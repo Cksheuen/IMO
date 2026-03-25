@@ -1,0 +1,65 @@
+# Claude Code 配置目录 - 白名单模式
+# 只有明确列出的文件/目录才会被版本控制
+
+# 忽略所有
+*
+
+# ===== 白名单 =====
+
+# 核心配置
+!.gitignore
+!CLAUDE.md
+!README.md
+!settings.json
+
+# 自定义 agents
+!agents/
+!agents/**
+
+# 自定义 skills (复杂能力，目录结构)
+!skills/
+!skills/**
+
+# 自定义 commands (斜杠命令，单文件)
+!commands/
+!commands/**
+
+# 自定义 hooks (事件钩子脚本)
+!hooks/
+!hooks/**
+
+# 自定义 rules (用户规则)
+!rules/
+!rules/**
+
+# 知识沉淀（经验教训、笔记）
+!notes/
+!notes/**
+
+# ===== 显式忽略（已被 * 覆盖，此处为文档说明）=====
+
+# 敏感凭据（绝对不能同步）
+# .credentials.json          - OAuth 令牌
+
+# 插件相关（不同步）
+# plugins/installed_plugins.json  - 自动生成的安装记录
+# plugins/cache/                  - 插件缓存（会无限增长）
+# plugins/marketplaces/           - 市场仓库（自动拉取）
+
+# 运行时数据（不同步）
+# cache/                     - 缓存数据
+# statsig/                   - 统计数据
+# todos/                     - 任务列表
+# projects/                  - 项目数据
+
+# 本地覆盖配置（不同步）
+# settings.local.json        - 个人偏好覆盖
+
+# ===== 临时文件 =====
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+*.swp
+*.swo
+*~
