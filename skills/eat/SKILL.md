@@ -236,6 +236,7 @@ skills/new-workflow-skill/SKILL.md
 - **代码相关** → 写入 `rules/technique/` 或 `rules/pattern/`
 - **行为规范** → 写入 `rules/` 根目录或 `MEMORY.md`
 - **工具使用** → 写入 `rules/tool/`
+- **归档旧知识** → 调用 `/archive` 移到冷存储
 
 ## 开始
 
