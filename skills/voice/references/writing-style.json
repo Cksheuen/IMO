@@ -1,0 +1,81 @@
+{
+  "version": "1.1",
+  "createdAt": "2026-03-25",
+  "lastUpdated": "2026-03-25",
+  "status": "initialized",
+  "sampleType": "task-instruction",
+  "sampleNote": "从 history.jsonl 提取的任务指令风格样本，非文档写作风格",
+  "sourceDocuments": [
+    "~/.claude/history.jsonl"
+  ],
+  "traits": {
+    "sentence": {
+      "lengthPreference": "medium",
+      "avgCharactersPerSentence": 104,
+      "rhythm": "direct",
+      "structureMix": "command-heavy"
+    },
+    "tone": {
+      "formality": "semi-formal",
+      "emotionLevel": "minimal",
+      "humorStyle": "none"
+    },
+    "vocabulary": {
+      "technicalDensity": "very-high",
+      "preferredWords": [
+        "当前", "需要", "进行", "修改", "更新", "新增",
+        "apps", "src", "config", "components", "api", "pages"
+      ],
+      "avoidedWords": [],
+      "connectorPreference": ["然后", "同时", "且"]
+    },
+    "structure": {
+      "paragraphLength": "single-sentence",
+      "listUsage": "occasional",
+      "tableUsage": "rare",
+      "headingStyle": "none",
+      "emphasisMethod": ["file-path", "command-call"]
+    },
+    "signature": {
+      "openingPatterns": [
+        { "pattern": "直接陈述", "frequency": "62.5%" },
+        { "pattern": "当前...", "frequency": "20.6%" },
+        { "pattern": "新任务：", "frequency": "3.5%" },
+        { "pattern": "/命令调用", "frequency": "13.4%" }
+      ],
+      "closingPatterns": [
+        "无固定结尾",
+        "请求确认"
+      ],
+      "formattingHabits": [
+        "文件路径引用 (@apps/...)",
+        "括号补充说明",
+        "编号列表 (1. 2. 3.)",
+        "中英混合术语"
+      ]
+    },
+    "structuralFeatures": {
+      "fileReferenceRate": "28.3%",
+      "commandCallRate": "13.2%",
+      "parenthesesNoteRate": "24.3%",
+      "numberedListRate": "2.9%"
+    }
+  },
+  "samples": [
+    {
+      "id": "sample-1",
+      "source": "history.jsonl",
+      "type": "task-instruction",
+      "excerpt": "新任务：当前@apps/ai-mcn-experiment/src/api/publishConfig中又更新了，出现了is_video_model字段，你需要在...中调用fetchCountrySummary的过程中获取并保存 is_video_model 与 video_type 的映射。",
+      "analyzedAt": "2026-03-25"
+    },
+    {
+      "id": "sample-2",
+      "source": "history.jsonl",
+      "type": "task-instruction",
+      "excerpt": "当前的shit应该注重于结构的清理与简洁化，实际上你提出的删除文件存在一定的定位偏差。但是这提供了一个很好的思路：长时间不用的内容可能仍然位于我们的主要提示中...",
+      "analyzedAt": "2026-03-25"
+    }
+  ],
+  "analysisNotes": "基于 456 条任务指令样本分析。特征：直接陈述、技术术语密集、文件路径引用频繁、无情感表达。注意：这是任务指令风格，可能不适用于文档/周报等场景。"
+}
