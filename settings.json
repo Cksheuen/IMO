@@ -1,14 +1,53 @@
 {
+  "env": {
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
   "permissions": {
     "allow": [
       "mcp__pencil"
-    ]
+    ],
+    "global": {
+      "Agent": "allow",
+      "AskUserQuestion": "allow",
+      "Bash": "allow",
+      "CronCreate": "allow",
+      "CronDelete": "allow",
+      "CronList": "allow",
+      "Edit": "allow",
+      "Glob": "allow",
+      "Grep": "allow",
+      "LSP": "allow",
+      "Read": "allow",
+      "Skill": "allow",
+      "TaskCreate": "allow",
+      "TaskGet": "allow",
+      "TaskList": "allow",
+      "TaskOutput": "allow",
+      "TaskUpdate": "allow",
+      "WebFetch": "allow",
+      "WebSearch": "allow",
+      "Write": "allow"
+    }
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash -c '\"/Users/cksheuen/.bun/bin/bun\" \"$(ls -td ~/.claude/plugins/cache/claude-hud/claude-hud/*/ 2>/dev/null | head -1)src/index.ts\"'"
   },
   "enabledPlugins": {
+    "claude-hud@claude-hud": true,
+    "claude-mem@thedotmack": true,
+    "rust-analyzer-lsp@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "chrome-devtools-mcp@chrome-devtools-plugins": true
   },
   "extraKnownMarketplaces": {
+    "thedotmack": {
+      "source": {
+        "source": "github",
+        "repo": "thedotmack/claude-mem"
+      }
+    },
     "chrome-devtools-plugins": {
       "source": {
         "source": "github",
@@ -22,7 +61,7 @@
       }
     }
   },
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  }
+  "alwaysThinkingEnabled": true,
+  "skipDangerousModePermissionPrompt": true,
+  "codemossProviderId": "4e65b9d5-0e52-4753-b065-660f9e8e1494"
 }
