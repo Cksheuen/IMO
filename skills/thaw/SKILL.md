@@ -132,4 +132,4 @@ update_index --remove "old-pattern"
 ## 相关技能
 
 - [[freeze]] - 冻结活跃内容
-- [[remember]] - 结构化记忆
+- [[locate]] - 代码地图索引

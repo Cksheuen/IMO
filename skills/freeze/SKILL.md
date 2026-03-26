@@ -127,7 +127,7 @@ grep -q ".cold-storage" ~/.claude/.gitignore 2>/dev/null || \
 ## 与其他元技能协作
 
 ```
-eat（吸收）→ remember（记忆）→ 活跃使用
+eat（吸收）→ locate（索引）→ 活跃使用
                 ↓
          [自动检测: 长期不用/超出阈值]
                 ↓
@@ -147,4 +147,4 @@ eat（吸收）→ remember（记忆）→ 活跃使用
 
 - [[thaw]] - 解冻恢复冻结的内容
 - [[eat]] - 吸收新知识
-- [[remember]] - 结构化记忆
+- [[locate]] - 代码地图索引
