@@ -11,7 +11,7 @@
 ## 实践要点
 
 1. **CLAUDE.md 保持精简**：只放核心原则（< 100 行）
-2. **规范分层存储**：`rules/technique/`, `rules/pattern/`, `rules/best-practice/`
+2. **规范分层存储**：`rules/pattern/`, `rules/technique/`, `rules/tool/`, `rules/knowledge/`
 3. **按需引用**：在 CLAUDE.md 中引用相关规则文件
 
 ## Claude Code 原生支持
