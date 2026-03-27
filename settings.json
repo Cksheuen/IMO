@@ -32,7 +32,15 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "bash -c '\"/Users/cksheuen/.bun/bin/bun\" \"$(ls -td ~/.claude/plugins/cache/claude-hud/claude-hud/*/ 2>/dev/null | head -1)src/index.ts\"'"
+    "command": "bash ~/.claude/rules/technique/rate-limit-management/scripts/statusline-wrapper.sh"
+  },
+  "hooks": {
+    "StopFailure": [
+      {
+        "type": "command",
+        "command": "bash ~/.claude/rules/technique/rate-limit-management/scripts/on-rate-limit-stop.sh"
+      }
+    ]
   },
   "enabledPlugins": {
     "claude-hud@claude-hud": true,

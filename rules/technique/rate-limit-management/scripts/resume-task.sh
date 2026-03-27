@@ -4,6 +4,13 @@
 STATE_DIR="$HOME/.claude"
 SUSPENDED_FILE="$STATE_DIR/suspended-task.json"
 RESUME_PID_FILE="$STATE_DIR/.resume-pid"
+TMP_SCRIPT=""
+
+cleanup() {
+  [ -n "$TMP_SCRIPT" ] && rm -f "$TMP_SCRIPT"
+}
+
+trap cleanup EXIT
 
 # Clean up PID file
 rm -f "$RESUME_PID_FILE"
@@ -26,7 +33,7 @@ if [ -f "$STATE_DIR/rate-limit-state.json" ]; then
   if [ "$PCT_INT" -ge 95 ] 2>/dev/null; then
     # Still rate limited, retry in 5 minutes
     echo "[$(date)] Still rate limited (${PCT_INT}%), retrying in 5 min" >> "$STATE_DIR/rate-limit.log"
-    nohup bash -c "sleep 300 && '$0'" > /dev/null 2>&1 &
+    nohup bash -c 'sleep "$1"; exec "$2"' _ 300 "$0" > /dev/null 2>&1 &
     echo "$!" > "$RESUME_PID_FILE"
     exit 0
   fi
@@ -46,11 +53,19 @@ echo "[$(date)] Resuming session=$SESSION_ID in cwd=$CWD" >> "$STATE_DIR/rate-li
 if [ -n "$SESSION_ID" ] && [ -n "$CWD" ]; then
   cd "$CWD" 2>/dev/null || true
 
+  TMP_SCRIPT=$(mktemp "${TMPDIR:-/tmp}/claude-resume.XXXXXX.sh")
+  chmod 700 "$TMP_SCRIPT"
+  {
+    printf '#!/bin/bash\n'
+    printf 'cd %q || exit 1\n' "$CWD"
+    printf 'exec claude --resume %q -p %q\n' "$SESSION_ID" "$RESUME_PROMPT"
+  } > "$TMP_SCRIPT"
+
   # Open a new terminal window with the resumed session
   osascript <<EOF
 tell application "Terminal"
   activate
-  do script "cd '${CWD}' && claude --resume '${SESSION_ID}' -p '${RESUME_PROMPT}'"
+  do script "bash $TMP_SCRIPT"
 end tell
 EOF
 

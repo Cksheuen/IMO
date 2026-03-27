@@ -37,19 +37,26 @@ if [ "$RESETS_AT" -le "$NOW" ] 2>/dev/null; then
   RESETS_AT=$((NOW + 18000))
 fi
 
-# Save suspended task context
-cat > "$SUSPENDED_FILE" <<EOF
-{
-  "session_id": "${SESSION_ID}",
-  "transcript_path": "${TRANSCRIPT_PATH}",
-  "cwd": "${CWD}",
-  "error": "${ERROR}",
-  "error_details": "${ERROR_DETAILS}",
-  "suspended_at": $NOW,
-  "resets_at": $RESETS_AT,
-  "resume_prompt": "The previous session was interrupted by a rate limit. Continue the task from where it left off."
-}
-EOF
+# Save suspended task context with proper JSON escaping
+jq -n \
+  --arg session_id "$SESSION_ID" \
+  --arg transcript_path "$TRANSCRIPT_PATH" \
+  --arg cwd "$CWD" \
+  --arg error "$ERROR" \
+  --arg error_details "$ERROR_DETAILS" \
+  --arg resume_prompt "The previous session was interrupted by a rate limit. Continue the task from where it left off." \
+  --argjson suspended_at "$NOW" \
+  --argjson resets_at "$RESETS_AT" \
+  '{
+    session_id: $session_id,
+    transcript_path: $transcript_path,
+    cwd: $cwd,
+    error: $error,
+    error_details: $error_details,
+    suspended_at: $suspended_at,
+    resets_at: $resets_at,
+    resume_prompt: $resume_prompt
+  }' > "$SUSPENDED_FILE"
 
 # Kill any existing resume waiter
 if [ -f "$RESUME_PID_FILE" ]; then
@@ -65,10 +72,7 @@ WAIT_SECONDS=$(( RESETS_AT - NOW + 90 ))
 RESET_TIME=$(date -r "$RESETS_AT" "+%Y-%m-%d %H:%M:%S" 2>/dev/null || echo "unknown")
 
 # Schedule resume in background
-nohup bash -c "
-  sleep $WAIT_SECONDS
-  '$RESUME_SCRIPT'
-" > /dev/null 2>&1 &
+nohup bash -c 'sleep "$1"; exec "$2"' _ "$WAIT_SECONDS" "$RESUME_SCRIPT" > /dev/null 2>&1 &
 
 RESUME_PID=$!
 echo "$RESUME_PID" > "$RESUME_PID_FILE"
