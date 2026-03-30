@@ -19,6 +19,8 @@
 # 自定义 skills (复杂能力，目录结构)
 !skills/
 !skills/**
+skills/**/workspace/
+skills/**/*-workspace/
 
 # 自定义 commands (斜杠命令，单文件)
 !commands/

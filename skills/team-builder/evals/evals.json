@@ -1,0 +1,23 @@
+{
+  "skill_name": "team-builder",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我有一个 Next.js + Prisma 的全栈项目，前端用 React + TailwindCSS，后端用 Next.js API Routes + Prisma ORM 连 PostgreSQL。项目刚启动，帮我组建一个 agent 团队来开发这个项目。",
+      "expected_output": "分析项目技术栈，输出能力需求清单，创建多个 agent .md 文件，设定 OKR，更新 roster.json",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我现在的团队缺一个专门写测试的 agent，项目用 Jest + React Testing Library 做单元测试，Playwright 做 E2E。帮我招一个测试工程师 agent。",
+      "expected_output": "创建 test-engineer agent .md 文件，设定测试相关 OKR，更新 roster.json",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "评估一下当前团队的表现，看看有没有需要淘汰或优化的。团队数据在 ~/.claude/teams/ 下。",
+      "expected_output": "读取 roster.json 和 performance 数据，计算 Agent Importance Score，输出绩效排名报告，给出淘汰/优化建议",
+      "files": []
+    }
+  ]
+}
