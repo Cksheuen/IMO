@@ -1,0 +1,29 @@
+{
+  "skill_name": "pkg-dive",
+  "evals": [
+    {
+      "id": 1,
+      "name": "explore-basic-info",
+      "prompt": "帮我探索一下 zustand 这个状态管理库是怎么实现的，找到它的入口文件和核心逻辑",
+      "expected_output": "应该定位到 zustand 包，找到入口文件，分析 createStore 等核心 API 的实现",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 2,
+      "name": "find-type-definitions",
+      "prompt": "看看 @tanstack/react-query 的 useQuery 类型定义，我需要知道它接受哪些参数",
+      "expected_output": "应该找到 useQuery 的类型定义文件，展示 UseQueryResult 或 UseQueryOptions 等类型",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 3,
+      "name": "trace-implementation",
+      "prompt": "我想了解 axios 的拦截器机制是怎么实现的，帮我追踪一下请求拦截器的调用链",
+      "expected_output": "应该找到 axios 拦截器相关的源码，分析请求拦截器的注册和执行流程",
+      "files": [],
+      "assertions": []
+    }
+  ]
+}
