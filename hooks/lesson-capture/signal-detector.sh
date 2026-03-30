@@ -82,6 +82,24 @@ for msg in messages:
             if isinstance(block, dict) and block.get('type') == 'text':
                 user_messages.append(block.get('text', ''))
 
+def is_system_injection(text):
+    """Filter out system-injected content that appears as user messages."""
+    if text.startswith('Base directory for this skill:'):
+        return True
+    if '<task-notification>' in text:
+        return True
+    if '<command-message>' in text or '<command-name>' in text:
+        return True
+    if text.startswith('<system-reminder>'):
+        return True
+    # Skill SKILL.md content injections: "# /loop", "# Brainstorm", etc.
+    skill_header_re = r'^# (?:/\w|Brainstorm|Skill Creator|Design|Loop|Locate|Eat|Voice|Orchestrat)'
+    if re.match(skill_header_re, text):
+        return True
+    return False
+
+user_messages = [m for m in user_messages if not is_system_injection(m)]
+
 if not user_messages:
     sys.exit(0)
 
@@ -89,7 +107,7 @@ signals = []
 
 # --- Signal 1: Explicit correction keywords ---
 correction_patterns_zh = [
-    r'不是', r'不对', r'错了', r'不要这样', r'别这样', r'搞错',
+    r'^不是[，,]|[。！？]\s*不是[，,]', r'不对', r'错了', r'不要这样', r'别这样', r'搞错',
     r'重来', r'重新来', r'不是这个意思', r'理解错了'
 ]
 correction_patterns_en = [

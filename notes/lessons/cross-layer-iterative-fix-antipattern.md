@@ -2,7 +2,7 @@
 
 - Status: candidate-rule
 - First Seen: 2026-03-22
-- Last Verified: 2026-03-29
+- Last Verified: 2026-03-30
 - Trigger: checkpoint resume 修了 4 轮，DDP 训练一次修 5 个问题，性能优化剥了 5 层洋葱
 
 ## 现象
@@ -25,6 +25,9 @@
 | 2026-03 | Windows CUDA 性能（诊断→同步→DataLoader→连接池→批量API） | 5 轮 |
 | 2026-03 | data_dir 路径编码 ådata→data | 1 轮但本可预防 |
 | 2026-03 | proxy forward_post 丢失 upstream 状态码 | 1 轮但本可预防 |
+| 2026-03-28 | Textura worker 跨主机连接（本地正常，远程 502→防火墙→端口检测） | 3 轮 |
+| 2026-03-29 | Textura 模型加载 state_dict 不匹配（加载失败→修复→bug仍然存在） | 2+ 轮 |
+| 2026-03-29 | Textura claude 进程调用（报错退出→应先评测再优化的流程未实现） | 1 轮但暴露流程缺失 |
 
 ## 正确做法
 
