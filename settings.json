@@ -5,6 +5,10 @@
   },
   "permissions": {
     "allow": [
+      "Bash(bash ~/.claude/rules/technique/rate-limit-management/scripts/*)",
+      "Bash(bash ~/.claude/hooks/*)",
+      "Bash(bash ~/.claude/hooks/lesson-capture/*)",
+      "Bash(bash ~/.claude/hooks/consolidate/*)",
       "mcp__pencil"
     ],
     "global": {
@@ -30,17 +34,36 @@
       "Write": "allow"
     }
   },
-  "statusLine": {
-    "type": "command",
-    "command": "bash ~/.claude/rules/technique/rate-limit-management/scripts/statusline-wrapper.sh"
-  },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "type": "command",
+        "command": "bash ~/.claude/hooks/scale-gate.sh"
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "bash ~/.claude/hooks/lesson-capture/lesson-gate.sh"
+      }
+    ],
+    "SessionEnd": [
+      {
+        "type": "command",
+        "command": "bash ~/.claude/hooks/consolidate/session-end-consolidate.sh"
+      }
+    ],
     "StopFailure": [
       {
         "type": "command",
         "command": "bash ~/.claude/rules/technique/rate-limit-management/scripts/on-rate-limit-stop.sh"
       }
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/rules/technique/rate-limit-management/scripts/statusline-wrapper.sh"
   },
   "enabledPlugins": {
     "claude-hud@claude-hud": true,

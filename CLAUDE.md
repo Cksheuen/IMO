@@ -1,5 +1,12 @@
 # CLAUDE.md
 
+## 语言偏好
+
+- **默认使用中文**创建 skills、rules、notes 等持久化内容（SKILL.md、规范文档、笔记等）
+- description 字段（frontmatter）使用中文
+- 代码注释、变量名、API 调用保持英文
+- 如果原始参考资料为英文，关键术语保留英文原文并附中文说明
+
 ## 设计哲学
 
 三条不可违背的原则:
@@ -42,7 +49,7 @@
 - 使用 git worktree 为每个任务创建独立工作目录
 - 任务完成后及时清理，合并回主分支
 
-> 完整编排规范见 `multi-agent-orchestration` skill (按需加载)
+> 完整编排规范见 `orchestrate` skill (按需加载)
 
 ### Verify - 完成前必须验证
 

@@ -44,6 +44,12 @@ log_fallback() {
 printf '%s' "$INPUT" | "$MONITOR_SCRIPT" 2>/dev/null || \
   printf '[%s] statusline-wrapper warning: rate-limit-monitor failed\n' "$(date)" >> "$LOG_FILE"
 
+# Lesson signal detection (lightweight, non-blocking)
+LESSON_DETECTOR="$HOME/.claude/hooks/lesson-capture/signal-detector.sh"
+if [ -x "$LESSON_DETECTOR" ]; then
+  printf '%s' "$INPUT" | "$LESSON_DETECTOR" 2>/dev/null &
+fi
+
 HUD_SCRIPT=$(find_hud_script)
 if [ -z "$HUD_SCRIPT" ]; then
   log_fallback "claude-hud script not found"
@@ -56,4 +62,3 @@ if ! BUN_BIN=$(find_bun); then
 fi
 
 printf '%s' "$INPUT" | "$BUN_BIN" "$HUD_SCRIPT"
-

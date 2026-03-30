@@ -26,15 +26,19 @@ TRANSCRIPT_PATH=$(echo "$INPUT" | jq -r '.transcript_path // empty')
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 
 # Determine reset time from state file (written by rate-limit-monitor)
+# Reads binding_window's resets_at (whichever window is the constraint)
 RESETS_AT=0
+NOW=$(date +%s)
 if [ -f "$RATE_STATE_FILE" ]; then
   RESETS_AT=$(jq -r '.resets_at // 0' "$RATE_STATE_FILE" 2>/dev/null)
+  BINDING_WINDOW=$(jq -r '.binding_window // "unknown"' "$RATE_STATE_FILE" 2>/dev/null)
+  echo "[$(date)] State file: binding=$BINDING_WINDOW, resets_at=$RESETS_AT" >> "$STATE_DIR/rate-limit.log"
 fi
 
-# Fallback: if no reset time, default to 5 hours from now
-NOW=$(date +%s)
+# Fallback: if no reset time or already past, default to 5 hours from now
 if [ "$RESETS_AT" -le "$NOW" ] 2>/dev/null; then
   RESETS_AT=$((NOW + 18000))
+  echo "[$(date)] No valid resets_at, fallback to +5h" >> "$STATE_DIR/rate-limit.log"
 fi
 
 # Save suspended task context with proper JSON escaping
