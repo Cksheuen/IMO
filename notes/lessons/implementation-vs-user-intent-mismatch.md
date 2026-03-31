@@ -1,8 +1,10 @@
 # Lesson: 实现偏离用户意图
 
-- Status: candidate-rule
+- Status: promoted
+- Promoted To: rules/pattern/requirements-confirmation.md
+- Promoted At: 2026-03-31
 - First Seen: 2026-03-29
-- Last Verified: 2026-03-30
+- Last Verified: 2026-03-31
 - Trigger: 用户说"我希望的不是…而是…"、"我需要的是…而不是…"
 
 ## 现象
@@ -28,7 +30,3 @@
 1. **区分"参考"与"复用"**：用户说"参考 X"时，提取 X 的原理但按当前需求重新设计
 2. **区分"调整"与"新建"**：用户要"新的脚本"时不要在旧脚本上 patch
 3. **关键歧义必须确认**：当需求可以理解为"修改现有"或"重新创建"时，先问
-
-## Promotion Criteria
-
-- 连续 5 次需求理解无"不是…而是…"类纠正

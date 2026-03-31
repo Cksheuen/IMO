@@ -11,6 +11,8 @@
 !CLAUDE.md
 !README.md
 !settings.json
+!settings.local.example.json
+!.mcp.example.json
 
 # 自定义 agents
 !agents/
@@ -34,13 +36,18 @@ skills/**/*-workspace/
 !rules/
 !rules/**
 
-# 知识沉淀（经验教训、笔记）
+# 知识沉淀（全局用户级，位于 ~/.claude/notes）
 !notes/
 !notes/**
 
 # 三层记忆系统（代码片段、模块、系统级记忆）
 !memory/
 !memory/**
+
+# 当前仓库这个项目自己的任务目录（标准形态是 <project>/.claude/tasks/）
+# 这里只同步目录说明文档；具体 task 实例默认不入库
+!tasks/
+!tasks/README.md
 
 # ===== 显式忽略（已被 * 覆盖，此处为文档说明）=====
 
@@ -55,11 +62,14 @@ skills/**/*-workspace/
 # 运行时数据（不同步）
 # cache/                     - 缓存数据
 # statsig/                   - 统计数据
-# todos/                     - 任务列表
+# tasks/**/.lock             - 任务运行时锁文件
+# tasks/**/.highwatermark    - 任务运行时游标
+# todos/                     - 旧任务列表
 # projects/                  - 项目数据
 
 # 本地覆盖配置（不同步）
-# settings.local.json        - 个人偏好覆盖
+# settings.local.json        - 个人/办公环境覆盖
+# .mcp.json                  - 项目级 MCP 覆盖
 
 # ===== 临时文件 =====
 __pycache__/
@@ -72,3 +82,4 @@ __pycache__/
 
 # 冷记忆（不同步）
 .cold-storage/
+skills/pkg-dive-workspace/

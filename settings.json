@@ -45,6 +45,10 @@
     "Stop": [
       {
         "type": "command",
+        "command": "bash ~/.claude/hooks/verification-gate.sh"
+      },
+      {
+        "type": "command",
         "command": "bash ~/.claude/hooks/lesson-capture/lesson-gate.sh"
       }
     ],
@@ -94,5 +98,6 @@
   },
   "alwaysThinkingEnabled": true,
   "skipDangerousModePermissionPrompt": true,
-  "codemossProviderId": "4e65b9d5-0e52-4753-b065-660f9e8e1494"
+  "codemossProviderId": "4e65b9d5-0e52-4753-b065-660f9e8e1494",
+  "autoMemoryEnabled": true
 }

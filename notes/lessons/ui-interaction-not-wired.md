@@ -1,9 +1,11 @@
 # Lesson: UI 交互元素未正确连线
 
-- Status: candidate-rule
+- Status: deferred
+- Defer Reason: 验证期仅 2 天，案例数 3 个，需观察后续 UI 功能实现是否一次通过交互验证。已被引用为 requirements-confirmation.md 的补充检查清单。
 - First Seen: 2026-03-28
-- Last Verified: 2026-03-30
+- Last Verified: 2026-03-31
 - Trigger: 实现 UI 功能后，按钮无法点击、滚动失效、状态未同步
+- Referenced By: rules/pattern/requirements-confirmation.md（作为 UI 功能验证补充检查清单）
 
 ## 现象
 

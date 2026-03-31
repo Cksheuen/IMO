@@ -27,12 +27,22 @@
 
 **任务组织（来自 Trellis）**：
 - 每个任务独立目录，包含 PRD + context + status
+- `tasks/` 默认是项目级目录：`<project>/.claude/tasks`
+- 当前仓库本身位于 `~/.claude/`，因此根目录下的 `tasks/` 只是这个仓库项目自己的 task 目录，不是其他项目共享的全局 task 池
+- `notes/` 维持用户级全局目录：`~/.claude/notes`
+- 任务目录名使用 `YYYY-MM-DD-slug`，禁止纯 UUID 命名
+- `tasks/` 只记录当前任务事实；跨任务结论沉淀到 `notes/`
 - 状态文件记录进度和 blockers，便于恢复
 - 评审标准明确（Acceptance Criteria）
+
+> task 与 note 的边界见 `rules/core/task-notes-boundary.md`
 
 ### Execute - 委派优先，聚焦执行
 
 **默认策略**: 能委派就委派，无依赖就并发，主 Agent 只做调度和结果聚合。
+
+- 用户已明确目标或已批准当前方向后，默认沿同一路径**连续执行到闭环**，不要在自然后续步骤之间反复发问“是否继续”
+- 只有遇到 **blocker / 高影响分叉 / 目标变化** 时，才暂停并重新确认
 
 | 条件 | 调度方式 |
 |------|----------|

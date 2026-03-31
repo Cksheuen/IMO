@@ -1,6 +1,6 @@
 #!/bin/bash
 # Verification Gate - Stop hook
-# Checks for pending features in feature-list.json before allowing session to stop.
+# Checks for pending features in the current project's feature-list.json before allowing session to stop.
 # If pending features exist, blocks stopping (exit 2) and triggers verification.
 #
 # Safety: checks stop_hook_active to prevent infinite loops.
@@ -16,7 +16,43 @@
 
 set -u
 
-TASKS_DIR="$HOME/.claude/tasks"
+resolve_tasks_dir() {
+  local git_root dir
+
+  if git_root=$(git rev-parse --show-toplevel 2>/dev/null); then
+    if [ "$(basename "$git_root")" = ".claude" ]; then
+      printf '%s/tasks\n' "$git_root"
+    else
+      printf '%s/.claude/tasks\n' "$git_root"
+    fi
+    return
+  fi
+
+  dir="$PWD"
+  while :; do
+    if [ "$(basename "$dir")" = ".claude" ]; then
+      printf '%s/tasks\n' "$dir"
+      return
+    fi
+
+    if [ -d "$dir/.claude" ]; then
+      printf '%s/.claude/tasks\n' "$dir"
+      return
+    fi
+
+    [ "$dir" = "/" ] && break
+    dir=$(dirname "$dir")
+  done
+
+  printf '%s/tasks\n' "$HOME/.claude"
+}
+
+# Task path resolution order:
+# 1. current git project's .claude/tasks
+# 2. nearest ancestor .claude/tasks when outside git
+# 3. ~/.claude/tasks fallback
+
+TASKS_DIR=$(resolve_tasks_dir)
 FEATURE_LIST="$TASKS_DIR/current/feature-list.json"
 
 INPUT=$(cat)

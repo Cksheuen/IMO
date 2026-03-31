@@ -1,6 +1,8 @@
 # Lesson: 跨层功能反复修补反模式
 
-- Status: candidate-rule
+- Status: promoted
+- Promoted To: rules/pattern/cross-layer-preflight.md
+- Promoted At: 2026-03-30
 - First Seen: 2026-03-22
 - Last Verified: 2026-03-30
 - Trigger: checkpoint resume 修了 4 轮，DDP 训练一次修 5 个问题，性能优化剥了 5 层洋葱
@@ -49,7 +51,3 @@
 - [ ] Proxy：status code + headers + body 全透传
 - [ ] Master→Worker：配置值序列化/反序列化一致性
 - [ ] Python 子进程：logger 配置、环境变量继承
-
-## Promotion Criteria
-
-- 如果后续 2 个跨层功能开发都能一次性收敛（≤2 commit），可提炼为 rule

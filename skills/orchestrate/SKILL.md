@@ -59,6 +59,92 @@ description: Multi-agent orchestration skill. Automatically decomposes large tas
 - 每个子任务必须有**可验证的验收标准**
 - 子任务粒度：一个 agent 在 20-50 turns 内可完成
 
+**Feature List 创建**（关键）：
+分解完成后，**必须在项目级 task 目录中创建 feature-list.json**：
+
+```bash
+# 解析 task 根目录：优先 <project>/.claude/tasks
+resolve_tasks_root() {
+  local project_root dir
+
+  if project_root=$(git rev-parse --show-toplevel 2>/dev/null); then
+    if [ "$(basename "$project_root")" = ".claude" ]; then
+      printf '%s/tasks\n' "$project_root"
+    else
+      printf '%s/.claude/tasks\n' "$project_root"
+    fi
+    return
+  fi
+
+  dir="$PWD"
+  while :; do
+    if [ "$(basename "$dir")" = ".claude" ]; then
+      printf '%s/tasks\n' "$dir"
+      return
+    fi
+
+    if [ -d "$dir/.claude" ]; then
+      printf '%s/.claude/tasks\n' "$dir"
+      return
+    fi
+
+    [ "$dir" = "/" ] && break
+    dir=$(dirname "$dir")
+  done
+
+  printf '%s/tasks\n' "$HOME/.claude"
+}
+
+TASKS_ROOT=$(resolve_tasks_root)
+
+# 创建任务目录
+TASK_DATE=$(date +%F)
+TASK_SLUG="feature-auth"
+TASK_DIR="$TASK_DATE-$TASK_SLUG"
+mkdir -p "$TASKS_ROOT/$TASK_DIR"
+
+# 创建 feature-list.json
+cat > "$TASKS_ROOT/$TASK_DIR/feature-list.json" << 'EOF'
+{
+  "task_id": "$TASK_DIR",
+  "created_at": "$(date -I --iso-8601-seconds=utc)",
+  "session_id": "$SESSION_ID",
+  "status": "in_progress",
+  "features": [
+    {
+      "id": "F001",
+      "category": "functional",
+      "description": "子任务 #1 描述",
+      "acceptance_criteria": ["验收标准1", "验收标准2"],
+      "verification_method": "e2e",
+      "passes": null,
+      "verified_at": null,
+      "attempt_count": 0,
+      "max_attempts": 3,
+      "notes": ""
+    }
+  ],
+  "summary": {
+    "total": N,
+    "passed": 0,
+    "pending": N
+  }
+}
+EOF
+
+# 创建 current 符号链接
+ln -sfn "$TASK_DIR" "$TASKS_ROOT/current"
+```
+
+目录名必须优先使用语义化 slug，例如 `2026-03-31-feature-auth`、`2026-03-31-skill-eval-iteration-2`。只有任务尚未成型时，才允许使用 `2026-03-31-draft-task-<shortid>` 作为临时兜底名。
+
+路径规则：
+
+- 默认使用 `<project>/.claude/tasks/`
+- 当前仓库自身位于 `~/.claude/`，因此这里的任务目录表现为 `~/.claude/tasks/`
+- 若当前不在 git 项目中，但从当前目录向上能找到某个项目的 `.claude/`，则仍使用该项目的 `.claude/tasks/`
+- 只有既不在 git 项目中、向上也找不到 `.claude/` 时，才回退到 `~/.claude/tasks/`
+
 **分解后必须展示给用户确认**，再进入 Step 2。
 
 ### Step 2: 模式选择
@@ -161,7 +247,9 @@ Agent(subagent_type: "researcher", prompt: 子任务 #3 prompt)
 所有子任务完成后：
 - 合并 worktree 变更到主分支
 - 运行项目测试（如有）
-- 如有 reviewer agent → 启动审查
+- **启动 reviewer agent 验证 feature list**
+- reviewer 更新 feature-list.json 中的 passes 状态
+- **verification-gate.sh 检测 pending features**，阻止退出直到验证通过
 
 ### Step 6: 综合输出
 
@@ -202,6 +290,7 @@ Agent(subagent_type: "researcher", prompt: 子任务 #3 prompt)
 | `generator-evaluator-pattern.md` | implementer = Generator, reviewer = Evaluator |
 | `git-worktree-parallelism.md` | 并行 implementer 的隔离基础设施 |
 | `task-centric-workflow.md` | 子任务的组织结构参考 |
+| `verification-gate.md` | Stop hook 验证门控，自动检测 pending features |
 
 ## 决策框架总览
 
@@ -236,3 +325,5 @@ Agent(subagent_type: "researcher", prompt: 子任务 #3 prompt)
 | 子任务过小（< 5 turns） | 合并到相邻子任务，减少编排开销 |
 | 串行任务用并行执行 | 有依赖关系的必须串行 |
 | 忽略 agent 报告的 blocker | blocker 必须处理后再继续 |
+| 未创建 feature-list.json | 分解后必须创建 feature-list.json |
+| 跳过验证门控 | 验证未通过时，会触发 Stop hook 阻止退出 |

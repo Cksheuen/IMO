@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "project-docs": {
+      "command": "bunx",
+      "args": [
+        "your-project-docs-mcp"
+      ]
+    },
+    "project-data": {
+      "command": "bunx",
+      "args": [
+        "your-project-data-mcp"
+      ]
+    }
+  }
+}

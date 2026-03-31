@@ -49,7 +49,59 @@ git clone https://github.com/your-repo/claude-config.git .claude
 
 AI 会根据当前上下文自动选择合适的技能和规范执行。
 
+## 配置分层
+
+为避免把办公环境、内网 registry、个人机器偏好误同步到所有环境，配置按两层管理：
+
+- `settings.json`：共享基线。只放跨环境稳定、适合版本控制的公共配置。
+- `settings.local.json`：本地覆盖。只放办公场景、内网 MCP、机器私有路径、个人偏好。
+- `settings.local.example.json`：本地覆盖模板。用于展示推荐结构，不直接生效。
+- `.mcp.example.json`：项目级 MCP 模板。用于展示“仅当前项目需要”的附加工具如何下沉。
+
+推荐原则：
+
+- 共享基线中不放依赖内网、租户、办公网络的 `mcpServers`
+- 办公场景 MCP 优先放到本地覆盖层，或按项目放在项目级 `.claude/settings.local.json`
+- 若某个 MCP 仅在少数项目使用，优先放项目级 `.mcp.json`，不要提升到用户级共享基线
+- 示例文件可版本控制，真实本地文件不入库
+
+### 三层边界
+
+- **共享层**：`settings.json`
+  适合所有项目、所有环境都稳定成立的配置。
+- **办公层**：`settings.local.json`
+  适合当前机器、当前办公网络、当前租户的长期工具。
+- **项目层**：`.mcp.json`
+  只适合某个项目当前需要的附加 MCP，不应污染用户级配置。
+
+### 办公场景建议放置位置
+
+- 用户级长期办公工具：`~/.claude/settings.local.json`
+- 项目特定办公工具：`<project>/.claude/settings.local.json` 或 `<project>/.mcp.json`
+
+典型应放入本地覆盖层的内容：
+
+- 内网 registry，如 `bnpm.byted.org`
+- 办公环境专用 MCP，如 `semi-mcp`、`tiksearch`、`lark-docs`、`feishu`
+- 带租户/端口/本地路径的环境变量
+- 临时授权过的高权限本地命令
+
+### 推荐落地方式
+
+1. 复制 `settings.local.example.json` 为本机 `settings.local.json`
+2. 按实际办公环境删减不需要的 MCP
+3. 优先固定版本，不使用 `@latest`
+4. 对 Feishu 一类大工具面优先配置 `FEISHU_ENABLED_TOOLS`
+5. 项目特定工具再下沉到项目级 `.mcp.json`
+6. 参考 `.mcp.example.json` 为具体项目生成最小项目覆盖
+
 ## 架构设计
+
+用户级与项目级目录分工如下：
+
+- `~/.claude/notes`：全局共享知识沉淀
+- `<project>/.claude/tasks`：当前项目自己的任务规格与状态
+- 当前仓库本身就是放在 `~/.claude/` 的一个项目，因此仓库根下的 `tasks/` 只是这个仓库自己的项目级 tasks 目录
 
 ```
 ~/.claude/
@@ -60,6 +112,10 @@ AI 会根据当前上下文自动选择合适的技能和规范执行。
 ├── rules/                 # 执行规范（pattern/technique/tool/knowledge）
 ├── memory/                # 分层记忆系统（L1/L2/L3）
 └── .cold-storage/         # 冷存储（上下文管理）
+
+<project>/
+└── .claude/
+    └── tasks/             # 当前项目自己的任务目录
 ```
 
 ### 三层能力体系
@@ -67,6 +123,7 @@ AI 会根据当前上下文自动选择合适的技能和规范执行。
 | 层级 | 职责 | 特点 |
 |------|------|------|
 | **hooks/** | 事件钩子脚本 | 由 hooks 事件触发的脚本资产 |
+| **tasks/** | 任务规格与状态 | 项目级目录，按 `YYYY-MM-DD-slug` 组织，便于扫描与恢复 |
 | **notes/** | 知识沉淀 | 承接经验教训、笔记、调研与设计思考 |
 | **skills/** | 完整工作流 | 用户可调用，有明确触发条件 |
 | **rules/** | 执行规范 | 被 CLAUDE.md 或 skills 引用 |
@@ -75,7 +132,10 @@ AI 会根据当前上下文自动选择合适的技能和规范执行。
 ### hooks / notes 的定位
 
 - `hooks/`：放自定义事件钩子脚本，配合 `settings.json` 或项目级 `.claude/settings.json` 使用。
-- `notes/`：放经验教训、笔记、调研与设计思考，作为 `rules/` / `skills/` 之前的知识沉淀层，并按任务循环定向读取。
+- `notes/`：放经验教训、笔记、调研与设计思考，作为 `rules/` / `skills/` 之前的知识沉淀层，并按任务循环定向读取；它是用户级全局目录，位于 `~/.claude/notes/`。
+- `tasks/`：是项目级目录，标准位置为 `<project>/.claude/tasks/`。
+- `tasks/` 与 `notes/` 的边界：`tasks/` 记录当前任务事实，`notes/` 沉淀跨任务可复用知识；详见 `rules/core/task-notes-boundary.md`。
+- 当前仓库位于 `~/.claude/`，所以仓库根下的 `tasks/` 只是这个仓库自身项目的 task 目录；它不代表其他项目共用同一个全局 task 池。
 - 当前仓库内 `.claude/hooks/` 与 `.claude/settings.json` 用于开发当前仓库这个项目；根目录 `hooks/` 面向配置仓库自身的可同步资产。
 
 ### notes 的工作流循环
@@ -105,7 +165,7 @@ AI 会根据当前上下文自动选择合适的技能和规范执行。
 | 阶段 | 要点 |
 |------|------|
 | **Plan** | 非平凡任务必须规划，拆成可验证的子任务 |
-| **Execute** | 能委派就委派，无依赖就并发 |
+| **Execute** | 能委派就委派，无依赖就并发；已获方向后默认连续执行到闭环 |
 | **Verify** | 未证明有效不标记完成 |
 | **Learn** | 收到纠正后分析根因，写入规范 |
 

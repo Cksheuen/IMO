@@ -1,6 +1,8 @@
 # Lesson: 重构/修改引入回归 bug
 
-- Status: candidate-rule
+- Status: promoted
+- Promoted To: rules/pattern/change-impact-review.md
+- Promoted At: 2026-03-30
 - First Seen: 2026-03-28
 - Last Verified: 2026-03-30
 - Trigger: 修改功能后原有功能出现 bug，用户说"在先前的修改中产生的"、"又对…造成了 bug"
@@ -30,7 +32,3 @@
 2. **Agent review 常态化**：用户已多次主动要求"开个 agent review 一下"，说明这是真实需求
 3. **回归测试**：修改后主动验证相关功能，不等用户报 bug
 4. **对比验证**：修改训练/连接等核心流程时，对比修改前后的 log 输出
-
-## Promotion Criteria
-
-- 连续 3 次重构无回归 bug 反馈

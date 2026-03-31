@@ -23,7 +23,9 @@
 See [architecture.md](rules/pattern/architecture.md)
 
 ## 当前任务
-See [task-context.md](.claude/tasks/current/context.md)
+See [task-context.md](<project>/.claude/tasks/current/context.md)
+
+若当前仓库本身就是 `~/.claude/`，则当前项目 task 路径等价为 `~/.claude/tasks/current/context.md`。
 ```
 
 ## 相关规则

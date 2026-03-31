@@ -18,6 +18,12 @@ STATE_FILE="$HOME/.claude/lesson-signals.json"
 
 INPUT=$(cat)
 
+# Refresh lesson signals synchronously to avoid racing the background statusline detector.
+LESSON_DETECTOR="$HOME/.claude/hooks/lesson-capture/signal-detector.sh"
+if [ -x "$LESSON_DETECTOR" ]; then
+  printf '%s' "$INPUT" | LESSON_DETECTOR_FORCE=1 "$LESSON_DETECTOR" 2>/dev/null || true
+fi
+
 # SAFETY: Prevent infinite loops - if already in forced continuation, let it stop
 STOP_ACTIVE=$(printf '%s' "$INPUT" | jq -r '.stop_hook_active // false' 2>/dev/null)
 if [ "$STOP_ACTIVE" = "true" ]; then
