@@ -8,7 +8,7 @@ description: Multi-agent orchestration skill. Automatically decomposes large tas
 **将大任务自动拆分为子任务，分配给专用 Agent 并行执行，收集并聚合结果。**
 
 ```
-大任务 → 分解 → 分配 → 并行执行 → 聚合 → 验证 → 交付
+大任务 → 规则提取 → 分解 → 分配 → 并行执行 → 聚合 → 验证 → 交付
 ```
 
 ## 触发条件
@@ -29,6 +29,131 @@ description: Multi-agent orchestration skill. Automatically decomposes large tas
 | **reviewer** | `~/.claude/agents/reviewer.md` | 验证、测试、审查 | 无 | inherit |
 
 ## 执行流程
+
+### Step 0: 规则提取与注入（新增）
+
+> **核心问题**：subagent 默认不继承主 agent 的 rules，导致行为不一致。
+> **解决方案**：在构建 agent prompt 时，提取并注入相关规则。
+
+#### 0.1 任务类型识别
+
+根据以下信号识别任务类型：
+
+| 信号 | 匹配规则 |
+|------|----------|
+| 文件路径 | `src/components/*`, `app/**/*.tsx` → `frontend` |
+| 文件路径 | `src/api/*`, `server/*`, `routes/*` → `backend` |
+| 文件路径 | `prisma/*`, `db/*`, `migrations/*` → `database` |
+| 文件路径 | `**/*.test.*`, `**/*.spec.*`, `tests/*` → `test` |
+| 关键词 | "重构"、"refactor"、"优化" → `refactor` |
+| 关键词 | "修复"、"fix"、"bug" → `fix` |
+
+#### 0.2 规则匹配表
+
+```yaml
+task_type_to_rules:
+  frontend:
+    essential:
+      - rules/domain/frontend/
+      - rules/scoped/frontend/
+    patterns:
+      - rules/pattern/change-impact-review.md
+      - rules/pattern/requirements-confirmation.md
+
+  backend:
+    essential:
+      - rules/domain/backend/
+      - rules/scoped/backend/
+    patterns:
+      - rules/pattern/cross-layer-preflight.md
+      - rules/pattern/change-impact-review.md
+
+  database:
+    essential:
+      - rules/domain/native/rust-egui-testing.md
+    patterns:
+      - rules/pattern/testable-architecture.md
+
+  refactor:
+    essential:
+      - rules/core/
+    patterns:
+      - rules/pattern/change-impact-review.md
+      - rules/pattern/cross-layer-preflight.md
+      - rules/pattern/generator-evaluator-pattern.md
+
+  test:
+    essential:
+      - rules/scoped/tests/
+      - rules/domain/shared/testable-architecture.md
+    patterns: []
+
+  fix:
+    essential:
+      - rules/core/
+    patterns:
+      - rules/pattern/change-impact-review.md
+      - rules/pattern/self-verification-mechanism.md
+
+  default:
+    essential:
+      - rules/core/
+    patterns:
+      - rules/pattern/generator-evaluator-pattern.md
+      - rules/pattern/self-verification-mechanism.md
+```
+
+#### 0.3 规则提取策略
+
+**提取原则**：只提取规则的**核心约束**，而非全文。
+
+| 规则类型 | 提取内容 | Token 预算 |
+|---------|---------|-----------|
+| core | 核心原则摘要（3-5 条） | 100 |
+| domain | 关键约束列表（5-10 条） | 100-200 |
+| pattern | 触发条件 + 执行要点 | 100-200 |
+| technique | 工具使用要点 | 50-100 |
+
+**总预算**：300-500 tokens，避免 prompt 膨胀。
+
+#### 0.4 Rules Pack 格式
+
+提取后的规则以如下格式注入 agent prompt：
+
+```markdown
+## 适用规则（Rules Pack）
+
+### 核心原则
+- 简洁优先：每个变更尽可能简单，影响最少的代码
+- 根因导向：找到根因，拒绝临时修复
+- 最小影响：只触及必要部分，不引入新问题
+
+### 领域规范（{task_type}）
+- {约束1}
+- {约束2}
+
+### 模式规范
+#### {pattern_name}
+- 触发条件：{when}
+- 执行要点：{what}
+```
+
+#### 0.5 实现示例
+
+```python
+# 伪代码：规则提取逻辑
+def extract_rules(task_description: str, files: list[str]) -> str:
+    task_type = identify_task_type(task_description, files)
+    rule_paths = TASK_TYPE_TO_RULES.get(task_type, TASK_TYPE_TO_RULES["default"])
+
+    rules_pack = []
+    for path in rule_paths:
+        content = read_rule(path)
+        extracted = extract_key_constraints(content)  # 只提取核心约束
+        rules_pack.append(extracted)
+
+    return format_rules_pack(rules_pack)
+```
 
 ### Step 1: 任务分解
 
@@ -121,7 +246,8 @@ cat > "$TASKS_ROOT/$TASK_DIR/feature-list.json" << 'EOF'
       "verified_at": null,
       "attempt_count": 0,
       "max_attempts": 3,
-      "notes": ""
+      "notes": "",
+      "delta_context": null
     }
   ],
   "summary": {
@@ -199,10 +325,16 @@ ln -sfn "$TASK_DIR" "$TASKS_ROOT/current"
 1. {具体的可验证行为}
 2. {具体的可验证行为}
 
-### 约束
-- {项目特定约束，如代码风格、框架版本}
-- {从 CLAUDE.md 或 rules 中提取的相关规范}
+### 适用规则（Rules Pack）
+{从 Step 0 提取的 Rules Pack，包含核心原则、领域规范、模式规范}
+
+### 输出格式
+按 agent 类型要求的标准格式输出
 ```
+
+**关键改进**：
+- Rules Pack 替代了原来的占位符 `{从 CLAUDE.md 或 rules 中提取的相关规范}`
+- Rules Pack 来自 Step 0 的结构化提取，而非临时拼凑
 
 ### Step 4: 分配执行
 
@@ -242,14 +374,74 @@ Agent(subagent_type: "researcher", prompt: 子任务 #3 prompt)
 - 列出冲突文件
 - 提示用户选择保留哪个版本，或手动合并
 
-**5.3 集成验证**
+**5.3 集成验证与 Fixer Loop**
 
-所有子任务完成后：
-- 合并 worktree 变更到主分支
-- 运行项目测试（如有）
-- **启动 reviewer agent 验证 feature list**
-- reviewer 更新 feature-list.json 中的 passes 状态
-- **verification-gate.sh 检测 pending features**，阻止退出直到验证通过
+所有子任务完成后，进入验证修复循环：
+
+```
+验证流程：
+┌──────────────────────────────────────────────────────────────┐
+│                                                              │
+│  合并 worktree → 运行测试 → 启动 reviewer                     │
+│                              │                               │
+│                              ▼                               │
+│                     reviewer 判定？                           │
+│                              │                               │
+│              ┌───────────────┴───────────────┐               │
+│              ▼                               ▼               │
+│          passes=true                    passes=false         │
+│              │                               │               │
+│              ▼                               ▼               │
+│          更新 feature-list             生成 delta_context    │
+│              │                               │               │
+│              ▼                               ▼               │
+│          检查 pending=0?            spawn implementer #2     │
+│              │                         (带 delta_context)    │
+│              ▼                               │               │
+│           通过退出 ◄─────────────────────────┘               │
+│                       (循环直到通过或达到 max_attempts)       │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Fixer Loop 关键机制**：
+
+1. **Delta Context Handoff**：
+   - reviewer 在发现问题时，必须输出结构化的 `delta_context`
+   - 包含：问题位置、根因分析、修复建议、读取范围
+   - 新 implementer 只需读取问题相关部分，无需重新理解全部代码
+
+2. **迭代上限保护**：
+   - 每个 feature 有 `max_attempts`（默认 3）
+   - 达到上限后标记为 `blocked`，请求人工干预
+
+3. **主 agent 职责约束**：
+   - 主 agent 只做调度，**禁止直接修改代码**
+   - reviewer 发现问题后，主 agent 必须 spawn 新 implementer
+
+**delta_context 格式**：
+```json
+{
+  "problem_location": {
+    "file": "src/auth/login.ts",
+    "lines": "45-52",
+    "code_snippet": "..."
+  },
+  "root_cause": "Token 生成未设置过期时间",
+  "fix_suggestion": {
+    "action": "add_parameter",
+    "details": "传入 { expiresIn: '24h' }",
+    "reference_example": "src/auth/refresh.ts:23"
+  },
+  "files_to_read": ["src/auth/login.ts:45-52"],
+  "files_to_skip": ["src/auth/login.ts:1-44"]
+}
+```
+
+**verification-gate.sh 行为**：
+- 检测 `passes=false` 时，输出 `VERIFICATION_FAILED` 指令
+- 主 agent 读取指令后，spawn implementer 执行修复
+- 循环直到 `pending=0` 或达到迭代上限
 
 ### Step 6: 综合输出
 
@@ -301,15 +493,21 @@ Agent(subagent_type: "researcher", prompt: 子任务 #3 prompt)
     │
     └─ 需要委派
          │
+         ├─ Step 0: 规则提取（新增）
+         │     └─ 识别任务类型 → 匹配规则 → 构建 Rules Pack
+         │
          ├─ Step 1: 分解子任务 + 文件所有权
          │
          ├─ Step 2: 选择模式（Subagent / Teams / 分批）
          │
          ├─ 展示分解方案 → 用户确认
          │
-         ├─ Step 3-4: 构建 prompt + 并行/串行执行
+         ├─ Step 3: 构建 prompt + 注入 Rules Pack
          │
-         ├─ Step 5: 聚合结果 + 冲突检查 + 集成验证
+         ├─ Step 4: 并行/串行执行
+         │
+         ├─ Step 5: 聚合结果 + Fixer Loop
+         │     └─ reviewer 失败 → delta_context → 新 implementer
          │
          └─ Step 6: 综合输出
 ```
@@ -327,3 +525,24 @@ Agent(subagent_type: "researcher", prompt: 子任务 #3 prompt)
 | 忽略 agent 报告的 blocker | blocker 必须处理后再继续 |
 | 未创建 feature-list.json | 分解后必须创建 feature-list.json |
 | 跳过验证门控 | 验证未通过时，会触发 Stop hook 阻止退出 |
+| **subagent 不继承 rules** | Step 0 提取 Rules Pack 并注入 prompt |
+| **主 agent 直接修改代码** | reviewer 失败后，spawn implementer 修复 |
+| **无 delta_context 修复** | reviewer 必须输出结构化问题定位 |
+| **无限修复循环** | max_attempts 保护，超限请求人工干预 |
+
+## 检查清单
+
+### 规则注入（Step 0）
+
+- [ ] 任务类型是否识别正确？
+- [ ] 相关 rules 是否匹配完整？
+- [ ] Rules Pack 是否控制在 500 tokens 以内？
+- [ ] 核心/领域/模式规范是否都有体现？
+
+### Fixer Loop（Step 5.3）
+
+- [ ] reviewer 是否输出 delta_context？
+- [ ] delta_context 包含问题位置、根因、修复建议？
+- [ ] 主 agent 是否 spawn implementer 而非直接修改？
+- [ ] attempt_count 是否正确递增？
+- [ ] max_attempts 是否正确保护？

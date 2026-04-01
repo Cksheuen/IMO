@@ -7,14 +7,25 @@
 # Iteration limit: checks attempt_count vs max_attempts to prevent endless retry.
 #
 # Flow:
-#   1. Stop hook fires → read stdin
-#   2. Check stop_hook_active → if true, exit 0 (prevent loop)
-#   3. Check feature-list.json exists → if not, exit 0 (no verification needed)
-#   4. Check iteration limits → if exceeded, allow stop with warning
-#   5. Check summary.pending → if > 0, block and trigger reviewer
-#   6. If all features passed → exit 0 (allow stop)
+#   1. Stop hook fires -> read stdin
+#   2. Check stop_hook_active -> if true, exit 0 (prevent loop)
+#   3. Check feature-list.json exists -> if not, exit 0 (no verification needed)
+#   4. Check iteration limits -> if exceeded, allow stop with warning
+#   5. Check summary.pending -> if > 0, block and trigger reviewer
+#   6. If all features passed -> exit 0 (allow stop)
 
 set -u
+
+timestamp_utc() {
+  date -u +"%Y-%m-%dT%H:%M:%SZ"
+}
+
+write_feature_list() {
+  local filter tmp
+  filter=$1
+  tmp=$(mktemp)
+  jq "$filter" "$FEATURE_LIST" > "$tmp" && mv "$tmp" "$FEATURE_LIST"
+}
 
 resolve_tasks_dir() {
   local git_root dir
@@ -92,11 +103,12 @@ PASSED=$(jq -r '.summary.passed // 0' "$FEATURE_LIST" 2>/dev/null)
 # If any feature has reached max_attempts, flag it and allow stop with warning
 EXCEEDED_FEATURES=$(jq -r '
   [.features[] | select(.passes == false and .attempt_count >= .max_attempts) |
-  "  - [\(.id)] \(.description[:50]) (attempts: \(.attempt_count)/\(.max_attempts))"
+   "  - [\(.id)] \(.description[:50]) (attempts: \(.attempt_count)/\(.max_attempts))"]
+  | join("\n")
 ' "$FEATURE_LIST" 2>/dev/null)
 
 if [ -n "$EXCEEDED_FEATURES" ]; then
-  cat >&2 <<EOF
+  cat >&2 <<EOF2
 Verification stopped: iteration limit reached.
 
 The following features exceeded max attempts:
@@ -105,60 +117,109 @@ $EXCEEDED_FEATURES
 These features will be marked as "blocked" and require manual intervention.
 To proceed, mark the task as completed:
    jq '.status = "completed"' $FEATURE_LIST
-EOF
-  # Mark task as completed to allow stop
-  jq '.status = "completed"' "$FEATURE_LIST" > /dev/null
+EOF2
+  write_feature_list '.status = "completed"'
   exit 0
 fi
 
-# Get pending features with details
-PENDING_DETAILS=$(jq -r '
-  .features[] | select(.passes == null or .passes == false) |
-  "Feature: \(.id) - \(.description[:60])
-   Status: \(.passes // "pending" // "failed")
-   Attempts: \(.attempt_count // 0)/\(.max_attempts // 3)
-   \(.notes // "")
-' "$FEATURE_LIST" 2>/dev/null | head -5)
-
-# Get failed features for fix suggestions
-FAILED_FEATURES=$(jq -r '
-  .features[] | select(.passes == false) |
-  "  - [\(.id)] \(.description[:50]): \(.notes[:80] // "no notes")
+# Check for failed features (passes = false) that need fixing
+FAILED_COUNT=$(jq -r '
+  [.features[] | select(.passes == false and .attempt_count < .max_attempts)] | length
 ' "$FEATURE_LIST" 2>/dev/null)
 
-# Calculate progress percentage
+if [ "$FAILED_COUNT" -gt 0 ] 2>/dev/null; then
+  FAILED_DETAILS=$(jq -r '
+    .features[] | select(.passes == false and .attempt_count < .max_attempts) |
+    [
+      "Feature: " + .id + " - " + (.description[:60]),
+      "  Root Cause: " + (.delta_context.root_cause // .notes[:80] // "No root cause provided"),
+      "  Fix Suggestion: " + (.delta_context.fix_suggestion.details[:80] // "No fix suggestion"),
+      "  Files to Read: " + ((.delta_context.files_to_read // ["All related files"]) | join(", ")),
+      "  Attempt: " + (.attempt_count | tostring) + "/" + (.max_attempts | tostring)
+    ] | join("\n")
+  ' "$FEATURE_LIST" 2>/dev/null | head -10)
+
+  DELTA_CONTEXT_JSON=$(jq -c '
+    [.features[]
+     | select(.passes == false and .attempt_count < .max_attempts)
+     | {
+         feature_id: .id,
+         description: .description,
+         delta_context: (.delta_context // {
+           root_cause: (.notes // "No root cause provided"),
+           fix_suggestion: {
+             details: "Inspect acceptance criteria and repair the failed implementation"
+           },
+           files_to_read: ["All related files"],
+           files_to_skip: []
+         })
+       }]
+  ' "$FEATURE_LIST" 2>/dev/null)
+
+  if [ "$TOTAL" -gt 0 ]; then
+    PROGRESS=$((PASSED * 100 / TOTAL))
+  else
+    PROGRESS=0
+  fi
+
+  cat >&2 <<EOF2
+VERIFICATION_FAILED: Fix required for $FAILED_COUNT feature(s).
+
+Task progress: $PASSED/$TOTAL ($PROGRESS%) - $FAILED_COUNT failed feature(s):
+
+$FAILED_DETAILS
+
+─────────────────────────────────────────
+FIXER LOOP TRIGGER:
+Spawn implementer agent to fix the failed features.
+
+Agent(subagent_type: "implementer", isolation: "worktree", prompt: """
+## Fix Task: Correct failed implementation
+
+### Delta Context (from reviewer)
+$DELTA_CONTEXT_JSON
+
+### Fix Instructions
+1. For each failed feature in the array, read only the files specified in delta_context.files_to_read
+2. Apply the corresponding delta_context.fix_suggestion
+3. Do NOT modify files listed in delta_context.files_to_skip
+4. When fixes are ready, reset those features to passes = null so reviewer can verify again
+5. Commit when done
+6. The features will be re-verified automatically
+""")
+
+─────────────────────────────────────────
+IMPORTANT: Main agent should NOT modify code directly.
+Spawn implementer agent to perform the fix.
+EOF2
+  exit 2
+fi
+
+# Get pending features with details (passes = null, not false)
+PENDING_DETAILS=$(jq -r '
+  .features[] | select(.passes == null) |
+  [
+    "Feature: " + .id + " - " + (.description[:60]),
+    "  Status: pending verification",
+    "  " + (.notes // "")
+  ] | join("
+")
+' "$FEATURE_LIST" 2>/dev/null | head -5)
+
 if [ "$TOTAL" -gt 0 ]; then
   PROGRESS=$((PASSED * 100 / TOTAL))
 else
   PROGRESS=0
 fi
 
-# Build fix suggestions for failed features
-FIX_SUGGESTIONS=""
-if [ -n "$FAILED_FEATURES" ]; then
-  FIX_SUGGESTIONS="
-
-Failed features need fixing:
-$FAILED_FEATURES
-
-For each failed feature:
-1. Analy the failure reason in .notes
-2. Review the acceptance_criteria
-3. Implement fix
-4. Update feature-list.json:
-   jq '(.features[] | select(.id == "F001") | .passes) = true | .verified_at) = "'$(date -I --iso-8601-seconds=utc)'"' $FEATURE_LIST
-"
-fi
-
-# Block with verification instructions
-cat >&2 <<EOF
-Verification required before finishing.
+cat >&2 <<EOF2
+VERIFICATION_REQUIRED: $PENDING pending feature(s) need review.
 
 Task progress: $PASSED/$TOTAL ($PROGRESS%) - $PENDING pending feature(s):
 
 Pending features:
 $PENDING_DETAILS
-$FIX_SUGGESTIONS
+
 ─────────────────────────────────────────
 Verification workflow:
 
@@ -167,18 +228,27 @@ Option A - Manual verification:
 2. Run verification (tests, E2E, or manual checks)
 3. Update feature-list.json:
    # Mark as passed
-   jq '(.features[] | select(.id == "FEATURE_ID") | .passes) = true | .verified_at) = "'$(date -I --iso-8601-seconds=utc)'" $FEATURE_LIST
+   jq '(.features[] | select(.id == "FEATURE_ID") | .passes) = true |
+       (.features[] | select(.id == "FEATURE_ID") | .verified_at) = "TIMESTAMP" |
+       (.features[] | select(.id == "FEATURE_ID") | .delta_context) = null |
+       .summary.passed += 1 |
+       .summary.pending -= 1' $FEATURE_LIST
 
    # Mark as failed (increments attempt_count)
-   jq '(.features[] | select(.id == "FEATURE_ID") | .passes = false | .attempt_count += 1 | .notes = "reason")' $FEATURE_LIST
+   jq '(.features[] | select(.id == "FEATURE_ID") | .passes) = false |
+       (.features[] | select(.id == "FEATURE_ID") | .attempt_count) += 1 |
+       (.features[] | select(.id == "FEATURE_ID") | .notes) = "reason" |
+       (.features[] | select(.id == "FEATURE_ID") | .delta_context) = {"root_cause":"reason","fix_suggestion":{"details":"describe fix"},"files_to_read":["path:line-range"],"files_to_skip":[]}' $FEATURE_LIST
+
+   # Reset to pending after implementer finishes a fix
+   jq '(.features[] | select(.id == "FEATURE_ID") | .passes) = null |
+       (.features[] | select(.id == "FEATURE_ID") | .verified_at) = null' $FEATURE_LIST
 
 Option B - Automated reviewer agent:
-   Use the reviewer agent to verify implementation quality:
    Agent(subagent_type: "reviewer", prompt: "Verify feature-list.json at $FEATURE_LIST")
 
 Option C - Skip verification (marks task as completed):
    jq '.status = "completed"' $FEATURE_LIST
-   echo "Verification skipped by user request"
-EOF
+EOF2
 
 exit 2
