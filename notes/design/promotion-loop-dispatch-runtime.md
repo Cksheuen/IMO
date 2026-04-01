@@ -14,6 +14,8 @@
 
 ## 当前运行时协议
 
+作用域说明：以下协议当前只对应**当前仓库开发态**，即由项目级 `.claude/settings.json` 挂载的链路；它不自动代表根目录共享 `settings.json` 已接入同一条链。
+
 ### 1. 候选发现
 
 - `promotion-scan.py` 在 `Stop` / `SubagentStop` 轻量扫描最近 notes
@@ -92,6 +94,6 @@ python3 .claude/hooks/promotion-dispatch.py fail --error "promote-notes subagent
 
 ## 结论
 
-到这一层为止，Promotion Loop 已经不是“提醒去做”，而是具备标准 queue 协议的可执行调度链。
+在上述作用域内，Promotion Loop 已经不是“提醒去做”，而是具备标准 queue 协议的可执行调度链。
 
-真正的剩余问题只会是：调用方是否遵守这条链，而不是链本身缺失。
+若脱离这个挂载作用域，仍必须先验证真实载入位置与触发事件；否则只能算设计完成，不能算运行链已接通。

@@ -145,7 +145,7 @@
 - 写完 `notes/design/` 后，如果设计决策已跨任务复用，立即进入 `Promotion Loop`
 - 会话结束前若本轮更新过 note，默认做一次轻量晋升扫描
 
-当前最小执行链已经落地为：
+当前最小执行链**仅在当前仓库开发态的项目级 `.claude/settings.json` 中挂载**，并非根目录共享 `settings.json` 默认具备：
 
 1. `promotion-scan.py` 轻量扫描并写入 `promotion-queue.json`
 2. `promotion-gate.py` 在 queue 仍有 actionable candidates 时阻止静默结束
@@ -159,6 +159,8 @@
 - hook 不直接执行完整晋升
 - 主 agent 不直接做完整评估
 - queue 成为主 agent 与 subagent 之间的事实源
+
+如果未来把这条链推广到根目录共享配置，必须重新补齐：挂载位置、触发事件、消费方、验证证据。未补齐前，不能把设计稿或脚本存在本身当作“已接入”。
 
 ### 与 hooks 的关系
 

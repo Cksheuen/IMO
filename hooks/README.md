@@ -71,6 +71,23 @@
 - 是否需要 matcher
 - 是否验证过脚本真的被执行
 
+## 真实链路要求
+
+创建脚本、创建 loop、补设计文档，不等于已经进入真实运行链。
+
+以后任何 hook / loop / 自动流程，如果声称“已落地”“自动触发”“当前运行时协议”，必须同时给出：
+
+1. **挂载位置**：是根目录 `settings.json`，还是项目级 `.claude/settings.json`
+2. **触发事件**：`SessionStart` / `PreToolUse` / `Stop` / `SubagentStop` 等哪个事件
+3. **消费方**：是 hook runtime、主 agent、subagent，还是 queue/disaptch 脚本
+4. **验证证据**：实际配置、脚本路径、最小触发验证方法
+
+若缺少以上任一项：
+
+- 只能写成 `proposed` / `design` / `intended`
+- 不能写成“当前最小执行链已经落地”
+- 不能默认认为后续 agent 会自然遵守这条链
+
 ## 与 notes 的协同
 
 `hooks/` 不负责保存知识；它只负责在事件点做自动动作或提醒。
@@ -83,6 +100,7 @@
 
 当前仓库开发态已经落地的最小实现：
 
+- `PreToolUse` 挂载 `hooks/scale-gate.sh`，在首次 `Edit/Write` 前执行规模评估并 bootstrap 当前 task 目录
 - 项目级 `.claude/settings.json` 在 `Stop` / `SubagentStop` 挂载 `.claude/hooks/promotion-scan.py`
 - 项目级 `.claude/settings.json` 在 `Stop` / `SubagentStop` 挂载 `.claude/hooks/promotion-gate.py`
 - `promotion-scan.py` 只做轻量候选扫描，不直接替代 `promote-notes`
@@ -98,6 +116,9 @@
 - `promote-notes` subagent：只处理已 claim 的候选，并写 `promotion-result.json`
 - `promotion-apply-result.py`：把 subagent 结果回写到 queue
 - `promotion-dispatch.py fail`：subagent 异常时恢复 queue
+- `hooks/audit-runtime-links.py`：静态审计文档中的“已落地/当前运行时协议”声明是否真的有对应 settings 挂载（只读，不自动执行）
+
+注意：上面这条 Promotion Loop 属于**当前仓库开发态的项目级链路**，真实挂载位置是 `.claude/settings.json`，不是根目录共享 `settings.json`。
 
 约束：
 
