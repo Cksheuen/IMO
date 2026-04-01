@@ -12,10 +12,10 @@
 set -euo pipefail
 
 # 读取 stdin JSON
-read -r stdin_json
+stdin_json=$(cat)
 
-# 提取文件路径
-file_path=$(echo "$stdin_json" | jq -r '.toolInput.file_path // ""')
+# 提取文件路径（兼容 toolInput / tool_input 两种 payload）
+file_path=$(echo "$stdin_json" | jq -r '.toolInput.file_path // .tool_input.file_path // ""')
 
 # 检查路径合法性
 if [[ "$file_path" == ".." ]] || [[ "$file_path" == ../* ]] || [[ "$file_path" == */../* ]] || [[ "$file_path" == *"/.." ]]; then

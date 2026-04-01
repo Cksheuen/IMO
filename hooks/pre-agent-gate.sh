@@ -1,7 +1,7 @@
 #!/bin/bash
 # pre-agent-gate.sh - Agent (Subagent) 操作预检
 #
-# 触发时机: PreToolUse (matcher: Agent)
+# 触发时机: PreToolUse (matcher: Agent / Task)
 # 功能: 检查子代理调用的合法性
 #
 # 检查项:
@@ -12,11 +12,11 @@
 set -euo pipefail
 
 # 读取 stdin JSON
-read -r stdin_json
+stdin_json=$(cat)
 
-# 提取子代理类型
-subagent_type=$(echo "$stdin_json" | jq -r '.toolInput.subagent_type // "general-purpose"')
-prompt=$(echo "$stdin_json" | jq -r '.toolInput.prompt // ""')
+# 提取子代理类型（兼容 toolInput / tool_input 两种 payload）
+subagent_type=$(echo "$stdin_json" | jq -r '.toolInput.subagent_type // .tool_input.subagent_type // "general-purpose"')
+prompt=$(echo "$stdin_json" | jq -r '.toolInput.prompt // .tool_input.prompt // ""')
 
 # 检查是否应该使用 worktree 隔离
 # 仅对会写文件的子代理强约束 worktree，纯只读 agent 不要求
@@ -31,7 +31,7 @@ fi
 
 # 如果应该使用 worktree 但没有配置，直接阻止，避免写路径污染主工作区
 if [ "$should_use_worktree" = true ]; then
-    isolation=$(echo "$stdin_json" | jq -r '.toolInput.isolation // ""')
+    isolation=$(echo "$stdin_json" | jq -r '.toolInput.isolation // .tool_input.isolation // ""')
     if [ "$isolation" != "worktree" ]; then
         echo '{"decision": "deny", "reason": "涉及写文件的子代理必须使用 worktree 隔离"}'
         exit 0

@@ -9,7 +9,7 @@
 #   3. Claude marks assessment done: touch ~/.claude/.scale-gate/{session_id}
 #   4. Subsequent Edit/Write → pass through
 #
-# Exit codes: 0 = allow, 2 = block with feedback
+# Contract: return Claude Code hook JSON instead of relying on stderr/exit 2.
 
 set -u
 
@@ -17,21 +17,22 @@ INPUT=$(cat)
 
 # Extract fields - use python3 as fallback if jq unavailable
 if command -v jq >/dev/null 2>&1; then
-  TOOL_NAME=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty')
-  SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // empty')
+  TOOL_NAME=$(printf '%s' "$INPUT" | jq -r '.tool_name // .toolName // empty')
+  SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // .sessionId // empty')
 else
-  TOOL_NAME=$(printf '%s' "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('tool_name',''))" 2>/dev/null)
-  SESSION_ID=$(printf '%s' "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('session_id',''))" 2>/dev/null)
+  TOOL_NAME=$(printf '%s' "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('tool_name') or d.get('toolName') or '')" 2>/dev/null)
+  SESSION_ID=$(printf '%s' "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('session_id') or d.get('sessionId') or '')" 2>/dev/null)
 fi
 
 # Only gate Edit and Write
 case "$TOOL_NAME" in
   Edit|Write) ;;
-  *) exit 0 ;;
+  *) echo '{"decision": "allow"}'; exit 0 ;;
 esac
 
 # Need session_id to track state
 if [ -z "$SESSION_ID" ]; then
+  echo '{"decision": "allow"}'
   exit 0
 fi
 
@@ -46,6 +47,7 @@ fi
 
 # If already assessed this session, pass through
 if [ -f "$MARKER" ]; then
+  echo '{"decision": "allow"}'
   exit 0
 fi
 
@@ -56,11 +58,15 @@ fi
 
 # Block and remind
 mkdir -p "$STATE_DIR"
-cat >&2 <<EOF
-Scale assessment required before editing files.
+python3 - "$MARKER" "$TASK_DIR" <<'PYEOF'
+import json
+import sys
+
+marker, task_dir = sys.argv[1:3]
+reason = f"""Scale assessment required before editing files.
 
 Task bootstrap:
-- Current task directory: ${TASK_DIR:-<bootstrap failed>}
+- Current task directory: {task_dir or '<bootstrap failed>'}
 - Seeded files: prd.md, context.md, status.md, feature-list.json
 
 Evaluate task scope first:
@@ -71,8 +77,11 @@ Evaluate task scope first:
 Then decide:
 - Trivial/Simple (1-2 files) → mark done and proceed directly
 - Moderate/Complex (3+ files or 2+ domains) → use orchestrate skill to decompose
+- 3+ independent subtasks → prefer Agent Teams / parallel subagents
 
 Mark assessment done by running:
-  touch $MARKER
-EOF
-exit 2
+  touch {marker}
+"""
+print(json.dumps({"decision": "deny", "reason": reason}, ensure_ascii=False))
+PYEOF
+exit 0

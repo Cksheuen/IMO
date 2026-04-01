@@ -46,6 +46,16 @@
       {
         "matcher": "Write",
         "type": "command",
+        "command": "bash ~/.claude/hooks/scale-gate.sh"
+      },
+      {
+        "matcher": "Edit",
+        "type": "command",
+        "command": "bash ~/.claude/hooks/scale-gate.sh"
+      },
+      {
+        "matcher": "Write",
+        "type": "command",
         "command": "bash ~/.claude/hooks/pre-write-gate.sh"
       },
       {
@@ -55,6 +65,11 @@
       },
       {
         "matcher": "Agent",
+        "type": "command",
+        "command": "bash ~/.claude/hooks/pre-agent-gate.sh"
+      },
+      {
+        "matcher": "Task",
         "type": "command",
         "command": "bash ~/.claude/hooks/pre-agent-gate.sh"
       }

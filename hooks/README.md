@@ -112,12 +112,11 @@
 - 完整晋升动作不在 hook 中执行，而是交给独立 `promote-notes` subagent
 - `skill-loader/skill-inject.sh` 在 `UserPromptSubmit` 输出轻量 skill 路由提示，不注入完整 `SKILL.md`
 
-当前仍仅停留在脚本/设计层、未接入共享运行时链路的部分：
+当前共享运行时新增接通的部分：
 
-- `hooks/scale-gate.sh`
-- `hooks/task-bootstrap.sh`
-
-这两个脚本当前存在，但根目录 `settings.json` 没有挂载它们；因此只能视为可复用设计资产，不能写成“当前已自动执行”。
+- 根目录 `settings.json` 在 `PreToolUse` 的 `Edit` / `Write` matcher 上挂载了 `hooks/scale-gate.sh`
+- `hooks/scale-gate.sh` 在首次编辑前调用 `hooks/task-bootstrap.sh` 自动创建 task 目录
+- 当前共享链路已经可以把“大任务先做规模评估，再进入 task workflow”落成运行时守门
 
 当前最小执行桥还包括：
 
