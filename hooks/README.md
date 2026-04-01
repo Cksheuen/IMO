@@ -110,6 +110,7 @@
 - 命中候选时同时写入根目录 `promotion-queue.json`
 - `promotion-gate.py` 在队列仍有新鲜候选时阻止静默结束，要求继续执行 `Promotion Loop`
 - 完整晋升动作不在 hook 中执行，而是交给独立 `promote-notes` subagent
+- `skill-loader/skill-inject.sh` 在 `UserPromptSubmit` 输出轻量 skill 路由提示，不注入完整 `SKILL.md`
 
 当前仍仅停留在脚本/设计层、未接入共享运行时链路的部分：
 

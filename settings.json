@@ -9,6 +9,7 @@
       "Bash(bash ~/.claude/hooks/*)",
       "Bash(bash ~/.claude/hooks/lesson-capture/*)",
       "Bash(bash ~/.claude/hooks/consolidate/*)",
+      "Bash(bash ~/.claude/hooks/skill-loader/*)",
       "mcp__pencil"
     ],
     "global": {
@@ -35,11 +36,27 @@
     }
   },
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "type": "command",
+        "command": "bash ~/.claude/hooks/skill-loader/skill-inject.sh"
+      }
+    ],
     "PreToolUse": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Write",
         "type": "command",
-        "command": "bash ~/.claude/hooks/scale-gate.sh"
+        "command": "bash ~/.claude/hooks/pre-write-gate.sh"
+      },
+      {
+        "matcher": "Edit",
+        "type": "command",
+        "command": "bash ~/.claude/hooks/pre-edit-gate.sh"
+      },
+      {
+        "matcher": "Agent",
+        "type": "command",
+        "command": "bash ~/.claude/hooks/pre-agent-gate.sh"
       }
     ],
     "Stop": [
@@ -50,6 +67,10 @@
       {
         "type": "command",
         "command": "bash ~/.claude/hooks/lesson-capture/lesson-gate.sh"
+      },
+      {
+        "type": "command",
+        "command": "bash ~/.claude/hooks/context-monitor.sh"
       }
     ],
     "SessionEnd": [

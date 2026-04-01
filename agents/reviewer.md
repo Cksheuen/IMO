@@ -2,6 +2,7 @@
 name: reviewer
 description: Code review agent that validates implementation quality, correctness, and consistency. Use after implementation subtasks complete to verify work meets acceptance criteria. Updates feature-list.json with verification results and delta_context for failed features.
 model: inherit
+isolation: worktree
 maxTurns: 20
 tools:
   - Read
