@@ -1,6 +1,17 @@
 {
   "version": "1.0",
-  "memories": [],
+  "memories": [
+    {
+      "id": "claude_change_scope_guard",
+      "level": "L2",
+      "path": "memory/L2-modules/claude_change-scope-guard.md",
+      "sourcePath": "/Users/bytedance/.claude/rules/pattern/change-scope-guard.md",
+      "project": "claude-config",
+      "summary": "新增改动边界守卫规范，要求只修改当前目标必需的内容，发现无关问题只记录不顺手修。",
+      "keywords": ["改动边界", "最小影响", "无关改动", "diff审查", "rules"],
+      "updatedAt": "2026-04-01"
+    }
+  ],
   "metadata": {
     "createdAt": "2026-03-25",
     "description": "三层记忆系统索引：L1代码片段、L2模块、L3系统"
