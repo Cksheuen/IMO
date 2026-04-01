@@ -25,6 +25,28 @@ CLAIM_PATTERNS = (
     "自动触发",
     "已接通",
 )
+NON_RUNTIME_MARKERS = (
+    "人工执行",
+    "只读",
+    "不自动执行",
+    "不会自行运行",
+    "不属于自动 hook",
+)
+RUNTIME_ACTION_MARKERS = (
+    "挂载",
+    "通过",
+    "注入",
+)
+NEGATING_MARKERS = (
+    "不能写成",
+    "不得写成",
+    "未接入",
+    "未挂载",
+    "缺少真实挂载",
+    "误写成",
+    "脚本资产层",
+    "设计资产",
+)
 SCRIPT_RE = re.compile(r"(?P<path>(?:\.claude/)?hooks/[\w./-]+\.(?:py|sh))")
 SETTINGS_FILES = ("settings.json", ".claude/settings.json")
 
@@ -127,16 +149,37 @@ def analyze_docs(root: Path, registrations: dict[str, list[str]], include_non_cl
         except OSError:
             continue
 
+        active_claim_line: int | None = None
+        active_claim_text = ""
         for lineno, line in enumerate(lines, start=1):
+            stripped = line.strip()
+            if not stripped:
+                continue
+
+            if stripped.startswith("#"):
+                active_claim_line = None
+                active_claim_text = ""
+
+            line_has_claim = any(pattern in line for pattern in CLAIM_PATTERNS)
+            line_is_negated = any(marker in line for marker in NEGATING_MARKERS)
+            if line_has_claim and not line_is_negated:
+                active_claim_line = lineno
+                active_claim_text = stripped
+
             matches = [normalize_script_path(m.group("path")) for m in SCRIPT_RE.finditer(line)]
             if not matches:
                 continue
 
-            has_claim = any(pattern in line for pattern in CLAIM_PATTERNS)
+            has_claim = (line_has_claim and not line_is_negated) or (
+                active_claim_line is not None and any(marker in line for marker in RUNTIME_ACTION_MARKERS)
+            )
             if not has_claim and not include_non_claims:
                 continue
 
             for script_path in matches:
+                is_runtime_claim = not any(marker in line for marker in NON_RUNTIME_MARKERS) and not any(
+                    marker in active_claim_text for marker in NON_RUNTIME_MARKERS
+                )
                 scope = classify_scope(script_path)
                 expected_settings = matching_settings(scope)
                 registered_in = [
@@ -144,6 +187,9 @@ def analyze_docs(root: Path, registrations: dict[str, list[str]], include_non_cl
                     for settings, scripts in registrations.items()
                     if script_path in scripts
                 ]
+                status = "ok" if all(s in registered_in for s in expected_settings) else "missing_registration"
+                if not is_runtime_claim:
+                    status = "non_runtime_reference"
                 records.append(
                     {
                         "doc": rel_path,
@@ -152,9 +198,11 @@ def analyze_docs(root: Path, registrations: dict[str, list[str]], include_non_cl
                         "script": script_path,
                         "scope": scope,
                         "is_claim": has_claim,
+                        "claim_line": active_claim_line if active_claim_line != lineno else lineno,
+                        "claim_text": active_claim_text if active_claim_line != lineno else stripped,
                         "expected_settings": expected_settings,
                         "registered_in": registered_in,
-                        "status": "ok" if all(s in registered_in for s in expected_settings) else "missing_registration",
+                        "status": status,
                     }
                 )
     return records
@@ -162,12 +210,16 @@ def analyze_docs(root: Path, registrations: dict[str, list[str]], include_non_cl
 
 def summarize(root: Path, registrations: dict[str, list[str]], records: list[dict]) -> dict:
     missing = [record for record in records if record["status"] != "ok"]
+    missing_registration = [record for record in records if record["status"] == "missing_registration"]
+    non_runtime = [record for record in records if record["status"] == "non_runtime_reference"]
     return {
         "root": str(root),
         "settings": registrations,
         "summary": {
             "total_claims": len(records),
-            "missing_registration": len(missing),
+            "missing_registration": len(missing_registration),
+            "non_runtime_reference": len(non_runtime),
+            "non_ok": len(missing),
         },
         "records": records,
     }
@@ -189,6 +241,7 @@ def print_text(report: dict) -> None:
     summary = report.get("summary", {})
     print(f"- total claim records: {summary.get('total_claims', 0)}")
     print(f"- missing registrations: {summary.get('missing_registration', 0)}")
+    print(f"- non-runtime references: {summary.get('non_runtime_reference', 0)}")
 
     if not report.get("records"):
         print("No matching documentation claims found.")
@@ -202,6 +255,8 @@ def print_text(report: dict) -> None:
             f"- {record['status']}: {record['doc']}:{record['line']} -> {record['script']} "
             f"(expected: {expected}; registered: {registered})"
         )
+        if record.get("claim_line") and record.get("claim_line") != record["line"]:
+            print(f"  claim context: {record['doc']}:{record['claim_line']} -> {record.get('claim_text', '')}")
         print(f"  {record['text']}")
 
 

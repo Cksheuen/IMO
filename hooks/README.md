@@ -98,17 +98,25 @@
 - `Stop` / `SubagentStop`：对本轮更新过的 note 执行轻量晋升扫描，必要时自动进入 `Promotion Loop`
 - `Notification`：在用户明确纠正 agent 时，提醒检查 `notes/lessons/`
 
-当前仓库开发态已经落地的最小实现：
+当前仓库开发态已接入运行时的最小实现：
 
-- `PreToolUse` 挂载 `hooks/scale-gate.sh`，在首次 `Edit/Write` 前执行规模评估并 bootstrap 当前 task 目录
+- 根目录 `settings.json` 在 `PreToolUse` 挂载 `hooks/pre-write-gate.sh`、`hooks/pre-edit-gate.sh`、`hooks/pre-agent-gate.sh`
+- 根目录 `settings.json` 在 `Stop` 挂载 `hooks/verification-gate.sh`、`hooks/lesson-capture/lesson-gate.sh`、`hooks/context-monitor.sh`
 - 项目级 `.claude/settings.json` 在 `Stop` / `SubagentStop` 挂载 `.claude/hooks/promotion-scan.py`
 - 项目级 `.claude/settings.json` 在 `Stop` / `SubagentStop` 挂载 `.claude/hooks/promotion-gate.py`
+- 项目级 `.claude/settings.json` 在 `SessionStart` 挂载 `.claude/hooks/promotion-queue-status.py`
 - `promotion-scan.py` 只做轻量候选扫描，不直接替代 `promote-notes`
 - 命中候选时输出短晋升信号，供后续 `Promotion Loop` 继续处理
 - 命中候选时同时写入根目录 `promotion-queue.json`
-- `SessionStart` 通过 `.claude/hooks/promotion-queue-status.py` 注入待处理晋升队列摘要
 - `promotion-gate.py` 在队列仍有新鲜候选时阻止静默结束，要求继续执行 `Promotion Loop`
 - 完整晋升动作不在 hook 中执行，而是交给独立 `promote-notes` subagent
+
+当前仍仅停留在脚本/设计层、未接入共享运行时链路的部分：
+
+- `hooks/scale-gate.sh`
+- `hooks/task-bootstrap.sh`
+
+这两个脚本当前存在，但根目录 `settings.json` 没有挂载它们；因此只能视为可复用设计资产，不能写成“当前已自动执行”。
 
 当前最小执行桥还包括：
 

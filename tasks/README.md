@@ -4,7 +4,15 @@
 
 标准位置是 `<project>/.claude/tasks/`。
 
-当前仓库默认通过 `hooks/scale-gate.sh` 在会话首次进入 `Edit/Write` 前自动 bootstrap 当前 task 目录，并预置 `prd.md`、`context.md`、`status.md`、`feature-list.json`。
+当前仓库**尚未**把 task bootstrap 接入共享运行时链路。
+
+当前事实是：
+
+- `hooks/scale-gate.sh` 与 `hooks/task-bootstrap.sh` 已存在，可作为 task bootstrap 设计资产复用
+- 但根目录 `settings.json` 当前没有挂载它们
+- 因此当前并不存在“首次进入 `Edit/Write` 前自动 bootstrap 当前 task 目录”的共享运行时保证
+
+如果后续重新把它们挂到 `settings.json -> PreToolUse`，才可以恢复为运行时已接通的描述。
 
 当前仓库本身位于 `~/.claude/`，所以这里的 `tasks/` 只是这个仓库项目自己的任务目录；它不是其他项目共享的全局 task 池。
 

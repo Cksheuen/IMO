@@ -154,8 +154,8 @@ AI 会根据当前上下文自动选择合适的技能和规范执行。
 
 ### 链路审计
 
-- 根目录提供 `hooks/audit-runtime-links.py`，用于静态检查“文档里声称已落地的链路”是否真的在 `settings.json` 或 `.claude/settings.json` 中挂载
-- 它是只读审计工具，不属于自动 hook，不会自行运行
+- 根目录提供 `hooks/audit-runtime-links.py`，用于人工执行的静态审计：检查文档里声称已接通的运行链，是否真的在 `settings.json` 或 `.claude/settings.json` 中挂载
+- 它是只读审计工具，不属于自动 hook，不会自行运行，也不应被当作需要挂载的运行时脚本
 - 用途是防止“脚本已创建 / 设计已写出，但真实触发链路并未接通”再次被误写为已落地
 
 ### 为什么以前会空着

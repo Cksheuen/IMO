@@ -52,4 +52,4 @@
 
 ## Source Cases
 
-- 2026-04-01：task bootstrap 已补到根目录 `settings.json -> PreToolUse -> scale-gate.sh`，而 Promotion Loop 仅挂在项目级 `.claude/settings.json`；文档若不显式区分作用域，就会把“设计存在”误写成“共享链路已接通”
+- 2026-04-01：`hooks/scale-gate.sh` / `hooks/task-bootstrap.sh` 仍只停留在脚本资产层，当前根目录 `settings.json` 实际挂载的是 `pre-write-gate.sh` / `pre-edit-gate.sh` / `pre-agent-gate.sh`；而 Promotion Loop 仅挂在项目级 `.claude/settings.json`。文档若不显式区分“脚本存在”和“真实挂载”，就会把“设计存在”误写成“共享链路已接通”
