@@ -4,6 +4,8 @@
 
 标准位置是 `<project>/.claude/tasks/`。
 
+当前仓库默认通过 `hooks/scale-gate.sh` 在会话首次进入 `Edit/Write` 前自动 bootstrap 当前 task 目录，并预置 `prd.md`、`context.md`、`status.md`、`feature-list.json`。
+
 当前仓库本身位于 `~/.claude/`，所以这里的 `tasks/` 只是这个仓库项目自己的任务目录；它不是其他项目共享的全局 task 池。
 
 它回答的是：

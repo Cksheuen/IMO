@@ -1,10 +1,10 @@
 #!/bin/bash
 # Scale Assessment Gate - PreToolUse hook
 # Blocks first Edit/Write in a session until task scale has been assessed.
-# This ensures Claude evaluates task size and considers delegation before coding.
+# It also bootstraps a task directory for the session before implementation.
 #
 # Flow:
-#   1. First Edit/Write → blocked, Claude gets reminder to assess scale
+#   1. First Edit/Write → bootstrap task directory, then block with reminder
 #   2. Claude assesses (reads files, estimates scope, decides delegation strategy)
 #   3. Claude marks assessment done: touch ~/.claude/.scale-gate/{session_id}
 #   4. Subsequent Edit/Write → pass through
@@ -37,6 +37,12 @@ fi
 
 STATE_DIR="$HOME/.claude/.scale-gate"
 MARKER="$STATE_DIR/$SESSION_ID"
+BOOTSTRAP_SCRIPT="$HOME/.claude/hooks/task-bootstrap.sh"
+
+TASK_DIR=""
+if [ -x "$BOOTSTRAP_SCRIPT" ]; then
+  TASK_DIR=$(printf '%s' "$INPUT" | "$BOOTSTRAP_SCRIPT" 2>/dev/null || true)
+fi
 
 # If already assessed this session, pass through
 if [ -f "$MARKER" ]; then
@@ -52,6 +58,10 @@ fi
 mkdir -p "$STATE_DIR"
 cat >&2 <<EOF
 Scale assessment required before editing files.
+
+Task bootstrap:
+- Current task directory: ${TASK_DIR:-<bootstrap failed>}
+- Seeded files: prd.md, context.md, status.md, feature-list.json
 
 Evaluate task scope first:
 - How many files will be modified?
