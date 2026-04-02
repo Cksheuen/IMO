@@ -140,20 +140,12 @@
     "command": "bash ~/.claude/rules/technique/rate-limit-management/scripts/statusline-wrapper.sh"
   },
   "enabledPlugins": {
-    "claude-hud@claude-hud": true,
-    "claude-mem@thedotmack": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "chrome-devtools-mcp@chrome-devtools-plugins": true,
     "codex@openai-codex": true
   },
   "extraKnownMarketplaces": {
-    "thedotmack": {
-      "source": {
-        "source": "github",
-        "repo": "thedotmack/claude-mem"
-      }
-    },
     "chrome-devtools-plugins": {
       "source": {
         "source": "github",
