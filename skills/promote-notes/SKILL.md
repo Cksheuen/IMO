@@ -104,7 +104,7 @@ note 达到稳定门槛 → 晋升评估 → rules / skills / memory / 保持在
 - 主 agent 不直接在当前用户链路中展开完整晋升分析
 - subagent 读取 queue / 候选 note 后独立完成评估
 - subagent 完成后回传：是否晋升、去向、更新了哪些文件、是否清空 queue
-- subagent 完成后应写 `promotion-result.json`，并由主链路显式运行 `python3 .claude/hooks/promotion-apply-result.py --result-file promotion-result.json`
+- subagent 完成后应写 `promotion-result.json`，并由主链路显式运行 `python3 "$HOME/.claude/.claude/hooks/promotion-apply-result.py" --result-file promotion-result.json`
 
 ### Step 0: 候选 note 检索（必须执行）
 

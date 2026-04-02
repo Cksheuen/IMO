@@ -1,7 +1,7 @@
 #!/bin/bash
 # Lesson Gate - Stop hook
 # When Claude finishes responding, checks if there are unhandled correction signals.
-# If yes, blocks stopping (exit 2) and reminds Claude to write a lesson.
+# If yes, blocks stopping (exit 2) and instructs main agent to spawn a subagent.
 #
 # Safety: checks stop_hook_active to prevent infinite loops.
 #
@@ -9,17 +9,18 @@
 #   1. Stop hook fires → read stdin
 #   2. Check stop_hook_active → if true, exit 0 (prevent loop)
 #   3. Read lesson-signals.json → check unhandled_count
-#   4. If unhandled signals exist → exit 2 with lesson-writing instructions
+#   4. If unhandled signals exist → exit 2 with subagent dispatch instruction
 #   5. If no signals → exit 0
 
 set -u
 
-STATE_FILE="$HOME/.claude/lesson-signals.json"
+# Configurable paths via environment variables
+STATE_FILE="${LESSON_SIGNALS_FILE:-$HOME/.claude/lesson-signals.json}"
+LESSON_DETECTOR="${LESSON_DETECTOR_PATH:-$HOME/.claude/hooks/lesson-capture/signal-detector.sh}"
 
 INPUT=$(cat)
 
 # Refresh lesson signals synchronously to avoid racing the background statusline detector.
-LESSON_DETECTOR="$HOME/.claude/hooks/lesson-capture/signal-detector.sh"
 if [ -x "$LESSON_DETECTOR" ]; then
   printf '%s' "$INPUT" | LESSON_DETECTOR_FORCE=1 "$LESSON_DETECTOR" 2>/dev/null || true
 fi
@@ -46,13 +47,14 @@ fi
 UNHANDLED=$(jq -r '.unhandled_count // 0' "$STATE_FILE" 2>/dev/null)
 [ "$UNHANDLED" -eq 0 ] 2>/dev/null && exit 0
 
-# Build signal summary for the reminder
+# Build signal summary and mark as handled in a single Python call
 SIGNAL_SUMMARY=$(python3 - "$STATE_FILE" <<'PYEOF'
 import json, sys
+from pathlib import Path
 
+state_file = Path(sys.argv[1])
 try:
-    with open(sys.argv[1], 'r') as f:
-        state = json.load(f)
+    state = json.loads(state_file.read_text())
 except Exception:
     sys.exit(0)
 
@@ -70,33 +72,50 @@ for s in state.get('signals', []):
     elif t == 'pattern_frustration':
         lines.append(f"  - Pattern: {s.get('correction_count', 0)} corrections detected in this session")
 
-print('\n'.join(lines[:5]))  # cap at 5 signals
+print('\n'.join(lines[:5]))
 PYEOF
 )
 
-# Block and remind
+# Block and instruct to spawn subagent synchronously
 cat >&2 <<EOF
-Lesson capture required before finishing.
+[LESSON CAPTURE REQUIRED]
 
 Detected $UNHANDLED unhandled correction signal(s) in this session:
 $SIGNAL_SUMMARY
 
-Before completing, you must:
+You must capture this lesson now. Execute:
+
+\`\`\`
+Agent(
+  subagent_type: "promote-notes",
+  prompt: "Capture lesson from correction signals.
+
+State file: $STATE_FILE
+
+Signals detected:
+$SIGNAL_SUMMARY
+
+Task:
 1. Analyze what went wrong (root cause, not surface symptom)
-2. Write or update a lesson in notes/lessons/ following the theme-based format
-3. Mark signals as handled:
-   python3 -c "
+2. Search if a lesson with similar theme already exists in notes/lessons/
+3. If exists, update it with this new Source Case
+4. If not, create a new lesson in notes/lessons/ following the theme-based format:
+   - Status: active
+   - Trigger: when does this lesson apply
+   - Decision: what to do differently
+   - Source Cases: this session's specific instance
+5. After writing, mark all signals as handled and clean up:
+   python3 -c \"
 import json
 with open('$STATE_FILE', 'r') as f: state = json.load(f)
 for s in state['signals']: s['handled'] = True
 state['unhandled_count'] = 0
 with open('$STATE_FILE', 'w') as f: json.dump(state, f, ensure_ascii=False, indent=2)
+\"
 "
+)
+\`\`\`
 
-Lesson note structure (notes/lessons/<theme>.md):
-  - Status: active
-  - Trigger: when does this lesson apply
-  - Decision: what to do differently
-  - Source Cases: this session's specific instance
+Do NOT write the lesson yourself in the main agent. Run the subagent synchronously so it completes the capture before you stop can continue.
 EOF
 exit 2

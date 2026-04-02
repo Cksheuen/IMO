@@ -13,11 +13,17 @@ set -euo pipefail
 
 OUTPUT="{}"
 
-# 读取 stdin JSON
-read -r stdin_json
+# 读取完整 stdin JSON。
+# UserPromptSubmit hook 的 payload 可能是多行 JSON，单行 read 会截断并导致 jq 解析失败。
+stdin_json=$(cat)
+
+if [ -z "$stdin_json" ]; then
+    echo "$OUTPUT"
+    exit 0
+fi
 
 # 提取用户输入
-user_prompt=$(echo "$stdin_json" | jq -r '.prompt // ""' | tr '[:upper:]' '[:lower:]')
+user_prompt=$(printf '%s' "$stdin_json" | jq -r '.prompt // ""' | tr '[:upper:]' '[:lower:]')
 
 # 定义关键词到 skill 的映射
 # 格式: "关键词:skill名称:推荐理由"
@@ -63,6 +69,11 @@ done
 # 去重并限制数量，避免注入过多路由提示
 unique_entries=()
 seen_skills=" "
+if [ "${#matched_entries[@]}" -eq 0 ]; then
+    echo "$OUTPUT"
+    exit 0
+fi
+
 for entry in "${matched_entries[@]}"; do
     skill=${entry%%:*}
     if [[ "$seen_skills" == *" $skill "* ]]; then

@@ -110,6 +110,16 @@ def is_system_injection(text):
         return True
     if text.startswith('<system-reminder>'):
         return True
+    if text.startswith('Stop hook feedback:'):
+        return True
+    if text.startswith('Run:\n\n```bash\n'):
+        return True
+    if text.startswith('Run a ') and 'shared plugin runtime' in text:
+        return True
+    if text.startswith('Run an ') and 'shared plugin runtime' in text:
+        return True
+    if 'Raw slash-command arguments:' in text:
+        return True
     # Skill SKILL.md content injections: "# /loop", "# Brainstorm", etc.
     skill_header_re = r'^# (?:/\w|Brainstorm|Skill Creator|Design|Loop|Locate|Eat|Voice|Orchestrat)'
     if re.match(skill_header_re, text):
@@ -157,6 +167,12 @@ modify_patterns = [
 
 # Extract file paths from user messages
 file_path_pattern = r'[\w\-./]+\.(?:ts|tsx|js|jsx|py|rs|go|md|json|sh|css|html|vue|svelte)'
+ignored_targets = {
+    'lesson-signals.json',
+    'feature-list.json',
+    'promotion-queue.json',
+    'promotion-result.json',
+}
 modification_targets = []
 
 for i, msg in enumerate(user_messages):
@@ -167,6 +183,8 @@ for i, msg in enumerate(user_messages):
         files = re.findall(file_path_pattern, msg)
         if files:
             for f in files:
+                if any(target in f for target in ignored_targets):
+                    continue
                 modification_targets.append((f, i))
         else:
             # Use first 30 chars as topic key (rough heuristic)

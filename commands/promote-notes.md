@@ -8,6 +8,6 @@
 - `promotion-gate.py` 阻止结束后，需要消费 queue
 
 执行要求：
-- 先运行 `python3 .claude/hooks/promotion-dispatch.py claim`
+- 先运行 `python3 "$HOME/.claude/.claude/hooks/promotion-dispatch.py" claim`
 - 若有候选，则派发 `subagent_type: "promote-notes"`
-- subagent 完成后必须运行 `python3 .claude/hooks/promotion-apply-result.py --result-file promotion-result.json`
+- subagent 完成后必须运行 `python3 "$HOME/.claude/.claude/hooks/promotion-apply-result.py" --result-file promotion-result.json`
