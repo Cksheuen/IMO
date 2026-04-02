@@ -1,0 +1,344 @@
+#!/usr/bin/env python3
+"""Compile CC rules into a compact AGENTS.md for Codex CLI.
+
+Reads rules from ~/.claude/ hierarchy and produces a single Markdown document
+that fits within Codex CLI's AGENTS.md size limit (default 28KB).
+
+Priority tiers control what gets included when space is tight:
+  P0: CLAUDE.md design philosophy (~1KB)
+  P1: rules/core/ (~4KB)
+  P2: rules/pattern/ (~6KB)
+  P3: notes/lessons/ active only (~4KB)
+  P4: rules/domain/ (~4KB)
+"""
+
+import argparse
+import hashlib
+import json
+import os
+import re
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+CLAUDE_DIR = Path.home() / ".claude"
+MAX_SIZE = 28 * 1024  # 28KB
+
+# Sections to extract from rule files
+KEEP_HEADINGS = {
+    "核心原则", "核心问题", "触发条件", "决策框架",
+    "执行规范", "执行规则", "反模式", "架构", "分工框架",
+    "核心洞察", "问题诊断", "解决方案",
+}
+
+# Sections to skip entirely
+SKIP_HEADINGS = {
+    "参考", "相关规范", "相关规则", "相关工具", "检查清单",
+    "参考源演进判断", "参考源演进检查", "examples",
+    "使用此规则的 skills", "常见问题",
+}
+
+
+def parse_frontmatter(text):
+    """Extract YAML-ish frontmatter and body from markdown."""
+    if not text.startswith("---"):
+        return {}, text
+    end = text.find("---", 3)
+    if end == -1:
+        return {}, text
+    fm_text = text[3:end].strip()
+    body = text[end + 3:].strip()
+    fm = {}
+    for line in fm_text.split("\n"):
+        if ":" in line:
+            key, _, val = line.partition(":")
+            fm[key.strip()] = val.strip()
+    return fm, body
+
+
+def extract_title(body):
+    """Get first # heading."""
+    for line in body.split("\n"):
+        line = line.strip()
+        if line.startswith("# ") and not line.startswith("# ==="):
+            return line[2:].strip()
+    return None
+
+
+def extract_sections(body, keep=KEEP_HEADINGS, skip=SKIP_HEADINGS):
+    """Extract relevant sections from markdown body."""
+    lines = body.split("\n")
+    result = []
+    current_heading = None
+    current_level = 0
+    include = True
+    skip_lower = {h.lower() for h in skip}
+    keep_lower = {h.lower() for h in keep}
+
+    for line in lines:
+        heading_match = re.match(r'^(#{2,3})\s+(.+)', line)
+        if heading_match:
+            level = len(heading_match.group(1))
+            heading_text = heading_match.group(2).strip()
+            heading_clean = re.sub(r'\s*[\(（].*$', '', heading_text).strip()
+
+            if heading_clean.lower() in skip_lower:
+                include = False
+                continue
+            elif heading_clean.lower() in keep_lower or not keep_lower:
+                include = True
+                current_heading = heading_text
+                current_level = level
+                result.append(line)
+                continue
+            else:
+                # Unknown heading at same or higher level — include conservatively
+                include = level <= 2
+                if include:
+                    result.append(line)
+                continue
+
+        if include:
+            result.append(line)
+
+    return "\n".join(result).strip()
+
+
+def extract_design_philosophy(claude_md_path):
+    """Extract design philosophy section from CLAUDE.md."""
+    if not claude_md_path.exists():
+        return ""
+    text = claude_md_path.read_text(encoding="utf-8")
+    # Find 设计哲学 section
+    match = re.search(
+        r'^## 设计哲学\s*\n(.*?)(?=\n## |\Z)',
+        text, re.MULTILINE | re.DOTALL
+    )
+    if match:
+        return match.group(1).strip()
+    return ""
+
+
+def process_rule_file(filepath):
+    """Process a single rule .md file into compact form."""
+    if filepath.name.lower() == "readme.md":
+        return None
+    try:
+        text = filepath.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
+
+    fm, body = parse_frontmatter(text)
+    title = extract_title(body)
+    if not title:
+        title = filepath.stem.replace("-", " ").title()
+
+    sections = extract_sections(body)
+    if not sections.strip():
+        return None
+
+    return f"### {title}\n\n{sections}"
+
+
+def process_lessons(lessons_dir):
+    """Process active lessons from notes/lessons/."""
+    if not lessons_dir.exists():
+        return []
+    results = []
+    for f in sorted(lessons_dir.glob("*.md")):
+        if f.name.lower() == "readme.md":
+            continue
+        try:
+            text = f.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        fm, body = parse_frontmatter(text)
+        status = fm.get("status", "").lower()
+        if status not in ("active", "candidate-rule"):
+            continue
+        title = extract_title(body) or f.stem.replace("-", " ").title()
+
+        # Extract Trigger and Decision sections
+        parts = []
+        for heading in ("Trigger", "Decision", "触发条件", "决策"):
+            match = re.search(
+                rf'^##\s+{re.escape(heading)}\s*\n(.*?)(?=\n## |\Z)',
+                body, re.MULTILINE | re.DOTALL
+            )
+            if match:
+                parts.append(f"**{heading}**: {match.group(1).strip()}")
+
+        if not parts:
+            # Fallback: take first meaningful paragraph
+            for line in body.split("\n"):
+                line = line.strip()
+                if line and not line.startswith("#") and not line.startswith("---"):
+                    parts.append(line[:200])
+                    break
+
+        if parts:
+            results.append(f"- **{title}**: " + " | ".join(parts))
+    return results
+
+
+def compile_agents_md(max_size=MAX_SIZE):
+    """Compile all sources into AGENTS.md content."""
+    sections = []
+    source_files = []
+    budgets = {}
+
+    # Header (no timestamp — manifest tracks last_sync; stable content = stable hash)
+    header = (
+        "# Project Rules (auto-synced from Claude Code)\n"
+        "# Source: ~/.claude/rules/\n\n"
+        "These rules guide coding style, architecture decisions, and quality standards.\n"
+        "Follow them when implementing tasks.\n"
+    )
+
+    # P0: Design philosophy
+    philosophy = extract_design_philosophy(CLAUDE_DIR / "CLAUDE.md")
+    if philosophy:
+        p0 = f"\n## 设计哲学\n\n{philosophy}"
+        sections.append(("P0", p0, 1024))
+        source_files.append(str(CLAUDE_DIR / "CLAUDE.md"))
+        budgets["P0"] = 1024
+
+    # P1: rules/core/
+    core_dir = CLAUDE_DIR / "rules" / "core"
+    if core_dir.exists():
+        core_parts = []
+        for f in sorted(core_dir.glob("*.md")):
+            result = process_rule_file(f)
+            if result:
+                core_parts.append(result)
+                source_files.append(str(f))
+        if core_parts:
+            p1 = "\n## 核心规范\n\n" + "\n\n".join(core_parts)
+            sections.append(("P1", p1, 4096))
+
+    # P2: rules/pattern/
+    pattern_dir = CLAUDE_DIR / "rules" / "pattern"
+    if pattern_dir.exists():
+        pattern_parts = []
+        for f in sorted(pattern_dir.glob("*.md")):
+            result = process_rule_file(f)
+            if result:
+                pattern_parts.append(result)
+                source_files.append(str(f))
+        if pattern_parts:
+            p2 = "\n## 架构模式\n\n" + "\n\n".join(pattern_parts)
+            sections.append(("P2", p2, 6144))
+
+    # P3: notes/lessons/ (active only)
+    lessons = process_lessons(CLAUDE_DIR / "notes" / "lessons")
+    if lessons:
+        p3 = "\n## 活跃教训\n\n" + "\n".join(lessons)
+        sections.append(("P3", p3, 4096))
+        source_files.append(str(CLAUDE_DIR / "notes" / "lessons"))
+
+    # P4: rules/domain/
+    domain_dir = CLAUDE_DIR / "rules" / "domain"
+    if domain_dir.exists():
+        domain_parts = []
+        for f in sorted(domain_dir.rglob("*.md")):
+            result = process_rule_file(f)
+            if result:
+                domain_parts.append(result)
+                source_files.append(str(f))
+        if domain_parts:
+            p4 = "\n## 领域规则\n\n" + "\n\n".join(domain_parts)
+            sections.append(("P4", p4, 4096))
+
+    # Assemble, respecting max_size
+    output = header
+    for priority, content, budget in sections:
+        candidate = output + content
+        if len(candidate.encode("utf-8")) <= max_size:
+            output = candidate
+        else:
+            # Truncate this section to fit
+            remaining = max_size - len(output.encode("utf-8")) - 50  # buffer
+            if remaining > 200:
+                truncated = content.encode("utf-8")[:remaining].decode("utf-8", errors="ignore")
+                # Cut at last complete line
+                last_nl = truncated.rfind("\n")
+                if last_nl > 0:
+                    truncated = truncated[:last_nl]
+                output += truncated + "\n\n*(truncated due to size limit)*\n"
+            break  # Skip remaining lower-priority sections
+
+    return output, source_files
+
+
+def compute_content_hash(content):
+    """Compute SHA256 hash of content."""
+    return hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+
+def load_manifest(manifest_path):
+    """Load existing manifest or return default."""
+    manifest = {
+        "version": 1,
+        "last_sync": None,
+        "rules_hash": None,
+        "synced_rules": [],
+        "feedback_count": 0,
+        "codex_agents_md_path": "~/.codex/AGENTS.md",
+    }
+    if manifest_path.exists():
+        try:
+            manifest.update(json.loads(manifest_path.read_text(encoding="utf-8")))
+        except (json.JSONDecodeError, OSError):
+            pass
+    return manifest
+
+
+def update_manifest(manifest_path, content, source_files):
+    """Update sync-manifest.json only when content actually changed."""
+    manifest = load_manifest(manifest_path)
+    content_hash = compute_content_hash(content)
+
+    # Skip write if hash unchanged — avoids dirtying the repo on no-op syncs
+    if manifest.get("rules_hash") == content_hash:
+        return content_hash
+
+    manifest["last_sync"] = datetime.now(timezone.utc).isoformat()
+    manifest["rules_hash"] = content_hash
+    manifest["synced_rules"] = source_files
+
+    manifest_path.write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return content_hash
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Compile CC rules into AGENTS.md")
+    parser.add_argument("--output", "-o", help="Output file path (default: stdout)")
+    parser.add_argument("--max-size", type=int, default=MAX_SIZE,
+                        help=f"Max output size in bytes (default: {MAX_SIZE})")
+    parser.add_argument("--manifest", help="Path to sync-manifest.json to update")
+    args = parser.parse_args()
+
+    content, source_files = compile_agents_md(max_size=args.max_size)
+    size = len(content.encode("utf-8"))
+
+    if args.output:
+        output_path = Path(args.output).expanduser()
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(content, encoding="utf-8")
+        print(f"Written {size} bytes to {output_path}", file=sys.stderr)
+    else:
+        sys.stdout.write(content)
+
+    if args.manifest:
+        manifest_path = Path(args.manifest).expanduser()
+        content_hash = update_manifest(manifest_path, content, source_files)
+        print(f"Manifest updated: hash={content_hash[:12]}...", file=sys.stderr)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

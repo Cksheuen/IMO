@@ -44,6 +44,12 @@ skills/**/*-workspace/
 !memory/
 !memory/**
 
+# CC ↔ Codex 共享知识层
+!shared-knowledge/
+!shared-knowledge/**
+shared-knowledge/codex-feedback.jsonl
+shared-knowledge/sync.log
+
 # 当前仓库这个项目自己的任务目录（标准形态是 <project>/.claude/tasks/）
 # 这里只同步目录说明文档；具体 task 实例默认不入库
 !tasks/

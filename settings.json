@@ -9,6 +9,7 @@
       "Bash(bash ~/.claude/hooks/*)",
       "Bash(bash ~/.claude/hooks/lesson-capture/*)",
       "Bash(bash ~/.claude/hooks/consolidate/*)",
+      "Bash(bash ~/.claude/hooks/codex-sync/*)",
       "Bash(bash ~/.claude/hooks/skill-loader/*)",
       "mcp__pencil"
     ],
@@ -36,24 +37,14 @@
     }
   },
   "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$HOME/.claude/.claude/hooks/hook-error-maintenance.py\""
-          }
-        ]
-      }
-    ],
+    "SessionStart": [],
     "UserPromptSubmit": [
       {
         "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.claude/.claude/hooks/hook-error-wrapper.py\" --hook-id skill-loader -- bash \"$HOME/.claude/hooks/skill-loader/skill-inject.sh\""
+            "command": "bash \"$HOME/.claude/hooks/skill-loader/skill-inject.sh\""
           }
         ]
       }
@@ -64,11 +55,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.claude/.claude/hooks/hook-error-wrapper.py\" --hook-id scale-gate-write -- bash \"$HOME/.claude/hooks/scale-gate.sh\""
+            "command": "bash \"$HOME/.claude/hooks/scale-gate.sh\""
           },
           {
             "type": "command",
-            "command": "python3 \"$HOME/.claude/.claude/hooks/hook-error-wrapper.py\" --hook-id pre-write-gate -- bash \"$HOME/.claude/hooks/pre-write-gate.sh\""
+            "command": "bash \"$HOME/.claude/hooks/pre-write-gate.sh\""
           }
         ]
       },
@@ -77,11 +68,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.claude/.claude/hooks/hook-error-wrapper.py\" --hook-id scale-gate-edit -- bash \"$HOME/.claude/hooks/scale-gate.sh\""
+            "command": "bash \"$HOME/.claude/hooks/scale-gate.sh\""
           },
           {
             "type": "command",
-            "command": "python3 \"$HOME/.claude/.claude/hooks/hook-error-wrapper.py\" --hook-id pre-edit-gate -- bash \"$HOME/.claude/hooks/pre-edit-gate.sh\""
+            "command": "bash \"$HOME/.claude/hooks/pre-edit-gate.sh\""
           }
         ]
       },
@@ -90,7 +81,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.claude/.claude/hooks/hook-error-wrapper.py\" --hook-id pre-agent-gate-agent -- bash \"$HOME/.claude/hooks/pre-agent-gate.sh\""
+            "command": "bash \"$HOME/.claude/hooks/pre-agent-gate.sh\""
           }
         ]
       },
@@ -99,7 +90,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.claude/.claude/hooks/hook-error-wrapper.py\" --hook-id pre-agent-gate-task -- bash \"$HOME/.claude/hooks/pre-agent-gate.sh\""
+            "command": "bash \"$HOME/.claude/hooks/pre-agent-gate.sh\""
           }
         ]
       }
@@ -110,15 +101,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.claude/.claude/hooks/hook-error-wrapper.py\" --hook-id verification-gate --block-on-exit2 -- bash \"$HOME/.claude/hooks/verification-gate.sh\""
+            "command": "bash \"$HOME/.claude/hooks/verification-gate.sh\""
           },
           {
             "type": "command",
-            "command": "python3 \"$HOME/.claude/.claude/hooks/hook-error-wrapper.py\" --hook-id lesson-gate --block-on-exit2 -- bash \"$HOME/.claude/hooks/lesson-capture/lesson-gate.sh\""
+            "command": "bash \"$HOME/.claude/hooks/lesson-capture/lesson-gate.sh\""
           },
           {
             "type": "command",
-            "command": "python3 \"$HOME/.claude/.claude/hooks/hook-error-wrapper.py\" --hook-id context-monitor -- bash \"$HOME/.claude/hooks/context-monitor.sh\""
+            "command": "bash \"$HOME/.claude/hooks/context-monitor.sh\""
           }
         ]
       }
@@ -129,11 +120,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.claude/.claude/hooks/hook-error-maintenance.py\""
-          },
-          {
-            "type": "command",
-            "command": "python3 \"$HOME/.claude/.claude/hooks/hook-error-wrapper.py\" --hook-id session-end-consolidate -- bash \"$HOME/.claude/hooks/consolidate/session-end-consolidate.sh\""
+            "command": "bash \"$HOME/.claude/hooks/consolidate/session-end-consolidate.sh\""
           }
         ]
       }
@@ -144,15 +131,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.claude/.claude/hooks/hook-error-wrapper.py\" --hook-id on-rate-limit-stop -- bash \"$HOME/.claude/rules/technique/rate-limit-management/scripts/on-rate-limit-stop.sh\""
+            "command": "bash \"$HOME/.claude/rules/technique/rate-limit-management/scripts/on-rate-limit-stop.sh\""
           }
         ]
       }
     ]
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "bash ~/.claude/rules/technique/rate-limit-management/scripts/statusline-wrapper.sh"
   },
   "enabledPlugins": {
     "rust-analyzer-lsp@claude-plugins-official": true,
