@@ -38,66 +38,100 @@
   "hooks": {
     "UserPromptSubmit": [
       {
-        "type": "command",
-        "command": "bash ~/.claude/hooks/skill-loader/skill-inject.sh"
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/skill-loader/skill-inject.sh"
+          }
+        ]
       }
     ],
     "PreToolUse": [
       {
         "matcher": "Write",
-        "type": "command",
-        "command": "bash ~/.claude/hooks/scale-gate.sh"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/scale-gate.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/pre-write-gate.sh"
+          }
+        ]
       },
       {
         "matcher": "Edit",
-        "type": "command",
-        "command": "bash ~/.claude/hooks/scale-gate.sh"
-      },
-      {
-        "matcher": "Write",
-        "type": "command",
-        "command": "bash ~/.claude/hooks/pre-write-gate.sh"
-      },
-      {
-        "matcher": "Edit",
-        "type": "command",
-        "command": "bash ~/.claude/hooks/pre-edit-gate.sh"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/scale-gate.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/pre-edit-gate.sh"
+          }
+        ]
       },
       {
         "matcher": "Agent",
-        "type": "command",
-        "command": "bash ~/.claude/hooks/pre-agent-gate.sh"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/pre-agent-gate.sh"
+          }
+        ]
       },
       {
         "matcher": "Task",
-        "type": "command",
-        "command": "bash ~/.claude/hooks/pre-agent-gate.sh"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/pre-agent-gate.sh"
+          }
+        ]
       }
     ],
     "Stop": [
       {
-        "type": "command",
-        "command": "bash ~/.claude/hooks/verification-gate.sh"
-      },
-      {
-        "type": "command",
-        "command": "bash ~/.claude/hooks/lesson-capture/lesson-gate.sh"
-      },
-      {
-        "type": "command",
-        "command": "bash ~/.claude/hooks/context-monitor.sh"
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/verification-gate.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/lesson-capture/lesson-gate.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/context-monitor.sh"
+          }
+        ]
       }
     ],
     "SessionEnd": [
       {
-        "type": "command",
-        "command": "bash ~/.claude/hooks/consolidate/session-end-consolidate.sh"
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/consolidate/session-end-consolidate.sh"
+          }
+        ]
       }
     ],
     "StopFailure": [
       {
-        "type": "command",
-        "command": "bash ~/.claude/rules/technique/rate-limit-management/scripts/on-rate-limit-stop.sh"
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/rules/technique/rate-limit-management/scripts/on-rate-limit-stop.sh"
+          }
+        ]
       }
     ]
   },
@@ -110,7 +144,8 @@
     "claude-mem@thedotmack": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
-    "chrome-devtools-mcp@chrome-devtools-plugins": true
+    "chrome-devtools-mcp@chrome-devtools-plugins": true,
+    "codex@openai-codex": true
   },
   "extraKnownMarketplaces": {
     "thedotmack": {
@@ -130,10 +165,17 @@
         "source": "github",
         "repo": "anthropics/skills"
       }
+    },
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
+      }
     }
   },
   "alwaysThinkingEnabled": true,
   "skipDangerousModePermissionPrompt": true,
   "codemossProviderId": "4e65b9d5-0e52-4753-b065-660f9e8e1494",
-  "autoMemoryEnabled": true
+  "autoMemoryEnabled": true,
+  "autoDreamEnabled": true
 }
