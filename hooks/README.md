@@ -116,7 +116,21 @@
 
 - 根目录 `settings.json` 在 `PreToolUse` 的 `Edit` / `Write` matcher 上挂载了 `hooks/scale-gate.sh`
 - `hooks/scale-gate.sh` 在首次编辑前调用 `hooks/task-bootstrap.sh` 自动创建 task 目录
-- 当前共享链路已经可以把“大任务先做规模评估，再进入 task workflow”落成运行时守门
+- 当前共享链路已经可以把”大任务先做规模评估，再进入 task workflow”落成运行时守门
+
+### Lesson Capture 后台执行机制
+
+- `hooks/lesson-capture/lesson-gate.sh` 在 `Stop` 事件触发时检测纠正信号
+- 当检测到未处理的纠正信号时，**使用 `nohup claude ... &` 在后台启动独立进程**
+- 若同一批未处理 signal 已有后台进程运行，则不会重复拉起新进程
+- 后台进程执行 `promote-notes` 技能捕获教训
+- **主 agent 返回 `exit 0`，用户流程不被打断**
+- 日志输出到 `~/.claude/logs/lesson-capture/background-*.log`
+
+关键约束：
+- hook 不向主 agent 输出任何指令
+- 用户不会看到 `[LESSON CAPTURE REQUIRED]` 等提示
+- Lesson capture 在后台静默完成
 
 当前最小执行桥还包括：
 
@@ -124,7 +138,24 @@
 - `promote-notes` subagent：只处理已 claim 的候选，并写 `promotion-result.json`
 - `promotion-apply-result.py`：把 subagent 结果回写到 queue
 - `promotion-dispatch.py fail`：subagent 异常时恢复 queue
-- `hooks/audit-runtime-links.py`：静态审计文档中的“已落地/当前运行时协议”声明是否真的有对应 settings 挂载（只读，不自动执行）
+- `hooks/audit-runtime-links.py`：静态审计文档中的”已落地/当前运行时协议”声明是否真的有对应 settings 挂载（只读，不自动执行）
+
+### Promotion Loop 后台执行（2026-04-03 更新）
+
+**重要变更**: Promotion Loop 现在完全在后台执行，不再阻断主 agent。
+
+| 组件 | 之前 | 现在 |
+|------|---------|------|
+| `lesson-gate.sh` | `exit 2` + stderr 输出 | `nohup ... &` + `exit 0` |
+| `promotion-gate.py` | `decision: “block”` | `subprocess.Popen` + `sys.exit(0)` |
+| 主 agent 行为 | 被迫执行 subagent | 正常结束 |
+| 用户感知 | 看到 `[PROMOTION LOOP REQUIRED]` | 无感知 |
+
+补充：verification gate 仍保留 `stderr` 指令输出，结构化日志只是附加通道，不替代现有 stop-hook 消费链路。
+
+后台进程日志：
+- Lesson capture: `~/.claude/logs/lesson-capture/background-*.log`
+- Promotion capture: `~/.claude/logs/promotion-capture/background-*.log`
 
 注意：上面这条 Promotion Loop 属于**当前仓库开发态的项目级链路**，真实挂载位置是 `.claude/settings.json`，不是根目录共享 `settings.json`。
 
