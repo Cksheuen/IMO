@@ -142,7 +142,8 @@
     "skill-creator@claude-plugins-official": true,
     "chrome-devtools-mcp@chrome-devtools-plugins": true,
     "codex@openai-codex": true,
-    "ttcodex@openai-codex": true
+    "ttcodex@openai-codex": true,
+    "ttcodex@ttcodex-local": true
   },
   "extraKnownMarketplaces": {
     "chrome-devtools-plugins": {
@@ -165,8 +166,8 @@
     }
   },
   "alwaysThinkingEnabled": true,
-  "skipDangerousModePermissionPrompt": true,
-  "codemossProviderId": "4e65b9d5-0e52-4753-b065-660f9e8e1494",
   "autoMemoryEnabled": true,
-  "autoDreamEnabled": true
+  "autoDreamEnabled": true,
+  "skipDangerousModePermissionPrompt": true,
+  "codemossProviderId": "4e65b9d5-0e52-4753-b065-660f9e8e1494"
 }

@@ -1,6 +1,8 @@
 ---
 title: 自动创建的 feature-list 与实际任务不匹配
-status: active
+status: promoted
+promoted_to: rules/pattern/auto-created-feature-list-noise.md
+promoted_at: 2026-04-03
 last_verified: 2026-04-02
 ---
 

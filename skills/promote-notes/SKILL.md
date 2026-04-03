@@ -1,6 +1,6 @@
 ---
 name: promote-notes
-description: notes 晋升技能。当 `notes/` 中的 lesson、research、design 已满足稳定条件时，执行被动晋升评估，决定是否提炼为 `rules/`、`skills/` 或 `memory/`。当用户要求“提炼 notes”“把经验升格成规则/技能”“检查哪些 note 可以晋升”时触发；也可在运行中由 Promotion Loop 自动调用。
+description: notes 晋升技能。当 `notes/` 中的 lesson、research、design 已满足稳定条件时，执行被动晋升评估，决定是否提炼为 `rules/`、`skills/` 或 `memory/`。当用户要求”提炼 notes””把经验升格成规则/技能””检查哪些 note 可以晋升”时触发；也可在运行中由 Promotion Loop 自动调用。
 ---
 
 # Promote Notes - 被动晋升技能
@@ -9,25 +9,26 @@ description: notes 晋升技能。当 `notes/` 中的 lesson、research、design
 
 此技能既可被用户显式调用，也可在运行过程中被 `Promotion Loop` 自动调用。
 
-默认执行位置：**独立 subagent**。
+## 执行位置
 
-原因：
+| 触发方式 | 执行位置 | 原因 |
+|---------|---------|------|
+| **自动触发（Stop hook）** | **后台独立进程** | 不打断主 agent 流程 |
+| 用户显式调用 `/promote-notes` | 当前 agent | 用户主动请求 |
 
-- 晋升动作会读取多个 note / rule / skill / memory
-- 可能同时修改多个知识资产
-- 不应污染用户当前主任务的上下文窗口
+### 自动触发的后台执行
 
-因此主 agent 负责：
+当 `lesson-gate.sh` 检测到未处理的纠正信号时：
 
-- 发现候选
-- 维护队列
-- 阻止静默跳过
+1. 使用 `nohup claude --print -p “...” &` 启动后台进程
+2. 进程独立运行，不阻塞主 agent
+3. 日志输出到 `~/.claude/logs/lesson-capture/background-*.log`
+4. 主 agent 正常结束（`exit 0`），用户流程不被打断
 
-独立 subagent 负责：
-
-- 完整晋升评估
-- 去向决策
-- 落盘更新与来源链路维护
+**关键约束**：
+- 后台进程不向主 agent 输出任何内容
+- 用户不会看到 `[LESSON CAPTURE REQUIRED]` 等提示
+- Lesson capture 在后台静默完成
 
 `promote-notes` 与 `eat` 的边界：
 

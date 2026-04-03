@@ -34,6 +34,8 @@ resolution: |
    - 添加 "Run a/an" 开头的 imperative instruction 过滤
    - 在 repeated modification 检测中排除 `lesson-signals.json` 自身
    - 在 repeated modification 检测中排除 `feature-list.json` 的内部操作修改
+   - 添加 "This session is being continued from a previous conversation" 会话继续消息过滤
+   - 在 repeated modification 检测中区分"同一 turn 的多次 hook 调用"和"跨 turn 的迭代修复"
 
 ## Source Cases
 
@@ -53,12 +55,20 @@ resolution: |
   3. Repeated modification: `lesson-signals.json` 自身的正常操作被检测为 repeated modification（8 次）
   4. Repeated modification: `feature-list.json` 的正常编辑被检测为 repeated modification（9 次）
   5. Pattern frustration: 基于上述 false positive 衍生的 "3+ corrections" 模式
-  
+
   **根因分析**：signal-detector.sh 的 `is_system_injection()` 过滤器不完整：
   1. **Stop hook feedback 过滤**: lesson-gate.sh 的 stderr 输出被写入 transcript 后，再次被检测为 correction
   2. **Skill expansion 过滤**: 无法识别 "Run a/an..." 开头的 slash command 展开指令文本
   3. **Signals file 自排除**: `lesson-signals.json` 未被排除在 repeated modification 检测目标之外
   4. **内部状态文件排除**: `feature-list.json` 在 signal 处理流程中的正常修改被误判
+- **2026-04-03 promote-notes subagent 会话**: lesson-gate 检测到 2 个信号，均为 false positive：
+  1. "Explicit correction": 会话继续消息（"This session is being continued from a previous conversation that ran out of context"）被检测为 correction，实际是系统级会话恢复消息
+  2. "Repeated modification": `task-bootstrap.sh` 在同一 turn 被 hook 调用 5 次（turn 2 所有修改都在同一 turn），实际是 hook 正常执行，非迭代修复问题
+
+  **根因分析**：
+  1. **Session continuation 过滤**: 会话继续消息（context window 耗尽后自动恢复）应被排除，这是正常的 context anxiety 处理机制，已在 `rules/technique/long-running-agent-techniques.md` 中定义
+  2. **Hook 调用 vs 修改**: repeated modification 检测应区分"同一 turn 的多次 hook 调用"和"跨 turn 的迭代修复"；同一 turn 内的多次修改通常是 hook 机制导致的，不是问题信号
+  3. **task-bootstrap.sh 特殊性**: 该脚本在会话启动时被 scale-gate 调用，同一 turn 内多次执行是正常行为
 
 ## Impact
 
