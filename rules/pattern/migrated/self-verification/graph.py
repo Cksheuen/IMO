@@ -12,9 +12,9 @@ LangGraph StateGraph 定义 - Self-Verification Mechanism
 
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
-from typing import Literal
+from typing import Any, Dict, List, Literal, Optional
 
-from .state import VerificationGateState
+from .state import VerificationGateState, FeatureList
 from .nodes import (
     gate_check,
     reviewer,
@@ -123,7 +123,7 @@ class VerificationGate:
     def __init__(
         self,
         max_iterations: int = 10,
-        checkpointer: MemorySaver | None = None,
+        checkpointer: Optional[MemorySaver] = None,
     ):
         """
         初始化 Verification Gate
@@ -175,13 +175,15 @@ class VerificationGate:
             result = self.graph.invoke(state, config)
 
             # 检查是否结束
-            if result.get("gate_decision", "").startswith("exit"):
+            gate_decision = result.get("gate_decision", "")
+            if gate_decision.startswith("exit") or gate_decision.startswith("trigger"):
                 return result
 
             # 增加迭代计数
             state = {
                 **result,
-                "iteration_count": result["iteration_count"] + 1,
+                "iteration_count": state["iteration_count"] + 1,
+                "resume_input": None,
             }
 
         # 超过最大迭代次数
@@ -209,19 +211,29 @@ class VerificationGate:
         Returns:
             更新后的状态
         """
-        from langgraph.types import Command
+        current_state = self.get_state(thread_id)
+        if not current_state:
+            raise ValueError(f"No saved state found for thread_id={thread_id}")
 
-        config = {"configurable": {"thread_id": thread_id}}
+        state_with_input = {
+            **current_state,
+            "resume_input": input_data,
+        }
 
-        # 使用 Command(resume=...) 恢复执行
-        result = self.graph.invoke(
-            Command(resume=input_data),
-            config,
-        )
+        if node_name == "reviewer":
+            node_result = reviewer(state_with_input)
+        else:
+            node_result = implementer(state_with_input)
 
-        return result
+        next_state = {
+            **current_state,
+            **node_result,
+            "resume_input": None,
+            "iteration_count": current_state.get("iteration_count", 0) + 1,
+        }
+        return self.run(next_state, thread_id=thread_id)
 
-    def get_state(self, thread_id: str) -> VerificationGateState | None:
+    def get_state(self, thread_id: str) -> Optional[VerificationGateState]:
         """
         获取当前状态
 
@@ -241,7 +253,7 @@ class VerificationGate:
 def create_initial_state(
     task_id: str,
     session_id: str,
-    features: list[dict],
+    features: List[dict],
 ) -> VerificationGateState:
     """
     创建初始状态
@@ -259,7 +271,7 @@ def create_initial_state(
 
     feature_list: FeatureList = {
         "task_id": task_id,
-        "created_at": datetime.now(),
+        "created_at": datetime.now().isoformat(),
         "session_id": session_id,
         "status": "in_progress",
         "features": [
@@ -294,6 +306,7 @@ def create_initial_state(
         "gate_decision": None,
         "reviewer_output": None,
         "implementer_output": None,
+        "resume_input": None,
     }
 
 

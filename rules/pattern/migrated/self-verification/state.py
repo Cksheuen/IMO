@@ -9,8 +9,7 @@ LangGraph State 定义 - Self-Verification Mechanism
 - verification status -> 枚举类型
 """
 
-from typing import TypedDict, Optional, Literal
-from datetime import datetime
+from typing import Any, Dict, List, Literal, Optional, TypedDict
 
 
 class ProblemLocation(TypedDict):
@@ -42,8 +41,8 @@ class DeltaContext(TypedDict):
     problem_location: ProblemLocation
     root_cause: str
     fix_suggestion: FixSuggestion
-    files_to_read: list[str]
-    files_to_skip: list[str]
+    files_to_read: List[str]
+    files_to_skip: List[str]
 
 
 # 验证状态枚举
@@ -64,10 +63,10 @@ class Feature(TypedDict):
     id: str
     category: str
     description: str
-    acceptance_criteria: list[str]
+    acceptance_criteria: List[str]
     verification_method: str  # "e2e", "unit", "manual"
     passes: Optional[bool]  # null=pending, true=passed, false=failed
-    verified_at: Optional[datetime]
+    verified_at: Optional[str]
     attempt_count: int
     max_attempts: int
     notes: str
@@ -89,10 +88,10 @@ class FeatureList(TypedDict):
     迁移自 feature-list.json schema
     """
     task_id: str
-    created_at: datetime
+    created_at: str
     session_id: str
     status: Literal["in_progress", "completed", "blocked"]
-    features: list[Feature]
+    features: List[Feature]
     summary: FeatureListSummary
 
 
@@ -133,6 +132,9 @@ class VerificationGateState(TypedDict):
     reviewer_output: Optional[str]
     implementer_output: Optional[str]
 
+    # 外部 resume 注入的输入
+    resume_input: Optional[Dict[str, Any]]
+
 
 # ==================== 节点输入/输出类型 ====================
 
@@ -145,9 +147,9 @@ class GateCheckInput(TypedDict):
 class GateCheckOutput(TypedDict):
     """Verification Gate 检查节点输出"""
     gate_decision: str
-    pending_features: list[Feature]
-    failed_features: list[Feature]
-    exceeded_features: list[Feature]  # 超过 max_attempts
+    pending_features: List[Feature]
+    failed_features: List[Feature]
+    exceeded_features: List[Feature]  # 超过 max_attempts
 
 
 class ReviewerInput(TypedDict):
@@ -172,4 +174,4 @@ class ImplementerInput(TypedDict):
 class ImplementerOutput(TypedDict):
     """Implementer 节点输出"""
     success: bool
-    changes_made: list[str]
+    changes_made: List[str]

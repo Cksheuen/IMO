@@ -11,7 +11,7 @@ LangGraph 节点函数 - Self-Verification Mechanism
 """
 
 from datetime import datetime
-from typing import Literal
+from typing import Dict, List, Literal, Optional, Tuple
 from .state import (
     VerificationGateState,
     Feature,
@@ -125,13 +125,13 @@ def reviewer(state: VerificationGateState) -> dict:
     if not feature:
         return {"gate_decision": "exit_completed"}
 
-    # === 实际验证逻辑（由外部 LLM 或工具实现） ===
-    # 这里是占位符，实际实现应该:
-    # 1. 运行测试
-    # 2. 检查 acceptance_criteria
-    # 3. 决定 passes
-    passes, notes, delta_context = _run_verification(feature)
-    # ==============================================
+    resume_input = state.get("resume_input") or {}
+    if "passes" in resume_input:
+        passes = bool(resume_input["passes"])
+        notes = resume_input.get("notes")
+        delta_context = resume_input.get("delta_context")
+    else:
+        passes, notes, delta_context = _run_verification(feature)
 
     # 更新 feature
     updated_features = []
@@ -162,7 +162,7 @@ def reviewer(state: VerificationGateState) -> dict:
     }
 
 
-def _run_verification(feature: Feature) -> tuple[bool, str | None, DeltaContext | None]:
+def _run_verification(feature: Feature) -> Tuple[bool, Optional[str], Optional[DeltaContext]]:
     """
     执行实际验证（占位符）
 
@@ -211,24 +211,29 @@ def implementer(state: VerificationGateState) -> dict:
 
     delta = feature["delta_context"]
 
-    # === 实际修复逻辑（由外部 LLM 或工具实现） ===
-    # 这里是占位符，实际实现应该:
-    # 1. 读取 delta.files_to_read
-    # 2. 按 delta.fix_suggestion 修复
-    # 3. 不读取 delta.files_to_skip
-    success, changes = _apply_fix(feature, delta)
-    # ==============================================
+    resume_input = state.get("resume_input") or {}
+    if "success" in resume_input:
+        success = bool(resume_input["success"])
+        changes = resume_input.get("changes", [])
+    else:
+        success, changes = _apply_fix(feature, delta)
 
     # 重置为待验证状态
     updated_features = []
     for f in feature_list["features"]:
         if f["id"] == current_id:
-            updated_f = {
-                **f,
-                "passes": None,  # 重置为待验证
-                "verified_at": None,
-                "notes": "",
-            }
+            updated_f = {**f}
+            if success:
+                updated_f.update({
+                    "passes": None,
+                    "verified_at": None,
+                    "notes": "",
+                })
+            else:
+                updated_f.update({
+                    "passes": False,
+                    "notes": "Fix attempt failed",
+                })
             updated_features.append(updated_f)
         else:
             updated_features.append(f)
@@ -245,7 +250,7 @@ def implementer(state: VerificationGateState) -> dict:
     }
 
 
-def _apply_fix(feature: Feature, delta: DeltaContext) -> tuple[bool, list[str]]:
+def _apply_fix(feature: Feature, delta: DeltaContext) -> Tuple[bool, List[str]]:
     """
     执行实际修复（占位符）
 
@@ -263,7 +268,7 @@ def _apply_fix(feature: Feature, delta: DeltaContext) -> tuple[bool, list[str]]:
 
 # ==================== Helper Functions ====================
 
-def _calculate_summary(features: list[Feature]) -> dict:
+def _calculate_summary(features: List[Feature]) -> Dict[str, int]:
     """计算 feature list summary"""
     total = len(features)
     passed = sum(1 for f in features if f["passes"] is True)
@@ -302,7 +307,7 @@ def mark_blocked(state: VerificationGateState) -> dict:
     return {
         "feature_list": {
             **feature_list,
-            "status": "completed",  # 标记完成，但需要人工干预
+            "status": "blocked",
         },
         "gate_decision": "exit_max_attempts",
     }

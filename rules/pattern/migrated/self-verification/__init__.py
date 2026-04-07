@@ -5,7 +5,7 @@ Self-Verification Mechanism - LangGraph Implementation
 
 使用方式:
 
-    from self_verification import VerificationGate, create_initial_state
+    from rules.pattern.migrated.self_verification import VerificationGate, create_initial_state
 
     # 创建 gate
     gate = VerificationGate(max_iterations=10)
