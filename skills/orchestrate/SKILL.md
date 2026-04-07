@@ -8,7 +8,7 @@ description: Multi-agent orchestration skill. Automatically decomposes large tas
 **将大任务自动拆分为子任务，分配给专用 Agent 并行执行，收集并聚合结果。**
 
 ```
-大任务 → 规则提取 → 分解 → 分配 → 并行执行 → 聚合 → 验证 → 交付
+大任务 → 上下文分析 → PRD创建 → 分解 → 分配 → 并行执行 → 聚合 → 验证 → 交付
 ```
 
 ## 触发条件
@@ -30,10 +30,9 @@ description: Multi-agent orchestration skill. Automatically decomposes large tas
 
 ## 执行流程
 
-### Step 0: 规则提取与注入（新增）
+### Step 0: 上下文自动收集（新增）
 
-> **核心问题**：subagent 默认不继承主 agent 的 rules，导致行为不一致。
-> **解决方案**：在构建 agent prompt 时，提取并注入相关规则。
+> **核心改进**：在分解任务前，先自动收集上下文，而非等待用户提供。
 
 #### 0.1 任务类型识别
 
@@ -48,7 +47,30 @@ description: Multi-agent orchestration skill. Automatically decomposes large tas
 | 关键词 | "重构"、"refactor"、"优化" → `refactor` |
 | 关键词 | "修复"、"fix"、"bug" → `fix` |
 
-#### 0.2 规则匹配表
+#### 0.2 上下文收集（自动化）
+
+**必须执行**：在开始分解前，自动收集以下信息：
+
+| 收集项 | 来源 | 目的 |
+|--------|------|------|
+| **相关文件** | Glob/Grep 搜索 | 识别可能涉及的文件 |
+| **现有模式** | 读取相似实现 | 提取可复用模式 |
+| **项目约束** | CLAUDE.md / package.json / tsconfig | 技术栈、依赖、规范 |
+| **历史上下文** | `notes/` 目录 | 是否有相关经验教训 |
+
+**收集方式**：
+```markdown
+## 上下文收集
+
+1. **文件搜索**：根据任务关键词搜索相关文件
+2. **模式识别**：读取 2-3 个相似实现的文件
+3. **约束提取**：读取项目配置文件
+4. **经验检索**：检查 notes/ 中是否有相关 lesson
+```
+
+#### 0.3 规则提取与注入
+
+**提取原则**：只提取规则的**核心约束**，而非全文。
 
 ```yaml
 task_type_to_rules:
@@ -68,25 +90,12 @@ task_type_to_rules:
       - rules/pattern/cross-layer-preflight.md
       - rules/pattern/change-impact-review.md
 
-  database:
-    essential:
-      - rules/domain/native/rust-egui-testing.md
-    patterns:
-      - rules/pattern/testable-architecture.md
-
   refactor:
     essential:
       - rules/core/
     patterns:
       - rules/pattern/change-impact-review.md
       - rules/pattern/cross-layer-preflight.md
-      - rules/pattern/generator-evaluator-pattern.md
-
-  test:
-    essential:
-      - rules/scoped/tests/
-      - rules/domain/shared/testable-architecture.md
-    patterns: []
 
   fix:
     essential:
@@ -103,23 +112,7 @@ task_type_to_rules:
       - rules/pattern/self-verification-mechanism.md
 ```
 
-#### 0.3 规则提取策略
-
-**提取原则**：只提取规则的**核心约束**，而非全文。
-
-| 规则类型 | 提取内容 | Token 预算 |
-|---------|---------|-----------|
-| core | 核心原则摘要（3-5 条） | 100 |
-| domain | 关键约束列表（5-10 条） | 100-200 |
-| pattern | 触发条件 + 执行要点 | 100-200 |
-| technique | 工具使用要点 | 50-100 |
-
-**总预算**：300-500 tokens，避免 prompt 膨胀。
-
-#### 0.4 Rules Pack 格式
-
-提取后的规则以如下格式注入 agent prompt：
-
+**Rules Pack 格式**（300-500 tokens）：
 ```markdown
 ## 适用规则（Rules Pack）
 
@@ -138,57 +131,14 @@ task_type_to_rules:
 - 执行要点：{what}
 ```
 
-#### 0.5 实现示例
+### Step 1: 创建结构化 PRD（新增）
 
-```python
-# 伪代码：规则提取逻辑
-def extract_rules(task_description: str, files: list[str]) -> str:
-    task_type = identify_task_type(task_description, files)
-    rule_paths = TASK_TYPE_TO_RULES.get(task_type, TASK_TYPE_TO_RULES["default"])
+> **核心改进**：参考 Trellis brainstorm 的 PRD 结构，自动创建更完整的 PRD。
 
-    rules_pack = []
-    for path in rule_paths:
-        content = read_rule(path)
-        extracted = extract_key_constraints(content)  # 只提取核心约束
-        rules_pack.append(extracted)
-
-    return format_rules_pack(rules_pack)
-```
-
-### Step 1: 任务分解
-
-分析用户任务，输出结构化子任务列表：
-
-```markdown
-## 任务分解
-
-### 子任务列表
-
-| # | 子任务 | Agent 类型 | 文件所有权 | 依赖 | 验收标准 |
-|---|--------|-----------|-----------|------|----------|
-| 1 | 描述 | implementer | file1.ts, file2.ts | 无 | 可验证的行为 |
-| 2 | 描述 | implementer | file3.ts | #1 | 可验证的行为 |
-| 3 | 描述 | researcher | (只读) | 无 | 回答具体问题 |
-
-### 文件所有权矩阵
-
-| 文件 | 所有者 | 操作 |
-|------|--------|------|
-| src/api/auth.ts | 子任务 #1 | 修改 |
-| src/components/Login.tsx | 子任务 #2 | 新建 |
-```
-
-**分解规则**：
-- 每个子任务的文件所有权**不可重叠**（一个文件只归属一个子任务）
-- 如果两个子任务必须改同一个文件 → 合并为一个子任务，或串行执行
-- 每个子任务必须有**可验证的验收标准**
-- 子任务粒度：一个 agent 在 20-50 turns 内可完成
-
-**Feature List 创建**（关键）：
-分解完成后，**必须在项目级 task 目录中创建 feature-list.json**：
+#### 1.1 任务目录创建
 
 ```bash
-# 解析 task 根目录：优先 <project>/.claude/tasks
+# 解析 task 根目录
 resolve_tasks_root() {
   local project_root dir
 
@@ -221,27 +171,131 @@ resolve_tasks_root() {
 }
 
 TASKS_ROOT=$(resolve_tasks_root)
-
-# 创建任务目录
 TASK_DATE=$(date +%F)
-TASK_SLUG="feature-auth"
-TASK_DIR="$TASK_DATE-$TASK_SLUG"
-mkdir -p "$TASKS_ROOT/$TASK_DIR"
 
-# 创建 feature-list.json
-cat > "$TASKS_ROOT/$TASK_DIR/feature-list.json" << 'EOF'
+# 从用户消息提取 slug
+TASK_SLUG=$(echo "$USER_MESSAGE" | python3 -c "
+import re, sys
+text = sys.stdin.read()
+words = re.findall(r'[a-zA-Z0-9]+', text.lower())[:6]
+stop = {'the', 'a', 'an', 'to', 'for', 'of', 'and', 'or', 'in', 'on', 'with', 'is', 'are', 'be', 'this', 'that', 'it', 'do', 'does', 'did', 'check', 'fix', 'issue', 'task', 'please', 'help'}
+filtered = [w for w in words if w not in stop][:4]
+print('-'.join(filtered) if filtered else 'task')
+")
+
+TASK_DIR="$TASKS_ROOT/$TASK_DATE-$TASK_SLUG"
+mkdir -p "$TASK_DIR"
+```
+
+#### 1.2 结构化 PRD 模板
+
+**自动创建** `prd.md`，融入 Trellis brainstorm 的字段结构：
+
+```markdown
+# {任务标题}
+
+## Goal
+
+{一句话描述：做什么 + 为什么}
+
+## What I Already Know
+
+> 自动收集的事实，区分用户原文 vs 已确认信息
+
+### From User
+- {用户消息中的原始需求}
+
+### From Context
+- {从代码/配置/文档中发现的事实}
+- {相关的项目约束}
+
+### Related Files (Auto-discovered)
+- `path/to/file1.ts` - {简要说明}
+- `path/to/file2.ts` - {简要说明}
+
+## Assumptions (Temporary)
+
+> 自动推断的假设，待验证
+
+- [ ] {假设1} - {验证方法}
+- [ ] {假设2} - {验证方法}
+
+## Open Questions
+
+> 仅保留 Blocking / Preference 问题，保持简短
+
+1. **{问题类型}**: {问题描述}
+   - 选项 A: {描述} - {权衡}
+   - 选项 B: {描述} - {权衡}
+
+## Requirements (Evolving)
+
+> 从已知信息推导的需求
+
+- [ ] {需求1}
+- [ ] {需求2}
+
+## Acceptance Criteria (Evolving)
+
+> 可验证的完成标准
+
+- [ ] {具体的可验证行为}
+- [ ] {具体的可验证行为}
+
+## Definition of Done
+
+> 团队质量标准（可继承自项目配置）
+
+- [ ] 测试通过（单元/集成/E2E 按需）
+- [ ] Lint / TypeCheck / CI 绿色
+- [ ] 文档更新（如有行为变更）
+- [ ] 风险评估（如有高风险变更）
+
+## Out of Scope (Explicit)
+
+> 明确不做的事项
+
+- {排除项1}
+- {排除项2}
+
+## Technical Notes
+
+> 技术约束、参考、研究笔记
+
+### Constraints
+- {技术栈约束}
+- {依赖版本约束}
+
+### References
+- `similar-feature.ts` - {相似实现参考}
+- {外部文档链接}
+
+### Research Notes (If Applicable)
+- {调研结论摘要}
+```
+
+#### 1.3 Feature List 创建
+
+同步创建 `feature-list.json`：
+
+```json
 {
   "task_id": "$TASK_DIR",
   "created_at": "$(date -I --iso-8601-seconds=utc)",
   "session_id": "$SESSION_ID",
   "status": "in_progress",
+  "prd_path": "prd.md",
   "features": [
     {
       "id": "F001",
-      "category": "functional",
-      "description": "子任务 #1 描述",
-      "acceptance_criteria": ["验收标准1", "验收标准2"],
-      "verification_method": "e2e",
+      "category": "task",
+      "description": "任务整体完成",
+      "acceptance_criteria": [
+        "所有 Open Questions 已解决",
+        "所有 Requirements 已实现",
+        "所有 Acceptance Criteria 已通过"
+      ],
+      "verification_method": "manual",
       "passes": null,
       "verified_at": null,
       "attempt_count": 0,
@@ -251,29 +305,64 @@ cat > "$TASKS_ROOT/$TASK_DIR/feature-list.json" << 'EOF'
     }
   ],
   "summary": {
-    "total": N,
+    "total": 1,
     "passed": 0,
-    "pending": N
+    "pending": 1
   }
 }
-EOF
-
-# 创建 current 符号链接
-ln -sfn "$TASK_DIR" "$TASKS_ROOT/current"
 ```
 
-目录名必须优先使用语义化 slug，例如 `2026-03-31-feature-auth`、`2026-03-31-skill-eval-iteration-2`。只有任务尚未成型时，才允许使用 `2026-03-31-draft-task-<shortid>` 作为临时兜底名。
+### Step 2: 任务分解
 
-路径规则：
+分析用户任务，输出结构化子任务列表：
 
-- 默认使用 `<project>/.claude/tasks/`
-- 当前仓库自身位于 `~/.claude/`，因此这里的任务目录表现为 `~/.claude/tasks/`
-- 若当前不在 git 项目中，但从当前目录向上能找到某个项目的 `.claude/`，则仍使用该项目的 `.claude/tasks/`
-- 只有既不在 git 项目中、向上也找不到 `.claude/` 时，才回退到 `~/.claude/tasks/`
+```markdown
+## 任务分解
 
-**分解后必须展示给用户确认**，再进入 Step 2。
+### 子任务列表
 
-### Step 2: 模式选择
+| # | 子任务 | Agent 类型 | 文件所有权 | 依赖 | 验收标准 |
+|---|--------|-----------|-----------|------|----------|
+| 1 | 描述 | implementer | file1.ts, file2.ts | 无 | 可验证的行为 |
+| 2 | 描述 | implementer | file3.ts | #1 | 可验证的行为 |
+| 3 | 描述 | researcher | (只读) | 无 | 回答具体问题 |
+
+### 文件所有权矩阵
+
+| 文件 | 所有者 | 操作 |
+|------|--------|------|
+| src/api/auth.ts | 子任务 #1 | 修改 |
+| src/components/Login.tsx | 子任务 #2 | 新建 |
+```
+
+**分解规则**：
+- 每个子任务的文件所有权**不可重叠**（一个文件只归属一个子任务）
+- 如果两个子任务必须改同一个文件 → 合并为一个子任务，或串行执行
+- 每个子任务必须有**可验证的验收标准**
+- 子任务粒度：一个 agent 在 20-50 turns 内可完成
+
+**更新 PRD**：分解完成后，更新 `prd.md`：
+
+```markdown
+## Implementation Plan
+
+### 子任务分解
+
+| # | 子任务 | Agent | 文件 | 状态 |
+|---|--------|-------|------|------|
+| 1 | {描述} | implementer | {文件列表} | pending |
+| 2 | {描述} | implementer | {文件列表} | pending |
+
+### 执行策略
+- {并行/串行}执行
+- {原因说明}
+```
+
+**更新 feature-list.json**：为每个子任务创建 feature 条目。
+
+**分解后必须展示给用户确认**，再进入 Step 3。
+
+### Step 3: 模式选择
 
 ```
 子任务数量和关系？
@@ -302,7 +391,7 @@ ln -sfn "$TASK_DIR" "$TASKS_ROOT/current"
 | 复杂实现/架构 | opus / inherit | 需要深度推理 |
 | 代码审查 | inherit | 需要理解全局上下文 |
 
-### Step 3: 构建 Agent Prompt
+### Step 4: 构建 Agent Prompt
 
 为每个子任务构建完整的 agent 调用 prompt：
 
@@ -311,6 +400,9 @@ ln -sfn "$TASK_DIR" "$TASKS_ROOT/current"
 
 ### 目标
 {一句话描述}
+
+### PRD 引用
+完整 PRD 见：`{task_dir}/prd.md`
 
 ### 上下文
 - 整体任务：{用户原始任务概述}
@@ -332,11 +424,7 @@ ln -sfn "$TASK_DIR" "$TASKS_ROOT/current"
 按 agent 类型要求的标准格式输出
 ```
 
-**关键改进**：
-- Rules Pack 替代了原来的占位符 `{从 CLAUDE.md 或 rules 中提取的相关规范}`
-- Rules Pack 来自 Step 0 的结构化提取，而非临时拼凑
-
-### Step 4: 分配执行
+### Step 5: 分配执行
 
 **并行子任务**（无依赖）：
 ```
@@ -357,24 +445,46 @@ Agent(subagent_type: "researcher", prompt: 子任务 #3 prompt)
 - researcher 类型不需要 worktree（只读）
 - 每个 agent 的 prompt 中包含完整上下文（不依赖主 agent 的对话历史）
 
-### Step 5: 结果聚合
+### Step 6: 结果聚合
 
 收集所有 agent 返回的报告，检查：
 
-**5.1 完成度检查**
+**6.1 完成度检查**
 
 | 子任务 | 状态 | 验收标准通过 |
 |--------|------|-------------|
 | #1 | complete | 2/2 |
 | #2 | blocked | 0/1 - 描述 blocker |
 
-**5.2 文件冲突检查**
+**6.2 文件冲突检查**
 
 如果多个 worktree 修改了同一文件（不应发生，但需防御）：
 - 列出冲突文件
 - 提示用户选择保留哪个版本，或手动合并
 
-**5.3 集成验证与 Fixer Loop**
+**6.3 更新 PRD**
+
+完成后更新 `prd.md`：
+
+```markdown
+## Implementation Progress
+
+### Completed
+- [x] {子任务 #1} - {关键决策摘要}
+
+### In Progress
+- [ ] {子任务 #2} - {当前状态}
+
+### Blockers
+- {问题描述}
+
+### Key Decisions (ADR-lite)
+- **决策**: {选择了什么}
+- **原因**: {为什么选择这个}
+- **后果**: {权衡和风险}
+```
+
+**6.4 集成验证与 Fixer Loop**
 
 所有子任务完成后，进入验证修复循环：
 
@@ -438,12 +548,7 @@ Agent(subagent_type: "researcher", prompt: 子任务 #3 prompt)
 }
 ```
 
-**verification-gate.sh 行为**：
-- 检测 `passes=false` 时，输出 `VERIFICATION_FAILED` 指令
-- 主 agent 读取指令后，spawn implementer 执行修复
-- 循环直到 `pending=0` 或达到迭代上限
-
-### Step 6: 综合输出
+### Step 7: 综合输出
 
 ```markdown
 ## 编排结果
@@ -466,6 +571,9 @@ Agent(subagent_type: "researcher", prompt: 子任务 #3 prompt)
 - 测试：通过/失败
 - 审查：通过/需修复
 
+### PRD 位置
+- `{task_dir}/prd.md`
+
 ### 遗留问题
 - 问题描述（如有）
 
@@ -483,6 +591,7 @@ Agent(subagent_type: "researcher", prompt: 子任务 #3 prompt)
 | `git-worktree-parallelism.md` | 并行 implementer 的隔离基础设施 |
 | `task-centric-workflow.md` | 子任务的组织结构参考 |
 | `verification-gate.md` | Stop hook 验证门控，自动检测 pending features |
+| `requirements-confirmation.md` | PRD 中的 Open Questions 遵循确认规范 |
 
 ## 决策框架总览
 
@@ -493,30 +602,42 @@ Agent(subagent_type: "researcher", prompt: 子任务 #3 prompt)
     │
     └─ 需要委派
          │
-         ├─ Step 0: 规则提取（新增）
-         │     └─ 识别任务类型 → 匹配规则 → 构建 Rules Pack
+         ├─ Step 0: 上下文收集 + 规则提取
+         │     ├─ 自动搜索相关文件
+         │     ├─ 读取相似实现模式
+         │     ├─ 提取项目约束
+         │     └─ 构建 Rules Pack
          │
-         ├─ Step 1: 分解子任务 + 文件所有权
+         ├─ Step 1: 创建结构化 PRD（新增）
+         │     ├─ 创建任务目录
+         │     ├─ 填充 PRD 模板
+         │     └─ 创建 feature-list.json
          │
-         ├─ Step 2: 选择模式（Subagent / Teams / 分批）
+         ├─ Step 2: 分解子任务 + 文件所有权
+         │     └─ 更新 PRD 的 Implementation Plan
          │
-         ├─ 展示分解方案 → 用户确认
+         ├─ Step 3: 选择模式（Subagent / Teams / 分批）
          │
-         ├─ Step 3: 构建 prompt + 注入 Rules Pack
+         ├─ 展示分解方案 + PRD → 用户确认
          │
-         ├─ Step 4: 并行/串行执行
+         ├─ Step 4: 构建 prompt + 注入 Rules Pack
          │
-         ├─ Step 5: 聚合结果 + Fixer Loop
+         ├─ Step 5: 并行/串行执行
+         │
+         ├─ Step 6: 聚合结果 + 更新 PRD + Fixer Loop
          │     └─ reviewer 失败 → delta_context → 新 implementer
          │
-         └─ Step 6: 综合输出
+         └─ Step 7: 综合输出
 ```
 
 ## 反模式
 
 | 反模式 | 正确做法 |
 |--------|----------|
-| 未确认就执行 | 分解方案必须经用户确认 |
+| 未收集上下文就开始分解 | Step 0 自动收集相关文件和模式 |
+| 未创建结构化 PRD | Step 1 自动创建 prd.md |
+| PRD 只有用户原文 | 区分 "From User" vs "From Context" |
+| 未确认就执行 | 分解方案 + PRD 必须经用户确认 |
 | 文件所有权重叠 | 一个文件只能属于一个子任务 |
 | 所有子任务都用 opus | 按类型匹配模型，研究用 haiku |
 | 子任务过大（> 50 turns） | 继续拆分，或使用 long-running harness |
@@ -532,14 +653,22 @@ Agent(subagent_type: "researcher", prompt: 子任务 #3 prompt)
 
 ## 检查清单
 
-### 规则注入（Step 0）
+### 上下文收集（Step 0）
 
-- [ ] 任务类型是否识别正确？
-- [ ] 相关 rules 是否匹配完整？
+- [ ] 是否搜索了相关文件？
+- [ ] 是否读取了相似实现模式？
+- [ ] 是否提取了项目约束？
 - [ ] Rules Pack 是否控制在 500 tokens 以内？
-- [ ] 核心/领域/模式规范是否都有体现？
 
-### Fixer Loop（Step 5.3）
+### PRD 创建（Step 1）
+
+- [ ] 是否区分了 "From User" vs "From Context"？
+- [ ] Assumptions 是否有验证方法？
+- [ ] Open Questions 是否只保留 Blocking/Preference？
+- [ ] Definition of Done 是否符合项目标准？
+- [ ] feature-list.json 是否同步创建？
+
+### Fixer Loop（Step 6.4）
 
 - [ ] reviewer 是否输出 delta_context？
 - [ ] delta_context 包含问题位置、根因、修复建议？
