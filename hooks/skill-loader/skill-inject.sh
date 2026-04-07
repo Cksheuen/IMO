@@ -40,6 +40,8 @@ KEYWORD_SKILL_MAP=(
     "freeze|冻结|冷存储:freeze:需要把不常用知识移入冷存储"
     "thaw|解冻|恢复:thaw:需要从冷存储恢复知识"
     "promote|晋升|笔记晋升:promote-notes:需要把 notes 晋升为规则或技能"
+    "lesson review|lesson-review|回顾教训|教训回顾|复盘教训:lesson-review:需要手动回顾未处理的教训信号"
+    "codex feedback|codex-feedback-review|回顾codex反馈|处理codex反馈|总结codex执行经验:codex-feedback-review:需要手动处理尚未消费的 Codex feedback 增量"
     "freshness|时效|过期检查:freshness:需要检查引用或知识时效性"
     "shit|精简|结构优化:shit:需要清理冗余结构或压缩上下文资产"
     "voice|口吻|个人风格:voice:输出需要匹配个人写作风格"

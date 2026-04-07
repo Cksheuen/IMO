@@ -1,7 +1,7 @@
 #!/bin/bash
 # context-monitor.sh - 上下文使用监控
 #
-# 触发时机: Stop (在 verification-gate 和 lesson-gate 之后)
+# 触发时机: Stop (在 verification-gate 之后)
 # 功能: 监控上下文使用情况，主动发出警告
 #
 # 基于 Claude Code 架构:

@@ -128,7 +128,7 @@
 
 - 根目录 `settings.json` 在 `PreToolUse` 挂载 `hooks/pre-write-gate.sh`、`hooks/pre-edit-gate.sh`、`hooks/pre-agent-gate.sh`
 - 根目录 `settings.json` 在 `UserPromptSubmit` 挂载 `hooks/skill-loader/skill-inject.sh`、`hooks/recall-entrypoint.py`
-- 根目录 `settings.json` 在 `Stop` 挂载 `hooks/recall-capture.py`、`hooks/verification-gate.sh`、`hooks/lesson-capture/lesson-gate.sh`、`hooks/context-monitor.sh`
+- 根目录 `settings.json` 在 `Stop` 挂载 `hooks/recall-capture.py`、`hooks/verification-gate.sh`、`hooks/context-monitor.sh`
 - 项目级 `.claude/settings.json` 在 `Stop` / `SubagentStop` 挂载 `.claude/hooks/promotion-scan.py`
 - 项目级 `.claude/settings.json` 在 `Stop` / `SubagentStop` 挂载 `.claude/hooks/promotion-gate.py`
 - 项目级 `.claude/settings.json` 在 `SessionStart` 挂载 `.claude/hooks/promotion-queue-status.py`
@@ -237,6 +237,8 @@
 - hook 不向主 agent 输出任何指令
 - 用户不会看到 `[LESSON CAPTURE REQUIRED]` 等提示
 - Lesson capture 在后台静默完成
+
+补充说明：`hooks/lesson-capture/lesson-gate.sh` 已于 2026-04-03 废弃，不再默认挂载；教训回顾改为通过 `/lesson-review` 显式触发，并只处理未回顾（`handled != true`）信号。
 
 当前最小执行桥还包括：
 

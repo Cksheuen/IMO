@@ -113,10 +113,6 @@
           },
           {
             "type": "command",
-            "command": "bash \"$HOME/.claude/hooks/lesson-capture/lesson-gate.sh\""
-          },
-          {
-            "type": "command",
             "command": "bash \"$HOME/.claude/hooks/context-monitor.sh\""
           }
         ]
