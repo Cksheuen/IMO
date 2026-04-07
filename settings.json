@@ -163,6 +163,12 @@
         "source": "github",
         "repo": "openai/codex-plugin-cc"
       }
+    },
+    "ttcodex-local": {
+      "source": {
+        "source": "path",
+        "path": "/Users/bytedance/.claude/plugins/marketplaces/ttcodex-local"
+      }
     }
   },
   "alwaysThinkingEnabled": true,
