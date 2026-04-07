@@ -1,20 +1,18 @@
 {
   "version": 1,
-  "last_sync": "2026-04-10T09:56:46.355482+00:00",
-  "rules_hash": "ff8e0ca823f7e7ab1c63317420f1b2347922ea3c8c2b2008d6cc10218f555bf0",
+  "last_sync": "2026-04-03T15:26:07.408862+00:00",
+  "rules_hash": "c48e736f53f37256a74adaf8faa22eda279ee77931a6b5edfba433cce696abcd",
   "synced_rules": [
+    "/Users/bytedance/.claude/CLAUDE.md",
     "/Users/bytedance/.claude/rules/core/context-injection.md",
     "/Users/bytedance/.claude/rules/core/llm-friendly-format.md",
     "/Users/bytedance/.claude/rules/core/proactive-delegation.md",
     "/Users/bytedance/.claude/rules/core/task-centric-workflow.md",
     "/Users/bytedance/.claude/rules/core/task-notes-boundary.md",
-    "/Users/bytedance/.claude/rules/core/user-facing-language.md",
-    "/Users/bytedance/.claude/rules/pattern/abandoned-solution-cleanup.md",
     "/Users/bytedance/.claude/rules/pattern/animation-driven-design.md",
     "/Users/bytedance/.claude/rules/pattern/auto-created-feature-list-noise.md",
     "/Users/bytedance/.claude/rules/pattern/change-impact-review.md",
     "/Users/bytedance/.claude/rules/pattern/change-scope-guard.md",
-    "/Users/bytedance/.claude/rules/pattern/closed-learning-loop.md",
     "/Users/bytedance/.claude/rules/pattern/code-as-interface.md",
     "/Users/bytedance/.claude/rules/pattern/cross-layer-preflight.md",
     "/Users/bytedance/.claude/rules/pattern/execution-continuity.md",
@@ -27,6 +25,7 @@
     "/Users/bytedance/.claude/rules/domain/native/rust-egui-testing.md",
     "/Users/bytedance/.claude/rules/domain/shared/testable-architecture.md"
   ],
-  "feedback_count": 0,
-  "codex_agents_md_path": "~/.codex/AGENTS.md"
+  "feedback_count": 1,
+  "codex_agents_md_path": "~/.codex/AGENTS.md",
+  "last_processed_timestamp": "2026-04-03T13:40:09.445Z"
 }

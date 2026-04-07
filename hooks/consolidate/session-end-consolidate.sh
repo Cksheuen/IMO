@@ -6,6 +6,10 @@
 # Trigger conditions (checked by consolidate.py):
 #   - 24+ hours since last consolidation, OR
 #   - 5+ sessions since last consolidation
+#
+# Note:
+# - Codex feedback -> CC lessons no longer auto-runs here.
+# - Use `/codex-feedback-review` to explicitly consume codex-feedback.jsonl incrementally.
 
 set -u
 
@@ -21,22 +25,11 @@ nohup python3 "$CONSOLIDATE" --target all >> "$LOG" 2>&1 &
 
 # === CC ↔ Codex sync ===
 CODEX_SYNC="$HOME/.claude/hooks/codex-sync/sync-to-codex.sh"
-CODEX_FEEDBACK="$HOME/.claude/hooks/codex-sync/process-codex-feedback.py"
 CODEX_SYNC_LOG="$HOME/.claude/shared-knowledge/sync.log"
 
 # Sync CC rules → Codex AGENTS.md (background, non-blocking)
 if [ -x "$CODEX_SYNC" ]; then
   nohup bash "$CODEX_SYNC" >> "$CODEX_SYNC_LOG" 2>&1 &
-fi
-
-# Process Codex feedback → CC lessons (background, non-blocking)
-if [ -f "$CODEX_FEEDBACK" ]; then
-  MANIFEST="$HOME/.claude/shared-knowledge/sync-manifest.json"
-  nohup python3 "$CODEX_FEEDBACK" \
-    --apply \
-    --min-occurrences 2 \
-    --update-manifest "$MANIFEST" \
-    >> "$CODEX_SYNC_LOG" 2>&1 &
 fi
 
 exit 0

@@ -496,8 +496,8 @@ def main():
         else:
             print("No changes applied (patterns below threshold or all matched).")
 
-    # Update manifest
-    if args.update_manifest or args.apply:
+    # Update manifest only after apply succeeds.
+    if args.apply:
         if not manifest:
             manifest = load_manifest(manifest_path)
 
