@@ -122,21 +122,18 @@ class CodexReviewTool:
         Execute the command and return output.
 
         In production, this runs the actual Codex CLI.
-        For migration demo, this simulates output.
         """
-        # SIMULATION: In production, uncomment the real implementation
-        # result = subprocess.run(
-        #     cmd,
-        #     capture_output=True,
-        #     text=True,
-        #     timeout=self.timeout
-        # )
-        # if result.returncode != 0:
-        #     raise RuntimeError(f"Codex review failed: {result.stderr}")
-        # return result.stdout
-
-        # SIMULATION OUTPUT for migration demo
-        return self._simulate_review_output()
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=self.timeout,
+            check=False,
+        )
+        if result.returncode != 0:
+            stderr = result.stderr.strip() or result.stdout.strip()
+            raise RuntimeError(f"Codex review failed: {stderr}")
+        return result.stdout
 
     def _simulate_review_output(self) -> str:
         """Simulate Codex review output for demo purposes."""
@@ -305,27 +302,26 @@ class CodexRescueTool:
         """
         Execute rescue command.
 
-        In production, this would call Codex CLI.
-        For migration demo, this simulates output.
+        In production, this calls Codex CLI.
         """
-        # SIMULATION: In production, uncomment real implementation
-        # cmd = [
-        #     "node",
-        #     os.path.join(self.plugin_root, "scripts/codex-companion.mjs"),
-        #     "rescue",
-        #     "--wait",
-        #     "--prompt", findings_summary
-        # ]
-        # result = subprocess.run(
-        #     cmd,
-        #     capture_output=True,
-        #     text=True,
-        #     timeout=self.timeout
-        # )
-        # return result.stdout
-
-        # SIMULATION OUTPUT
-        return self._simulate_rescue_output(findings_summary)
+        cmd = [
+            "node",
+            os.path.join(self.plugin_root, "scripts/codex-companion.mjs"),
+            "rescue",
+            "--wait",
+            "--prompt", findings_summary
+        ]
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=self.timeout,
+            check=False,
+        )
+        if result.returncode != 0:
+            stderr = result.stderr.strip() or result.stdout.strip()
+            raise RuntimeError(f"Codex rescue failed: {stderr}")
+        return result.stdout
 
     def _simulate_rescue_output(self, findings_summary: str) -> str:
         """Simulate rescue output for demo purposes."""
