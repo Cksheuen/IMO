@@ -14,6 +14,14 @@
 set -u
 
 STATE_DIR="$HOME/.claude"
+# 统一存放 mtime 缓存文件的目录
+MTIME_CACHE_DIR="$STATE_DIR/.lesson-detector-cache"
+mkdir -p "$MTIME_CACHE_DIR" 2>/dev/null || true
+# 清理超过 7 天的旧缓存文件（随机执行，避免每次都清理）
+if [ $((RANDOM % 100)) -lt 5 ]; then
+  find "$MTIME_CACHE_DIR" -type f -mtime +7 -delete 2>/dev/null || true
+fi
+
 STATE_FILE="$STATE_DIR/lesson-signals.json"
 LOG_FILE="$STATE_DIR/lesson-capture.log"
 
@@ -33,7 +41,7 @@ TRANSCRIPT_PATH=$(printf '%s' "$INPUT" | jq -r '.transcript_path // empty' 2>/de
 
 # Skip if already processed this transcript version (mtime-based dedup)
 MTIME=$(stat -f%m "$TRANSCRIPT_PATH" 2>/dev/null || stat -c%Y "$TRANSCRIPT_PATH" 2>/dev/null || echo 0)
-LAST_MTIME_FILE="$STATE_DIR/.lesson-detector-mtime-$SESSION_ID"
+LAST_MTIME_FILE="$MTIME_CACHE_DIR/$SESSION_ID"
 if [ "${LESSON_DETECTOR_FORCE:-0}" != "1" ] && [ -f "$LAST_MTIME_FILE" ]; then
   LAST_MTIME=$(cat "$LAST_MTIME_FILE" 2>/dev/null || echo 0)
   [ "$MTIME" = "$LAST_MTIME" ] && exit 0
