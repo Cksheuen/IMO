@@ -13,11 +13,13 @@ Usage:
 import argparse
 import fcntl
 import json
+import subprocess
 import sys
 import time
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 BASE = Path.home() / ".claude"
 QUEUE_FILE = BASE / "promotion-queue.json"
@@ -35,10 +37,21 @@ def log(msg: str):
     """写入日志"""
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     line = f"[{ts}] {msg}"
-    print(line)
+    print(line, file=sys.stderr)
     log_file = LOG_DIR / "dispatch.log"
-    with open(log_file, "a") as f:
+    with open(log_file, "a", encoding="utf-8") as f:
         f.write(line + "\n")
+
+
+def build_dispatch_prompt(candidate: dict) -> str:
+    """构造 promote-notes subagent prompt。"""
+    return (
+        "Process only the claimed promotion candidate from promotionDispatch.candidates. "
+        "Do not rescan the whole queue. Analyze the note, decide promote/merge/keep, "
+        "write promotion-result.json, then stop.\n\n"
+        f"Candidate: {candidate.get('path', '')}\n"
+        f"Reason: {candidate.get('reason', '')}"
+    )
 
 
 def load_queue() -> dict:
@@ -116,14 +129,34 @@ def calculate_similarity(lesson_path: Path, target_path: Path) -> float:
         lesson_content = lesson_path.read_text(encoding="utf-8", errors="ignore")
         target_content = target_path.read_text(encoding="utf-8", errors="ignore")
 
-        # 提取 Trigger 字段
+        # 提取触发条件 - 支持 frontmatter、metadata 和 markdown 标题三种格式
         import re
-        lesson_trigger = re.search(r"Trigger[:\s]+([^\n]+)", lesson_content, re.IGNORECASE)
-        target_trigger = re.search(r"触发条件[:\s]+([^\n]+)", target_content, re.IGNORECASE)
+
+        def extract_trigger_text(content: str) -> str:
+            """从内容中提取触发条件文本"""
+            # 尝试 frontmatter: Trigger: xxx 或 触发条件: xxx
+            fm_match = re.search(r"^(Trigger|触发条件)[:\s]+(.+)$", content, re.MULTILINE | re.IGNORECASE)
+            if fm_match:
+                return fm_match.group(2).strip()
+
+            # 尝试 metadata 格式: - Trigger: xxx (常见于 lesson 文件)
+            meta_match = re.search(r"^-?\s*Trigger[:\s]+(.+)$", content, re.MULTILINE | re.IGNORECASE)
+            if meta_match:
+                return meta_match.group(1).strip()
+
+            # 尝试 markdown 标题: ## 触发条件 后的第一段内容
+            heading_match = re.search(r"^##\s*触发条件\s*\n+(.+?)(?=\n##|\n---|\Z)", content, re.MULTILINE | re.DOTALL)
+            if heading_match:
+                return heading_match.group(1).strip()
+
+            return ""
+
+        lesson_trigger = extract_trigger_text(lesson_content)
+        target_trigger = extract_trigger_text(target_content)
 
         if lesson_trigger and target_trigger:
-            lt_kw = extract_keywords(lesson_trigger.group(1))
-            tt_kw = extract_keywords(target_trigger.group(1))
+            lt_kw = extract_keywords(lesson_trigger)
+            tt_kw = extract_keywords(target_trigger)
             if lt_kw and tt_kw:
                 trigger_sim = len(lt_kw & tt_kw) / max(len(lt_kw), len(tt_kw))
 
@@ -261,11 +294,20 @@ def cmd_claim():
 
     if claimed:
         log(f"Claimed candidate: {claimed['id']}")
-        print(json.dumps(claimed, indent=2, ensure_ascii=False))
+        payload = {
+            "promotionDispatch": {
+                "subagentType": "promote-notes",
+                "queuePath": str(QUEUE_FILE.relative_to(BASE)),
+                "hasCandidates": True,
+                "candidates": [claimed],
+                "prompt": build_dispatch_prompt(claimed),
+            }
+        }
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
         return
 
     log("No pending candidates found")
-    print(json.dumps({"error": "no_pending_candidates"}, indent=2))
+    print(json.dumps({"promotionDispatch": {"hasCandidates": False, "candidates": []}}, indent=2, ensure_ascii=False))
 
 
 def cmd_release(candidate_id: str):
@@ -291,6 +333,53 @@ def cmd_release(candidate_id: str):
     print(f"Error: candidate {candidate_id} not in processing")
 
 
+def cmd_fail(candidate_id: Optional[str], error: Optional[str]):
+    """失败恢复：将一个或全部 processing 候选重新入队。"""
+    requeued = []
+
+    with locked_queue() as queue:
+        remaining = []
+        for candidate in queue["processing"]:
+            if candidate_id and candidate.get("id") != candidate_id:
+                remaining.append(candidate)
+                continue
+
+            candidate["status"] = "pending"
+            candidate["claimed_at"] = None
+            candidate["last_error"] = error or "subagent_failed"
+            queue["candidates"].append(candidate)
+            requeued.append(candidate["id"])
+
+        queue["processing"] = remaining
+
+    if requeued:
+        log(f"Re-queued failed candidates: {', '.join(requeued)}")
+        print(json.dumps({"requeued": requeued, "error": error}, indent=2, ensure_ascii=False))
+    else:
+        log("No processing candidates matched fail request")
+        print(json.dumps({"requeued": [], "error": error}, indent=2, ensure_ascii=False))
+
+
+def cmd_apply(result_file: str):
+    """调用 promotion-apply-result.py 应用结果。"""
+    apply_script = BASE / "hooks" / "promotion-apply-result.py"
+    target = Path(result_file)
+    if not target.is_absolute():
+        target = BASE / target
+
+    completed = subprocess.run(
+        [sys.executable, str(apply_script), "--result-file", str(target)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if completed.stderr:
+        print(completed.stderr, file=sys.stderr, end="")
+    if completed.returncode != 0:
+        raise SystemExit(completed.returncode)
+    print(completed.stdout, end="")
+
+
 def cmd_list():
     """列出队列状态"""
     queue = load_queue()
@@ -310,8 +399,10 @@ def cmd_list():
 
 def main():
     parser = argparse.ArgumentParser(description="Promotion Dispatch")
-    parser.add_argument("command", choices=["scan", "claim", "release", "list"])
+    parser.add_argument("command", choices=["scan", "claim", "release", "fail", "apply", "list"])
     parser.add_argument("candidate_id", nargs="?", help="Candidate ID for release")
+    parser.add_argument("--error", help="Failure reason for fail command")
+    parser.add_argument("--result-file", help="Result file for apply command")
     args = parser.parse_args()
 
     if args.command == "scan":
@@ -323,6 +414,13 @@ def main():
             print("Error: candidate_id required for release")
             sys.exit(1)
         cmd_release(args.candidate_id)
+    elif args.command == "fail":
+        cmd_fail(args.candidate_id, args.error)
+    elif args.command == "apply":
+        if not args.result_file:
+            print("Error: --result-file required for apply", file=sys.stderr)
+            sys.exit(1)
+        cmd_apply(args.result_file)
     elif args.command == "list":
         cmd_list()
 

@@ -49,6 +49,7 @@ class PromoteNotesState(TypedDict):
     # Input
     input_candidates: Optional[List[Dict[str, Any]]]  # From promotionScan/promotionDispatch
     queue_path: Optional[str]
+    result_path: Optional[str]
 
     # Candidates
     candidates: List[NoteCandidate]
@@ -330,7 +331,7 @@ async def write_result_node(state: PromoteNotesState) -> Dict[str, Any]:
     """
     from pathlib import Path
 
-    result_path = state.get("queue_path", "") or str(Path.home() / ".claude" / "promotion-result.json")
+    result_path = state.get("result_path") or str(Path.home() / ".claude" / "promotion-result.json")
 
     write_promotion_result.invoke({
         "result_path": result_path,
@@ -460,6 +461,7 @@ def compile_promote_notes_graph(checkpoint: bool = False):
 async def run_promotion(
     input_candidates: Optional[List[Dict[str, Any]]] = None,
     queue_path: Optional[str] = None,
+    result_path: Optional[str] = None,
     llm: Optional[BaseChatModel] = None,
     checkpoint: bool = False
 ) -> PromoteNotesState:
@@ -469,6 +471,7 @@ async def run_promotion(
     Args:
         input_candidates: Pre-identified candidates (from promotionScan/promotionDispatch)
         queue_path: Path to promotion-queue.json
+        result_path: Path to promotion-result.json
         llm: LLM for evaluation (optional - falls back to heuristics)
         checkpoint: Whether to use checkpointing
 
@@ -479,6 +482,7 @@ async def run_promotion(
     initial_state = PromoteNotesState(
         input_candidates=input_candidates,
         queue_path=queue_path,
+        result_path=result_path,
         candidates=[],
         current_candidate_index=0,
         evaluations=[],

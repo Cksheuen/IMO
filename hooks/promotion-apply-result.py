@@ -13,31 +13,96 @@ import argparse
 import fcntl
 import json
 import re
+import sys
 import shutil
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Dict, List, Optional, Tuple
 
 BASE = Path.home() / ".claude"
 LESSONS_DIR = BASE / "notes" / "lessons"
+NOTES_DIR = BASE / "notes"
 RULES_DIR = BASE / "rules"
 SKILLS_DIR = BASE / "skills"
 MEMORY_DIR = BASE / "projects" / "-Users-bytedance--claude" / "memory"
 LOG_DIR = BASE / "logs" / "promotion"
 QUEUE_FILE = BASE / "promotion-queue.json"
 QUEUE_LOCK_FILE = BASE / "promotion-queue.lock"
-ALLOWED_TARGET_ROOTS = tuple((BASE / name).resolve() for name in ("rules", "skills", "notes", "memory"))
+ALLOWED_TARGET_ROOTS = tuple(path.resolve() for path in (RULES_DIR, SKILLS_DIR, NOTES_DIR, MEMORY_DIR))
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def log(msg: str):
     """写入日志"""
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     line = f"[{ts}] {msg}"
-    print(line)
+    print(line, file=sys.stderr)
     log_file = LOG_DIR / "apply.log"
-    with open(log_file, "a") as f:
+    with open(log_file, "a", encoding="utf-8") as f:
         f.write(line + "\n")
+
+
+def resolve_lesson_path(lesson_path_str: str) -> Path:
+    """限制 lesson 路径只能落在 notes/lessons 下。"""
+    candidate = Path(lesson_path_str)
+    if candidate.is_absolute():
+        raise ValueError(f"Lesson path must be relative to {BASE}: {lesson_path_str}")
+
+    resolved = (BASE / candidate).resolve()
+    lessons_root = LESSONS_DIR.resolve()
+    if resolved != lessons_root and not resolved.is_relative_to(lessons_root):
+        raise ValueError(f"Lesson path escapes lessons directory: {lesson_path_str}")
+    return resolved
+
+
+def normalize_result_actions(result: dict) -> List[dict]:
+    """兼容旧 actions schema 和新的 promotionDispatchResult schema。"""
+    if isinstance(result.get("actions"), list):
+        return result["actions"]
+
+    dispatch_result = result.get("promotionDispatchResult")
+    if not isinstance(dispatch_result, dict):
+        return []
+
+    actions = []
+    summary_map = {
+        "promoted_to_rule": "created",
+        "promoted_to_skill": "created",
+        "indexed_in_memory": "kept",
+        "kept": "kept",
+        "skipped_duplicate": "kept",
+    }
+
+    for item in dispatch_result.get("processed", []):
+        outcome = item.get("outcome") or item.get("action") or "kept"
+        actions.append({
+            "id": Path(item.get("path", "")).stem,
+            "action": "already_applied",
+            "lesson": item.get("path"),
+            "target": item.get("target_path") or item.get("targetPath"),
+            "reason": item.get("reason", outcome),
+            "summary_kind": summary_map.get(outcome, "kept"),
+            "outcome": outcome,
+        })
+
+    for item in dispatch_result.get("deferred", []):
+        actions.append({
+            "id": Path(item.get("path", "")).stem,
+            "action": "defer",
+            "lesson": item.get("path"),
+            "reason": item.get("reason", "deferred"),
+        })
+
+    for item in dispatch_result.get("failed", []):
+        actions.append({
+            "id": Path(item.get("path", "")).stem,
+            "action": "failed",
+            "lesson": item.get("path"),
+            "reason": item.get("error") or item.get("reason", "failed"),
+        })
+
+    return [action for action in actions if action.get("lesson")]
 
 
 def load_result(result_file: Path) -> dict:
@@ -125,12 +190,15 @@ def update_frontmatter(content: str, updates: dict) -> str:
 
     # 更新已有字段
     updated_keys = set()
+    normalized_updates = {k.lower(): (k, v) for k, v in updates.items()}
     for i, line in enumerate(fm_lines):
         if ":" in line:
             key = line.split(":")[0].strip()
-            if key in updates:
-                fm_lines[i] = f"{key}: {updates[key]}"
-                updated_keys.add(key)
+            lookup = normalized_updates.get(key.lower())
+            if lookup:
+                canonical_key, value = lookup
+                fm_lines[i] = f"{key}: {value}"
+                updated_keys.add(canonical_key)
 
     # 添加新字段
     for k, v in updates.items():
@@ -181,9 +249,15 @@ def create_rule(lesson_path: Path, target_dir: Path, lesson: dict, dry_run: bool
 
     rule_file = rule_dir / f"{clean_stem}.md"
 
-    # 检查目标文件是否已存在
+    # 检查目标文件是否已存在 - 幂等性检查
     if rule_file.exists():
-        log(f"Refusing to overwrite existing rule: {rule_file}")
+        existing_content = rule_file.read_text(encoding="utf-8")
+        # 如果已存在且包含相同 lesson 来源，视为成功（幂等）
+        if lesson_path.name in existing_content:
+            log(f"Rule already exists with same source: {rule_file} (idempotent)")
+            return rule_file
+        # 否则拒绝覆盖
+        log(f"Refusing to overwrite existing rule with different content: {rule_file}")
         return None
 
     # 构建 rule 内容
@@ -228,18 +302,22 @@ description: {fm.get('title', clean_stem)}
 
 
 def merge_to_rule(lesson_path: Path, rule_path: Path, lesson: dict, dry_run: bool):
-    """合并 lesson 到现有 rule"""
+    """合并 lesson 到现有 rule - 幂等实现"""
     if not rule_path.exists():
         log(f"Rule file not found: {rule_path}")
         return False
 
     rule_content = rule_path.read_text(encoding="utf-8")
-
-    # 添加新 Source Case
     today = datetime.now().strftime("%Y-%m-%d")
+    lesson_id = lesson_path.name  # 用于去重
+
+    # 幂等性检查: 检查是否已存在相同 lesson 的 Source Case
+    if lesson_id in rule_content:
+        log(f"Source case already exists for {lesson_id}, skipping (idempotent)")
+        return True
 
     # 查找或创建 Source Cases 章节
-    if "## Source Cases" in rule_content or "## Source Cases" in rule_content:
+    if "## Source Cases" in rule_content:
         # 追加到现有章节
         new_case = f"\n- **{today}**: 来自 `{lesson_path.name}`\n"
         # 在相关规范或参考章节前插入
@@ -299,16 +377,55 @@ def update_lesson_status(lesson_path: Path, action: str, target: str, dry_run: b
 
 def apply_promotion(result: dict, dry_run: bool) -> dict:
     """执行晋升"""
-    actions = result.get("actions", [])
+    actions = normalize_result_actions(result)
     summary = {
         "created": 0,
         "merged": 0,
         "kept": 0,
+        "deferred": 0,
         "failed": 0,
         "files": [],
         "processed_ids": [],
         "failed_ids": [],
+        "deferred_ids": [],
     }
+
+    # 阈值策略常量
+    THRESHOLD_MERGE = 0.8
+    THRESHOLD_CREATE = 0.5
+
+    def validate_action_threshold(action: dict, lesson_path: Path) -> Tuple[bool, str]:
+        """验证 action 是否符合阈值策略
+
+        Returns:
+            (is_valid, error_message)
+        """
+        action_type = action.get("action", "keep")
+        similarity = action.get("similarity")
+        target_path_str = action.get("target")
+
+        # keep 动作无需验证
+        if action_type == "keep":
+            return True, ""
+
+        # 如果没有 similarity，允许通过（向后兼容）
+        if similarity is None:
+            log(f"Warning: No similarity score for action {action.get('id')}, allowing")
+            return True, ""
+
+        sim = float(similarity)
+
+        if action_type == "merge":
+            if sim < THRESHOLD_MERGE:
+                return False, f"Merge rejected: similarity {sim:.2f} < threshold {THRESHOLD_MERGE}"
+            if not target_path_str:
+                return False, "Merge action requires target path"
+
+        elif action_type == "create":
+            if sim >= THRESHOLD_MERGE:
+                log(f"Warning: Create action with high similarity {sim:.2f}, consider merge instead")
+
+        return True, ""
 
     for action in actions:
         action_type = action.get("action", "keep")
@@ -325,31 +442,107 @@ def apply_promotion(result: dict, dry_run: bool) -> dict:
                 summary["failed_ids"].append(action_id)
             continue
 
-        lesson_path = BASE / lesson_path_str
+        try:
+            lesson_path = resolve_lesson_path(lesson_path_str)
+        except ValueError as exc:
+            log(str(exc))
+            summary["failed"] += 1
+            if action_id:
+                summary["failed_ids"].append(action_id)
+            commit_queue_item(action_id, False, dry_run)
+            continue
 
         if not lesson_path.exists():
             log(f"Lesson not found: {lesson_path}")
             summary["failed"] += 1
             if action_id:
                 summary["failed_ids"].append(action_id)
+            commit_queue_item(action_id, False, dry_run)
+            continue
+
+        if action_type == "already_applied":
+            summary_kind = action.get("summary_kind", "kept")
+            if summary_kind == "created":
+                summary["created"] += 1
+            elif summary_kind == "merged":
+                summary["merged"] += 1
+            else:
+                summary["kept"] += 1
+
+            file_entry = {
+                "action": action.get("outcome", action_type),
+                "lesson": str(lesson_path),
+            }
+            if target_path_str:
+                file_entry["target"] = target_path_str
+            if reason:
+                file_entry["reason"] = reason
+            summary["files"].append(file_entry)
+            if action_id:
+                summary["processed_ids"].append(action_id)
+                commit_queue_item(action_id, True, dry_run)
+            continue
+
+        if action_type == "defer":
+            summary["deferred"] += 1
+            summary["files"].append({"action": "defer", "lesson": str(lesson_path), "reason": reason})
+            if action_id:
+                summary["deferred_ids"].append(action_id)
+                commit_queue_item(action_id, False, dry_run)
+            continue
+
+        if action_type == "failed":
+            log(f"Subagent reported failure for {lesson_path}: {reason}")
+            summary["failed"] += 1
+            summary["files"].append({"action": "failed", "lesson": str(lesson_path), "reason": reason})
+            if action_id:
+                summary["failed_ids"].append(action_id)
+                commit_queue_item(action_id, False, dry_run)
+            continue
+
+        # 验证阈值策略
+        is_valid, error_msg = validate_action_threshold(action, lesson_path)
+        if not is_valid:
+            log(f"Action rejected: {error_msg}")
+            summary["failed"] += 1
+            if action_id:
+                summary["failed_ids"].append(action_id)
+            commit_queue_item(action_id, False, dry_run)
             continue
 
         lesson = read_lesson(lesson_path)
 
         if action_type == "create":
-            # 创建新 rule
-            target_dir = RULES_DIR
-            rule_file = create_rule(lesson_path, target_dir, lesson, dry_run)
+            target_root = RULES_DIR
+            if target_path_str:
+                try:
+                    target_root = resolve_allowed_target_path(target_path_str)
+                except ValueError as exc:
+                    log(str(exc))
+                    summary["failed"] += 1
+                    if action_id:
+                        summary["failed_ids"].append(action_id)
+                    commit_queue_item(action_id, False, dry_run)
+                    continue
+
+            if target_root == RULES_DIR or target_root.is_relative_to(RULES_DIR):
+                rule_file = create_rule(lesson_path, target_root, lesson, dry_run)
+            else:
+                log(f"Create action currently only supports rules targets: {target_root}")
+                rule_file = None
             if not rule_file:
                 summary["failed"] += 1
                 if action_id:
                     summary["failed_ids"].append(action_id)
+                commit_queue_item(action_id, False, dry_run)
                 continue
             update_lesson_status(lesson_path, "create", str(rule_file.relative_to(BASE)), dry_run)
             summary["created"] += 1
             summary["files"].append({"action": "create", "lesson": str(lesson_path), "target": str(rule_file)})
             if action_id:
                 summary["processed_ids"].append(action_id)
+                # 原子性提交队列状态
+                commit_queue_item(action_id, success=True, dry_run=dry_run)
 
         elif action_type == "merge":
             # 合并到现有 rule
@@ -358,6 +551,7 @@ def apply_promotion(result: dict, dry_run: bool) -> dict:
                 summary["failed"] += 1
                 if action_id:
                     summary["failed_ids"].append(action_id)
+                commit_queue_item(action_id, False, dry_run)
                 continue
 
             try:
@@ -367,12 +561,14 @@ def apply_promotion(result: dict, dry_run: bool) -> dict:
                 summary["failed"] += 1
                 if action_id:
                     summary["failed_ids"].append(action_id)
+                commit_queue_item(action_id, False, dry_run)
                 continue
 
             if not merge_to_rule(lesson_path, target_path, lesson, dry_run):
                 summary["failed"] += 1
                 if action_id:
                     summary["failed_ids"].append(action_id)
+                commit_queue_item(action_id, False, dry_run)
                 continue
 
             update_lesson_status(lesson_path, "merge", target_path_str, dry_run)
@@ -380,6 +576,7 @@ def apply_promotion(result: dict, dry_run: bool) -> dict:
             summary["files"].append({"action": "merge", "lesson": str(lesson_path), "target": str(target_path)})
             if action_id:
                 summary["processed_ids"].append(action_id)
+                commit_queue_item(action_id, True, dry_run)
 
         elif action_type == "keep":
             # 保留在 notes
@@ -388,18 +585,62 @@ def apply_promotion(result: dict, dry_run: bool) -> dict:
             summary["files"].append({"action": "keep", "lesson": str(lesson_path), "reason": reason})
             if action_id:
                 summary["processed_ids"].append(action_id)
+                commit_queue_item(action_id, True, dry_run)
 
         else:
             log(f"Unknown action type: {action_type}")
             summary["failed"] += 1
             if action_id:
                 summary["failed_ids"].append(action_id)
+                commit_queue_item(action_id, False, dry_run)
 
     return summary
 
 
-def cleanup_queue(processed_ids: list[str], failed_ids: list[str], dry_run: bool):
-    """清理队列，将失败项重新入队"""
+def commit_queue_item(candidate_id: str, success: bool, dry_run: bool):
+    """原子性更新单个队列项状态
+
+    Args:
+        candidate_id: 候选 ID
+        success: True 表示成功完成，False 表示失败需重试
+        dry_run: 是否为 dry run
+    """
+    if dry_run:
+        return
+
+    with locked_queue() as queue:
+        # 从 processing 移除
+        remaining = []
+        found = False
+        for c in queue["processing"]:
+            if c.get("id") == candidate_id:
+                found = True
+                if success:
+                    # 成功：添加到 completed
+                    c["status"] = "completed"
+                    c["completed_at"] = datetime.now().isoformat()
+                    queue["completed"].append(c)
+                else:
+                    # 失败：重置为 pending 重新入队
+                    c["status"] = "pending"
+                    c["claimed_at"] = None
+                    queue["candidates"].append(c)
+            else:
+                remaining.append(c)
+
+        queue["processing"] = remaining
+
+        if found:
+            log(f"Committed queue item {candidate_id}: {'completed' if success else 're-queued'}")
+        else:
+            log(f"Warning: candidate {candidate_id} not found in processing queue")
+
+
+def cleanup_queue(processed_ids: List[str], failed_ids: List[str], dry_run: bool):
+    """清理队列，将失败项重新入队
+
+    注意：如果使用 commit_queue_item，此函数主要用于处理未单独提交的遗留项
+    """
     if dry_run:
         log("[DRY-RUN] Would cleanup queue")
         return
@@ -452,7 +693,10 @@ def main():
         cleanup_queue(summary["processed_ids"], summary["failed_ids"], args.dry_run)
 
     # 输出摘要
-    log(f"Promotion complete: {summary['created']} created, {summary['merged']} merged, {summary['kept']} kept, {summary['failed']} failed")
+    log(
+        f"Promotion complete: {summary['created']} created, {summary['merged']} merged, "
+        f"{summary['kept']} kept, {summary['deferred']} deferred, {summary['failed']} failed"
+    )
 
     print(json.dumps(summary, indent=2, ensure_ascii=False))
 

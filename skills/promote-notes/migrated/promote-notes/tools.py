@@ -274,7 +274,11 @@ def check_existing_assets(
     if rules_path.exists():
         for md_file in rules_path.glob("**/*.md"):
             content = md_file.read_text(encoding="utf-8").lower()
-            if _has_topic_overlap(content, topic_keywords):
+            overlap = _topic_overlap_ratio(content, topic_keywords)
+            if overlap >= 0.6:
+                conflict_paths.append(str(md_file))
+                conflict_type = "duplicate"
+            elif overlap >= 0.3:
                 conflict_paths.append(str(md_file))
                 conflict_type = "partial"
 
@@ -283,7 +287,11 @@ def check_existing_assets(
     if skills_path.exists():
         for skill_file in skills_path.glob("*/SKILL.md"):
             content = skill_file.read_text(encoding="utf-8").lower()
-            if _has_topic_overlap(content, topic_keywords):
+            overlap = _topic_overlap_ratio(content, topic_keywords)
+            if overlap >= 0.6:
+                conflict_paths.append(str(skill_file))
+                conflict_type = "duplicate"
+            elif overlap >= 0.3:
                 conflict_paths.append(str(skill_file))
                 conflict_type = "partial"
 
@@ -292,7 +300,11 @@ def check_existing_assets(
     if memory_path.exists():
         for md_file in memory_path.glob("**/*.md"):
             content = md_file.read_text(encoding="utf-8").lower()
-            if _has_topic_overlap(content, topic_keywords):
+            overlap = _topic_overlap_ratio(content, topic_keywords)
+            if overlap >= 0.6:
+                conflict_paths.append(str(md_file))
+                conflict_type = "duplicate"
+            elif overlap >= 0.3:
                 conflict_paths.append(str(md_file))
                 conflict_type = "partial"
 
@@ -509,15 +521,20 @@ def write_promotion_result(
 
 # Helper functions
 
-def _has_topic_overlap(content: str, keywords: set, threshold: float = 0.3) -> bool:
-    """Check if content has sufficient keyword overlap."""
+def _topic_overlap_ratio(content: str, keywords: set) -> float:
+    """Return keyword overlap ratio for conflict detection."""
     content_words = set(re.findall(r"\w+", content))
     overlap = keywords & content_words
 
     if len(keywords) == 0:
-        return False
+        return 0.0
 
-    return len(overlap) / len(keywords) >= threshold
+    return len(overlap) / len(keywords)
+
+
+def _has_topic_overlap(content: str, keywords: set, threshold: float = 0.3) -> bool:
+    """Check if content has sufficient keyword overlap."""
+    return _topic_overlap_ratio(content, keywords) >= threshold
 
 
 # Tool list for easy import
