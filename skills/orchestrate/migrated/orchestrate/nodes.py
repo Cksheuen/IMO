@@ -102,13 +102,24 @@ async def execute_subtask_node(state: OrchestrateState) -> Dict[str, Any]:
     if current_index >= len(subtasks):
         return {"fixer_loop_active": False}
 
-    current_subtask = subtasks[current_index]
+    runnable_index = None
+    current_subtask = None
+    for idx, subtask in enumerate(subtasks):
+        if subtask.get("status") != "pending":
+            continue
+        if can_execute_subtask(state, subtask):
+            runnable_index = idx
+            current_subtask = subtask
+            break
 
-    # Check dependencies
-    if not can_execute_subtask(state, current_subtask):
+    if current_subtask is None:
         return {
-            "errors": [f"Subtask {current_subtask['id']} dependencies not satisfied"],
+            "fixer_loop_active": False,
+            "errors": ["No runnable pending subtasks"],
         }
+
+    if runnable_index is None:
+        return {"fixer_loop_active": False}
 
     # In production, this would:
     # 1. Create an isolated worktree
@@ -118,9 +129,16 @@ async def execute_subtask_node(state: OrchestrateState) -> Dict[str, Any]:
     # Demo: Simulate execution
     result = f"Simulated execution of subtask {current_subtask['id']}"
 
+    updated_subtasks = []
+    for idx, subtask in enumerate(subtasks):
+        if idx == runnable_index:
+            updated_subtasks.append(dict(subtask, status="complete", result=result))
+        else:
+            updated_subtasks.append(subtask)
+
     return {
-        "subtasks": [dict(current_subtask, status="complete", result=result)],
-        "current_subtask_index": current_index + 1,
+        "subtasks": updated_subtasks,
+        "current_subtask_index": max(current_index, runnable_index + 1),
     }
 
 
@@ -229,6 +247,9 @@ def format_subtask_prompt(
     if not subtask:
         return ""
 
+    acceptance = state["features"][0].get("acceptance_criteria", []) if state["features"] else ["Complete the task"]
+    acceptance_text = "\n".join(f"- {criterion}" for criterion in acceptance)
+
     prompt = f"""## Subtask #{subtask['id']}: {subtask['description']}
 
 ### Goal
@@ -247,7 +268,7 @@ Full PRD: See state['prd']
 - Cannot modify: All other files
 
 ### Acceptance Criteria
-{(c for c in state['features'][0].get('acceptance_criteria', []) if state['features'] else ['Complete the task'])}
+{acceptance_text}
 
 ### Rules Pack
 - Minimal change: Each change should affect minimal code

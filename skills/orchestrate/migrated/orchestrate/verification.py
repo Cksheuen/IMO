@@ -158,13 +158,13 @@ async def run_verification_with_interrupt(
     3. External approval
     4. Resume with Command(resume=...)
     """
-    checkpointer = MemorySaver()
-
-    # Compile with interrupt_before=["verify"]
-    compiled = graph.compile(
-        checkpointer=checkpointer,
-        interrupt_before=["verify"]
-    )
+    compiled = graph
+    if not hasattr(compiled, "get_state"):
+        checkpointer = MemorySaver()
+        compiled = graph.compile(
+            checkpointer=checkpointer,
+            interrupt_before=["verify"]
+        )
 
     # Run until interrupt
     result = await compiled.ainvoke(
@@ -193,19 +193,16 @@ async def resume_with_approval(
     Returns:
         Updated state
     """
-    if approved:
-        return await graph.invoke(
-            Command(resume={
-                "approved": True,
-                "feature_results": feature_results or {}
-            }),
-            config={"configurable": {"thread_id": thread_id}}
-        )
-    else:
-        return await graph.invoke(
-            Command(resume={"approved": False}),
-            config={"configurable": {"thread_id": thread_id}}
-        )
+    command = Command(
+        resume={
+            "approved": approved,
+            "feature_results": feature_results or {},
+        }
+    )
+    return await graph.ainvoke(
+        command,
+        config={"configurable": {"thread_id": thread_id}}
+    )
 
 
 # Feature status helpers

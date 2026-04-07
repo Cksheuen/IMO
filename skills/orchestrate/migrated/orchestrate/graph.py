@@ -6,7 +6,7 @@ Wires together all nodes into a complete orchestration graph.
 from typing import Literal
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.types import Command, interrupt
+from langgraph.types import Command
 
 from .state import OrchestrateState, DeltaContext
 from .nodes import (
@@ -45,7 +45,7 @@ def create_orchestrate_graph():
         should_proceed_after_decompose,
         {
             "execute": "execute_subtask",
-            "wait": "decompose",  # Wait for confirmation (would use interrupt in production)
+            "wait": END,
         }
     )
 
@@ -84,19 +84,16 @@ def should_proceed_after_decompose(state: OrchestrateState) -> Literal["execute"
     """Check if user has confirmed the decomposition plan."""
     if state.get("user_confirmed"):
         return "execute"
-    # In production, would use interrupt() here
-    # For demo, auto-confirm
-    return "execute"
+    return "wait"
 
 
 def should_continue_execution(state: OrchestrateState) -> Literal["continue", "aggregate"]:
     """Check if there are more subtasks to execute."""
-    current_index = state.get("current_subtask_index", 0)
     subtasks = state.get("subtasks", [])
 
     # Check for pending subtasks with satisfied dependencies
-    for i, subtask in enumerate(subtasks):
-        if subtask.get("status") != "complete":
+    for subtask in subtasks:
+        if subtask.get("status") == "pending":
             # Check dependencies
             deps_satisfied = all(
                 any(s["id"] == dep_id and s.get("status") == "complete"
@@ -106,9 +103,6 @@ def should_continue_execution(state: OrchestrateState) -> Literal["continue", "a
             if deps_satisfied:
                 return "continue"
 
-    # All subtasks complete or no more can run
-    if current_index < len(subtasks):
-        return "continue"
     return "aggregate"
 
 
@@ -134,6 +128,11 @@ def compile_orchestrate_graph_with_checkpoint():
     graph = create_orchestrate_graph()
     checkpointer = MemorySaver()
     return graph.compile(checkpointer=checkpointer)
+
+
+def compile_orchestrate_graph():
+    """Compile the graph without checkpointing."""
+    return create_orchestrate_graph().compile()
 
 
 def compile_orchestrate_graph_with_interrupt():
@@ -208,7 +207,7 @@ async def run_orchestration(
     if checkpoint:
         graph = compile_orchestrate_graph_with_checkpoint()
     else:
-        graph = create_orchestrate_graph().compile()
+        graph = compile_orchestrate_graph()
 
     # Run the graph
     result = await graph.ainvoke(initial_state)
