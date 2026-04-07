@@ -248,6 +248,7 @@ def scan_lesson_capture() -> dict:
         "hooks_exist": False,
         "signal_detector_exists": False,
         "lesson_gate_exists": False,
+        "lesson_gate_deprecated": False,
         "settings_stop_hook": False,
         "settings_statusline_integrated": False,
         "signal_state": None,
@@ -259,6 +260,10 @@ def scan_lesson_capture() -> dict:
     gate = HOOKS_DIR / "lesson-capture" / "lesson-gate.sh"
     result["signal_detector_exists"] = detector.is_file()
     result["lesson_gate_exists"] = gate.is_file()
+    if result["lesson_gate_exists"]:
+        gate_text = read_file_safe(gate)
+        if gate_text and "DEPRECATED: lesson-gate" in gate_text:
+            result["lesson_gate_deprecated"] = True
     result["hooks_exist"] = result["signal_detector_exists"] and result["lesson_gate_exists"]
 
     # Check settings.json for hook registration
