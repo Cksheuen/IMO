@@ -142,7 +142,6 @@
     "skill-creator@claude-plugins-official": true,
     "chrome-devtools-mcp@chrome-devtools-plugins": true,
     "codex@openai-codex": true,
-    "ttcodex@openai-codex": true,
     "ttcodex@ttcodex-local": true
   },
   "extraKnownMarketplaces": {
