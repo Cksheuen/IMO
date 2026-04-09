@@ -1,6 +1,7 @@
 #!/bin/bash
 # CC → Codex 规则同步脚本
-# 从 CC 的 rules/skills/lessons 提炼生成 ~/.codex/AGENTS.md
+# 从 CC 的 rules/skills/lessons 提炼生成共享的 ~/.claude/AGENTS.md，
+# 并让 ~/.codex/AGENTS.override.md 与 ~/.codex/AGENTS.md 通过符号链接指向它。
 #
 # 调用方式：
 #   bash ~/.claude/hooks/codex-sync/sync-to-codex.sh
@@ -12,8 +13,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 CODEX_DIR="$HOME/.codex"
 MANIFEST="$CLAUDE_DIR/shared-knowledge/sync-manifest.json"
-OUTPUT="$CODEX_DIR/AGENTS.md"
 PROJECT_OUTPUT="$CLAUDE_DIR/AGENTS.md"
+CODEX_OVERRIDE_LINK="$CODEX_DIR/AGENTS.override.md"
+CODEX_LEGACY_LINK="$CODEX_DIR/AGENTS.md"
 COMPILER="$SCRIPT_DIR/compile-rules.py"
 LOG="$CLAUDE_DIR/shared-knowledge/sync.log"
 
@@ -42,6 +44,13 @@ target_matches_hash() {
   [ "$(file_sha256 "$target")" = "$expected_hash" ]
 }
 
+symlink_points_to() {
+  local target="$1"
+  local expected_source="$2"
+  [ -L "$target" ] || return 1
+  [ "$(readlink "$target")" = "$expected_source" ]
+}
+
 sync_target() {
   local target="$1"
   local label="$2"
@@ -56,6 +65,21 @@ sync_target() {
   filesize=$(wc -c < "$target" | tr -d ' ')
   log "SYNCED[$label]: $filesize bytes -> $target (hash=${NEW_HASH:0:12}...)"
   echo "$label AGENTS.md synced: ${filesize} bytes" >&2
+}
+
+ensure_symlink() {
+  local source="$1"
+  local target="$2"
+  local label="$3"
+
+  if ln -sfn "$source" "$target"; then
+    log "LINKED[$label]: $target -> $source"
+    echo "$label AGENTS.md linked: $target -> $source" >&2
+  else
+    log "ERROR: failed to create $label symlink at $target -> $source"
+    echo "Failed to link $label AGENTS.md: $target -> $source" >&2
+    return 1
+  fi
 }
 
 # Ensure directories exist
@@ -102,19 +126,22 @@ except: print('')
 " 2>/dev/null)
 
 if [ "$FORCE" = false ] && [ -n "$OLD_HASH" ] && [ "$OLD_HASH" = "$NEW_HASH" ]; then
-  if target_matches_hash "$OUTPUT" "$NEW_HASH" && target_matches_hash "$PROJECT_OUTPUT" "$NEW_HASH"; then
-    log "SKIP: rules unchanged and all targets intact (hash=$OLD_HASH)"
+  if target_matches_hash "$PROJECT_OUTPUT" "$NEW_HASH" \
+    && symlink_points_to "$CODEX_OVERRIDE_LINK" "$PROJECT_OUTPUT" \
+    && symlink_points_to "$CODEX_LEGACY_LINK" "$PROJECT_OUTPUT"; then
+    log "SKIP: rules unchanged and all targets intact (hash=$OLD_HASH, symlinks ok)"
     exit 0
   fi
 
-  [ -f "$OUTPUT" ] || log "TARGET_MISSING: $OUTPUT does not exist, re-syncing"
   [ -f "$PROJECT_OUTPUT" ] || log "TARGET_MISSING: $PROJECT_OUTPUT does not exist, re-syncing"
-  target_matches_hash "$OUTPUT" "$NEW_HASH" || log "TARGET_DRIFT: $OUTPUT differs from manifest, re-syncing"
   target_matches_hash "$PROJECT_OUTPUT" "$NEW_HASH" || log "TARGET_DRIFT: $PROJECT_OUTPUT differs from manifest, re-syncing"
+  symlink_points_to "$CODEX_OVERRIDE_LINK" "$PROJECT_OUTPUT" || log "LINK_DRIFT: $CODEX_OVERRIDE_LINK is missing or points elsewhere, re-syncing"
+  symlink_points_to "$CODEX_LEGACY_LINK" "$PROJECT_OUTPUT" || log "LINK_DRIFT: $CODEX_LEGACY_LINK is missing or points elsewhere, re-syncing"
 fi
 
-# Write to both Codex global config and the current ~/.claude project root.
-sync_target "$OUTPUT" "codex-global"
+# Write the compiled output once, then expose it to Codex via symlinks.
 sync_target "$PROJECT_OUTPUT" "claude-project"
+ensure_symlink "$PROJECT_OUTPUT" "$CODEX_OVERRIDE_LINK" "codex-global-override"
+ensure_symlink "$PROJECT_OUTPUT" "$CODEX_LEGACY_LINK" "codex-global"
 
 exit 0
