@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "last_sync": "2026-04-03T08:08:19.789988+00:00",
-  "rules_hash": "ff045ebdb013de3334e2a3c0ff71752c920fcc9f680bb4b08ec4f9bf21300f6b",
+  "last_sync": "2026-04-09T13:19:25.116850+00:00",
+  "rules_hash": "95f17809c91ac696e8f18d64e19e8025e222478c9f966ad9801712d8c1c1611c",
   "synced_rules": [
     "/Users/bytedance/.claude/CLAUDE.md",
     "/Users/bytedance/.claude/rules/core/context-injection.md",
@@ -13,6 +13,7 @@
     "/Users/bytedance/.claude/rules/pattern/auto-created-feature-list-noise.md",
     "/Users/bytedance/.claude/rules/pattern/change-impact-review.md",
     "/Users/bytedance/.claude/rules/pattern/change-scope-guard.md",
+    "/Users/bytedance/.claude/rules/pattern/closed-learning-loop.md",
     "/Users/bytedance/.claude/rules/pattern/code-as-interface.md",
     "/Users/bytedance/.claude/rules/pattern/cross-layer-preflight.md",
     "/Users/bytedance/.claude/rules/pattern/execution-continuity.md",

@@ -105,6 +105,7 @@
 - 项目级 `.claude/settings.json` 在 `Stop` / `SubagentStop` 挂载 `.claude/hooks/promotion-scan.py`
 - 项目级 `.claude/settings.json` 在 `Stop` / `SubagentStop` 挂载 `.claude/hooks/promotion-gate.py`
 - 项目级 `.claude/settings.json` 在 `SessionStart` 挂载 `.claude/hooks/promotion-queue-status.py`
+- Promotion Loop 是否自动运行受根目录 `promotion-config.json` 的 `autoBackgroundEnabled` 控制
 - `promotion-scan.py` 只做轻量候选扫描，不直接替代 `promote-notes`
 - 命中候选时输出短晋升信号，供后续 `Promotion Loop` 继续处理
 - 命中候选时同时写入根目录 `promotion-queue.json`
@@ -158,6 +159,25 @@
 - Promotion capture: `~/.claude/logs/promotion-capture/background-*.log`
 
 注意：上面这条 Promotion Loop 属于**当前仓库开发态的项目级链路**，真实挂载位置是 `.claude/settings.json`，不是根目录共享 `settings.json`。
+
+### Promotion Loop 开关（2026-04-09 更新）
+
+- 配置文件：根目录 `promotion-config.json`
+- 开关字段：`autoBackgroundEnabled`
+- `true`：允许 `promotion-scan.py` / `promotion-gate.py` 在 `Stop` / `SubagentStop` 自动执行并后台拉起 `promote-notes`
+- `false`：hooks 静默跳过 promotion 自动链路，用户需手动执行 `/promote-notes`
+- 推荐用户入口：
+  - `/promotion-mode status`
+  - `/promotion-mode on`
+  - `/promotion-mode off`
+- 兼容别名：
+  - `/promotion-auto-status`
+  - `/promotion-auto-on`
+  - `/promotion-auto-off`
+- 底层脚本：
+  - `python3 "$HOME/.claude/hooks/promotion-mode.py" status`
+  - `python3 "$HOME/.claude/hooks/promotion-mode.py" enable`
+  - `python3 "$HOME/.claude/hooks/promotion-mode.py" disable`
 
 约束：
 

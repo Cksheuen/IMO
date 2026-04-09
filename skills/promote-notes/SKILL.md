@@ -9,11 +9,24 @@ description: notes 晋升技能。当 `notes/` 中的 lesson、research、design
 
 此技能既可被用户显式调用，也可在运行过程中被 `Promotion Loop` 自动调用。
 
+用户侧应通过命令切换模式，而不是直接编辑配置文件：
+
+- `/promotion-mode on`：允许 Stop / SubagentStop 在后台自动扫描并执行 Promotion Loop
+- `/promotion-mode off`：禁止自动后台触发，只保留用户手动 `/promote-notes`
+- `/promotion-mode status`：查看当前模式
+
+兼容别名仍可用：
+- `/promotion-auto-on`
+- `/promotion-auto-off`
+- `/promotion-auto-status`
+
+底层状态仍落在仓库根目录 `promotion-config.json`，但那是运行时存储，不是推荐的用户入口。
+
 ## 执行位置
 
 | 触发方式 | 执行位置 | 原因 |
 |---------|---------|------|
-| **自动触发（Stop hook）** | **后台独立进程** | 不打断主 agent 流程 |
+| **自动触发（Stop / SubagentStop hook，且开关开启）** | **后台独立进程** | 不打断主 agent 流程 |
 | 用户显式调用 `/promote-notes` | 当前 agent | 用户主动请求 |
 
 ### 自动触发的后台执行

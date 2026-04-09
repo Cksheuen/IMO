@@ -2,6 +2,14 @@
 
 显式触发 `promote-notes` 技能或继续处理当前 `promotion-queue.json` 里的待晋升候选。
 
+模式切换：
+- 优先使用 `/promotion-mode on|off|status`
+- 兼容别名：`/promotion-auto-on`、`/promotion-auto-off`、`/promotion-auto-status`
+
+模式语义：
+- 自动模式：Stop / SubagentStop 后台自动扫描并处理
+- 手动模式：不自动跑，需手动执行本命令
+
 适用场景：
 - 用户要求"提炼 notes"
 - 需要手动继续 `Promotion Loop`
