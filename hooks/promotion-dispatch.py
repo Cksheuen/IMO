@@ -15,7 +15,6 @@ import fcntl
 import json
 import subprocess
 import sys
-import time
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -54,25 +53,113 @@ def build_dispatch_prompt(candidate: dict) -> str:
     )
 
 
+def now_iso() -> str:
+    return datetime.now().isoformat()
+
+
+def default_dispatch_state() -> dict:
+    return {
+        "status": "idle",
+        "consumer": "promote-notes",
+        "attempts": 0,
+        "requestedAt": None,
+        "lastAttemptAt": None,
+        "finishedAt": None,
+        "lastError": None,
+    }
+
+
+def normalize_candidate(item: dict, forced_status: Optional[str] = None) -> Optional[dict]:
+    """归一化候选项，兼容 v1/v2 字段。"""
+    if not isinstance(item, dict):
+        return None
+
+    candidate = dict(item)
+    candidate_id = candidate.get("id") or candidate.get("path")
+    if not candidate_id:
+        return None
+
+    candidate["id"] = candidate_id
+    candidate["status"] = forced_status or candidate.get("status") or "pending"
+    candidate["attempts"] = candidate.get("attempts", 0)
+    return candidate
+
+
+def normalize_queue(raw_queue: Optional[dict]) -> dict:
+    """归一化队列，兼容 legacy(v1) 和 queue v2。"""
+    if not isinstance(raw_queue, dict):
+        raw_queue = {}
+
+    dispatch = default_dispatch_state()
+    if isinstance(raw_queue.get("dispatch"), dict):
+        dispatch.update(raw_queue["dispatch"])
+
+    candidates_by_id = {}
+    status_priority = {"pending": 0, "failed": 1, "processing": 2, "completed": 3}
+
+    def upsert(item: dict, forced_status: Optional[str] = None):
+        candidate = normalize_candidate(item, forced_status=forced_status)
+        if not candidate:
+            return
+
+        key = str(candidate["id"])
+        existing = candidates_by_id.get(key)
+        if not existing:
+            candidates_by_id[key] = candidate
+            return
+
+        existing_status = existing.get("status", "pending")
+        new_status = candidate.get("status", "pending")
+        if status_priority.get(new_status, 0) >= status_priority.get(existing_status, 0):
+            merged = dict(existing)
+            merged.update(candidate)
+        else:
+            merged = dict(candidate)
+            merged.update(existing)
+        candidates_by_id[key] = merged
+
+    for item in raw_queue.get("candidates", []):
+        upsert(item)
+    for item in raw_queue.get("processing", []):
+        upsert(item, forced_status="processing")
+    for item in raw_queue.get("completed", []):
+        upsert(item, forced_status="completed")
+
+    return {
+        "version": raw_queue.get("version", 2),
+        "created_at": raw_queue.get("created_at") or raw_queue.get("createdAt") or now_iso(),
+        "updatedAt": raw_queue.get("updatedAt") or raw_queue.get("updated_at") or now_iso(),
+        "dispatch": dispatch,
+        "candidates": list(candidates_by_id.values()),
+    }
+
+
+def candidates_with_status(queue: dict, *statuses: str) -> list:
+    if not statuses:
+        return list(queue.get("candidates", []))
+    target = set(statuses)
+    return [c for c in queue.get("candidates", []) if c.get("status", "pending") in target]
+
+
 def load_queue() -> dict:
     """加载队列状态"""
     if QUEUE_FILE.exists():
         try:
-            return json.loads(QUEUE_FILE.read_text())
+            return normalize_queue(json.loads(QUEUE_FILE.read_text()))
         except (json.JSONDecodeError, OSError):
             pass
-    return {
-        "created_at": datetime.now().isoformat(),
-        "candidates": [],
-        "processing": [],
-        "completed": [],
-    }
+    return normalize_queue({})
 
 
 def save_queue(queue: dict):
     """保存队列状态"""
-    queue["updated_at"] = datetime.now().isoformat()
-    QUEUE_FILE.write_text(json.dumps(queue, indent=2, ensure_ascii=False))
+    normalized = normalize_queue(queue)
+    normalized["updatedAt"] = now_iso()
+    # legacy mirrors: 给仍依赖 processing/completed 的脚本做兜底
+    normalized["processing"] = candidates_with_status(normalized, "processing")
+    normalized["completed"] = candidates_with_status(normalized, "completed")
+    normalized["updated_at"] = normalized["updatedAt"]
+    QUEUE_FILE.write_text(json.dumps(normalized, indent=2, ensure_ascii=False))
 
 
 @contextmanager
@@ -264,16 +351,21 @@ def cmd_scan():
 
     # 更新队列（使用锁保护）
     with locked_queue() as queue:
-        existing_ids = {c["id"] for c in queue["candidates"] + queue["processing"]}
+        existing_ids = {c["id"] for c in queue["candidates"]}
+        now = now_iso()
 
         for c in candidates:
             if c["id"] not in existing_ids:
                 c["status"] = "pending"
                 c["claimed_at"] = None
+                c.setdefault("attempts", 0)
+                c.setdefault("enqueuedAt", now)
+                c["lastSeenAt"] = now
                 queue["candidates"].append(c)
+                existing_ids.add(c["id"])
 
-        pending_count = len(queue["candidates"])
-        processing_count = len(queue["processing"])
+        pending_count = len(candidates_with_status(queue, "pending"))
+        processing_count = len(candidates_with_status(queue, "processing"))
 
     print(f"\nQueue updated: {pending_count} pending, {processing_count} processing")
 
@@ -283,13 +375,22 @@ def cmd_claim():
     claimed = None
 
     with locked_queue() as queue:
-        for candidate in list(queue["candidates"]):
-            if candidate.get("status") == "pending":
+        claimable_statuses = ("pending", "failed")
+        for candidate in queue["candidates"]:
+            if candidate.get("status") in claimable_statuses:
                 candidate["status"] = "processing"
-                candidate["claimed_at"] = datetime.now().isoformat()
-                queue["processing"].append(candidate)
-                queue["candidates"].remove(candidate)
+                candidate["claimed_at"] = now_iso()
+                candidate["attempts"] = candidate.get("attempts", 0) + 1
+                candidate.pop("last_error", None)
+                candidate.pop("lastError", None)
                 claimed = dict(candidate)
+
+                dispatch = queue["dispatch"]
+                dispatch["status"] = "running"
+                dispatch["requestedAt"] = dispatch.get("requestedAt") or now_iso()
+                dispatch["lastAttemptAt"] = now_iso()
+                dispatch["attempts"] = dispatch.get("attempts", 0) + 1
+                dispatch["lastError"] = None
                 break
 
     if claimed:
@@ -315,14 +416,19 @@ def cmd_release(candidate_id: str):
     released = False
 
     with locked_queue() as queue:
-        for candidate in list(queue["processing"]):
-            if candidate["id"] == candidate_id:
+        for candidate in queue["candidates"]:
+            if candidate.get("id") == candidate_id and candidate.get("status") == "processing":
                 candidate["status"] = "pending"
                 candidate["claimed_at"] = None
-                queue["candidates"].append(candidate)
-                queue["processing"].remove(candidate)
                 released = True
                 break
+
+        if released and not candidates_with_status(queue, "processing"):
+            queue["dispatch"]["status"] = "idle"
+            queue["dispatch"]["finishedAt"] = now_iso()
+            queue["dispatch"]["lastError"] = None
+            queue["dispatch"]["background_spawned"] = False
+            queue["dispatch"]["background_pid"] = None
 
     if released:
         log(f"Released candidate: {candidate_id}")
@@ -338,19 +444,24 @@ def cmd_fail(candidate_id: Optional[str], error: Optional[str]):
     requeued = []
 
     with locked_queue() as queue:
-        remaining = []
-        for candidate in queue["processing"]:
+        for candidate in queue["candidates"]:
+            if candidate.get("status") != "processing":
+                continue
             if candidate_id and candidate.get("id") != candidate_id:
-                remaining.append(candidate)
                 continue
 
-            candidate["status"] = "pending"
+            candidate["status"] = "failed" if error else "pending"
             candidate["claimed_at"] = None
             candidate["last_error"] = error or "subagent_failed"
-            queue["candidates"].append(candidate)
+            candidate["lastError"] = error or "subagent_failed"
             requeued.append(candidate["id"])
 
-        queue["processing"] = remaining
+        if requeued:
+            queue["dispatch"]["status"] = "failed" if error else "idle"
+            queue["dispatch"]["finishedAt"] = now_iso()
+            queue["dispatch"]["lastError"] = error
+            queue["dispatch"]["background_spawned"] = False
+            queue["dispatch"]["background_pid"] = None
 
     if requeued:
         log(f"Re-queued failed candidates: {', '.join(requeued)}")
@@ -383,18 +494,37 @@ def cmd_apply(result_file: str):
 def cmd_list():
     """列出队列状态"""
     queue = load_queue()
+    dispatch = queue.get("dispatch", {})
+    pending = candidates_with_status(queue, "pending")
+    processing = candidates_with_status(queue, "processing")
+    failed = candidates_with_status(queue, "failed")
+    completed = candidates_with_status(queue, "completed")
 
     print("=== Promotion Queue ===")
-    print(f"Pending: {len(queue['candidates'])}")
-    for c in queue["candidates"]:
+    print(f"Version: {queue.get('version', 'N/A')}")
+    print(
+        "Dispatch: "
+        f"status={dispatch.get('status', 'unknown')}, "
+        f"consumer={dispatch.get('consumer', 'unknown')}, "
+        f"attempts={dispatch.get('attempts', 0)}, "
+        f"lastError={dispatch.get('lastError') or 'N/A'}"
+    )
+
+    print(f"\nPending: {len(pending)}")
+    for c in pending:
         print(f"  - {c['id']} ({c.get('reason', 'N/A')})")
 
-    print(f"\nProcessing: {len(queue['processing'])}")
-    for c in queue["processing"]:
+    print(f"\nProcessing: {len(processing)}")
+    for c in processing:
         claimed = c.get("claimed_at", "N/A")
         print(f"  - {c['id']} (claimed: {claimed})")
 
-    print(f"\nCompleted: {len(queue['completed'])}")
+    print(f"\nFailed: {len(failed)}")
+    for c in failed:
+        err = c.get("lastError") or c.get("last_error") or "N/A"
+        print(f"  - {c['id']} (error: {err})")
+
+    print(f"\nCompleted: {len(completed)}")
 
 
 def main():
