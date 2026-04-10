@@ -53,6 +53,22 @@
 - 想作为配置仓库内容被同步、复用的 hook 脚本，放根目录 `hooks/`
 - 只服务于本仓库开发流程的项目级 hook，继续留在 `.claude/hooks/`
 
+### Runtime Profiles
+
+当前仓库长期同时存在两套 runtime profile：
+
+- **shared runtime**：根目录 `settings.json`
+- **repo-dev runtime**：仓库内 `.claude/settings.json`
+
+判断方法：
+
+- 某条脚本若挂在根 `settings.json`，它属于共享 profile
+- 某条脚本若挂在仓库内 `.claude/settings.json`，它只服务“开发这个仓库自身”
+- 若要快速对照两套 profile，运行：
+  - `python3 "$HOME/.claude/hooks/runtime-profile-audit.py"`
+
+这个 audit 是只读工具，不属于自动 hook，不改变任何挂载。
+
 ## 调用链
 
 `hooks/` 目录本身不会触发任何脚本。要生效，必须把脚本挂到 settings 中。

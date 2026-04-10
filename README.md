@@ -104,6 +104,21 @@ AI 会根据当前上下文自动选择合适的技能和规范执行。
 6. 项目特定工具再下沉到项目级 `.mcp.json`
 7. 参考 `.mcp.example.json` 为具体项目生成最小项目覆盖
 
+### 运行时 Profile 审计
+
+当前仓库有两套长期并存的 runtime profile：
+
+- 共享 profile：根目录 `settings.json`
+- 仓库开发态 profile：仓库内 `.claude/settings.json`
+
+需要确认某条 hook、plugin 或 marketplace 配置属于哪一层时，运行：
+
+```bash
+python3 ~/.claude/hooks/runtime-profile-audit.py
+```
+
+这个工具只做对照，不修改任何配置。
+
 ## 架构设计
 
 用户级与项目级目录分工如下：
@@ -172,6 +187,23 @@ AI 会根据当前上下文自动选择合适的技能和规范执行。
 - `hooks/` 以前缺少正式设计说明，也缺少“需要在 settings 中挂载才会生效”的显式提醒。
 - `notes/` 以前缺少“什么时候写入”的工作流触发条件，因此即使目录存在，也不会自然积累内容。
 - 目录设计如果只有语义、没有调用链，最终仍然会是空目录。
+
+### Runtime-heavy 目录
+
+以下目录主要属于本地运行时资产，不应进入 git 白名单：
+
+- `plugins/`：plugin cache、marketplace clone、本地 plugin data
+- `projects/`：按项目路径聚合的本地 session / runtime 状态
+- `file-history/`：本地历史快照
+- `specs/`：工作流产出的规格资产
+
+需要查看这些目录的体积与职责边界时，运行：
+
+```bash
+python3 ~/.claude/hooks/runtime-storage-audit.py
+```
+
+这个工具只做容量观测与建议输出，不删除、不移动任何目录内容。
 
 ## 核心工作流
 
