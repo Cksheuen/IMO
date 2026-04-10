@@ -37,6 +37,30 @@ git clone https://github.com/your-repo/claude-config.git .claude
 - 用户级：放通用规则和技能
 - 项目级：放项目特定的上下文和规则
 
+### LangChain / LangGraph 迁移 runtime 依赖
+
+当前仓库里的 `skills/*/migrated/` 与部分 `rules/pattern/migrated/` 样例统一使用仓库本地 `.venv`。
+
+共享基础依赖入口：
+
+```bash
+./.venv/bin/pip install -r skills/migrated/requirements.txt
+```
+
+如只想按 runtime 局部安装，也可以使用各自入口：
+
+```bash
+./.venv/bin/pip install -r skills/orchestrate/migrated/requirements.txt
+```
+
+运行前可先检查：
+
+```bash
+python3 ~/.claude/hooks/check-langchain-runtime-deps.py --runtime orchestrate
+```
+
+若当前任务需要运行 migrated runtime 且检查显示缺依赖，agent 应直接申请安装，而不是停留在 `ModuleNotFoundError` 说明层。
+
 ## 如何使用
 
 **直接问 AI**。这个仓库本身就是配置，AI 启动后会自动读取。

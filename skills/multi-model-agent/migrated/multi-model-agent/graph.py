@@ -102,7 +102,17 @@ def resume_after_fallback_review(
     if override_force_fallback is not None:
         payload["force_fallback"] = override_force_fallback
     return compiled_graph.invoke(
-        Command(resume=payload),
+        Command(
+            resume=payload,
+            update={
+                "fallback_review_approved": approved,
+                **(
+                    {"force_fallback": override_force_fallback}
+                    if override_force_fallback is not None
+                    else {}
+                ),
+            },
+        ),
         config={"configurable": {"thread_id": thread_id}},
     )
 
@@ -113,6 +123,7 @@ async def run_multi_model_routing(
     current_agent_model: Optional[str] = None,
     force_fallback: bool = False,
     checkpoint: bool = False,
+    thread_id: Optional[str] = None,
 ) -> MultiModelState:
     """Convenience helper to run the routing graph end to end."""
     initial_state = create_initial_state(
@@ -127,4 +138,11 @@ async def run_multi_model_routing(
         if checkpoint
         else compile_multi_model_graph()
     )
-    return await compiled_graph.ainvoke(initial_state)
+    invoke_config = None
+    if checkpoint:
+        invoke_config = {
+            "configurable": {
+                "thread_id": thread_id or f"multi-model:{initial_state['created_at']}",
+            }
+        }
+    return await compiled_graph.ainvoke(initial_state, config=invoke_config)

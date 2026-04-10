@@ -53,6 +53,16 @@
 - 想作为配置仓库内容被同步、复用的 hook 脚本，放根目录 `hooks/`
 - 只服务于本仓库开发流程的项目级 hook，继续留在 `.claude/hooks/`
 
+补充：
+
+- `hooks/` 里也允许放**不自动挂载的只读/检查型工具**
+- 这类脚本必须在文档中明确写出“不是自动 hook，只是本地检查工具”
+- 当前例子包括：
+  - `runtime-profile-audit.py`
+  - `runtime-storage-audit.py`
+  - `task-audit.py`
+  - `check-langchain-runtime-deps.py`
+
 ### Runtime Profiles
 
 当前仓库长期同时存在两套 runtime profile：

@@ -2,13 +2,20 @@
 
 ## 安装
 
-在新环境中先安装本目录依赖：
+在新环境中先安装共享基础依赖或本目录入口依赖：
 
 ```bash
-pip install -r skills/multi-model-agent/migrated/requirements.txt
+./.venv/bin/pip install -r skills/migrated/requirements.txt
+./.venv/bin/pip install -r skills/multi-model-agent/migrated/requirements.txt
 ```
 
 如果后续要接具体 provider，再额外安装对应 integration 包，例如 Anthropic 或 OpenAI provider。
+
+运行前可先检查：
+
+```bash
+python3 ~/.claude/hooks/check-langchain-runtime-deps.py --runtime multi-model-agent
+```
 
 ## LiteLLM 配置自动发现
 

@@ -232,24 +232,43 @@ async def verify_node(state: OrchestrateState) -> Dict[str, Any]:
     Equivalent to CC's verification-gate + reviewer agent.
     """
     features = state["features"]
+    verification_approved = state.get("verification_approved")
+    explicit_results = state.get("verification_feature_results", {})
+
+    if verification_approved is False:
+        return {
+            "errors": ["Verification review was not approved."],
+            "fixer_loop_active": False,
+        }
 
     # Check each pending feature
     for feature in features:
         if feature["passes"] is None:
-            # In production, this would call reviewer agent
-            # For demo, simulate verification
-            passes = True  # Simulate success
+            if feature["id"] in explicit_results:
+                passes = explicit_results[feature["id"]]
+                notes = "Verified from resume payload"
+            else:
+                # In production, this would call reviewer agent
+                # For demo, simulate verification
+                passes = True  # Simulate success
+                notes = "Verified automatically"
 
             updates = update_feature_result(
                 state,
                 feature["id"],
                 passes=passes,
-                notes="Verified automatically"
+                notes=notes,
             )
+            updates["verification_approved"] = None
+            updates["verification_feature_results"] = {}
             return updates
 
     # All features verified
-    return {"fixer_loop_active": False}
+    return {
+        "fixer_loop_active": False,
+        "verification_approved": None,
+        "verification_feature_results": {},
+    }
 
 
 async def fixer_node(state: OrchestrateState) -> Dict[str, Any]:

@@ -86,6 +86,7 @@ class DualReviewState(TypedDict):
     # Current state
     current_round: int
     status: str  # in_progress, passed, max_rounds_reached, error
+    fix_approved: Optional[bool]
 
     # Aggregated results
     rounds: List[RoundResult]
@@ -126,6 +127,7 @@ def create_initial_state(
         skip_rescue=skip_rescue,
         current_round=0,
         status="in_progress",
+        fix_approved=None,
         rounds=[],
         current_codex_review=None,
         current_codex_rescue=None,
@@ -186,6 +188,8 @@ def is_verdict_approved(state: DualReviewState) -> bool:
 
 def can_continue_loop(state: DualReviewState) -> bool:
     """Check if loop can continue (not max rounds, not passed)."""
+    if state["status"] != "in_progress":
+        return False
     if state["status"] == "passed":
         return False
     if state["current_round"] >= state["max_rounds"]:

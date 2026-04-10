@@ -46,6 +46,7 @@
 - 变更影响审查：`rules/pattern/change-impact-review.md`
 - 废弃方案清理：`rules/pattern/abandoned-solution-cleanup.md`
 - 闭环学习边界：`rules/pattern/closed-learning-loop.md`
+- LangChain 迁移 runtime 依赖：`rules/tool/langchain-runtime-dependencies.md`
 
 ## Notes 读取协议
 

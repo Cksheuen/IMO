@@ -98,6 +98,8 @@ class OrchestrateState(TypedDict):
     # Control flow
     requires_user_confirmation: bool
     user_confirmed: bool
+    verification_approved: Optional[bool]
+    verification_feature_results: Dict[str, bool]
 
     # Error handling
     errors: Annotated[List[str], operator.add]
@@ -137,6 +139,8 @@ def create_initial_state(
         delta_context=None,
         requires_user_confirmation=False,
         user_confirmed=False,
+        verification_approved=None,
+        verification_feature_results={},
         errors=[]
     )
 

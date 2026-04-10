@@ -98,6 +98,7 @@ class MultiModelState(TypedDict):
     agent_role: str
     current_agent_model: Optional[str]
     force_fallback: bool
+    fallback_review_approved: Optional[bool]
 
     model_profiles: List[ModelProfile]
     routing_rules: List[RoutingRule]
@@ -242,6 +243,7 @@ def create_initial_state(
         agent_role=agent_role,
         current_agent_model=current_agent_model,
         force_fallback=force_fallback,
+        fallback_review_approved=None,
         model_profiles=create_default_model_profiles(),
         routing_rules=create_default_routing_rules(),
         task_analysis=None,

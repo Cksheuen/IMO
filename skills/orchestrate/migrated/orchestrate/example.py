@@ -3,31 +3,86 @@ Example usage and tests for Orchestrate LangGraph migration.
 
 Demonstrates how to use the migrated orchestration system.
 """
+from __future__ import annotations
+
 import asyncio
+import importlib.util
+from pathlib import Path
+import sys
 from typing import Dict, Any
 
-from .state import (
-    OrchestrateState,
-    create_initial_state,
-    create_feature,
-    create_subtask,
-    DeltaContext,
-)
-from .graph import (
-    create_orchestrate_graph,
-    compile_orchestrate_graph,
-    compile_orchestrate_graph_with_checkpoint,
-    run_orchestration,
-)
-from .nodes import execute_subtask_node
-from .verification import (
-    VerificationGate,
-    run_verification_with_interrupt,
-    resume_with_approval,
-    get_feature_summary,
-    has_pending_features,
-    all_features_passed,
-)
+
+def _load_runtime():
+    module_path = Path(__file__).with_name("__init__.py")
+    spec = importlib.util.spec_from_file_location(
+        "orchestrate_migrated_runtime",
+        module_path,
+        submodule_search_locations=[str(module_path.parent)],
+    )
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load runtime from {module_path}")
+
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+_RUNTIME_IMPORT_ERROR = None
+if __package__ in (None, ""):
+    try:
+        _runtime = _load_runtime()
+    except ModuleNotFoundError as exc:
+        _runtime = None
+        _RUNTIME_IMPORT_ERROR = exc
+else:
+    _runtime = None
+
+if __package__ not in (None, ""):
+    from .state import (
+        OrchestrateState,
+        create_initial_state,
+        create_feature,
+        create_subtask,
+        DeltaContext,
+    )
+    from .graph import (
+        create_orchestrate_graph,
+        compile_orchestrate_graph,
+        compile_orchestrate_graph_with_checkpoint,
+        compile_orchestrate_graph_with_interrupt,
+        run_orchestration,
+    )
+    from .nodes import execute_subtask_node
+    from .verification import (
+        VerificationGate,
+        FixerLoop,
+        run_verification_with_interrupt,
+        resume_with_approval,
+        get_feature_summary,
+        has_pending_features,
+        all_features_passed,
+    )
+else:
+    if _runtime is not None:
+        OrchestrateState = _runtime.OrchestrateState
+        create_initial_state = _runtime.create_initial_state
+        create_feature = _runtime.create_feature
+        create_subtask = _runtime.create_subtask
+        DeltaContext = _runtime.DeltaContext
+        create_orchestrate_graph = _runtime.create_orchestrate_graph
+        compile_orchestrate_graph = _runtime.compile_orchestrate_graph
+        compile_orchestrate_graph_with_checkpoint = _runtime.compile_orchestrate_graph_with_checkpoint
+        compile_orchestrate_graph_with_interrupt = _runtime.compile_orchestrate_graph_with_interrupt
+        run_orchestration = _runtime.run_orchestration
+        execute_subtask_node = _runtime.execute_subtask_node
+        VerificationGate = _runtime.VerificationGate
+        FixerLoop = _runtime.FixerLoop
+        run_verification_with_interrupt = _runtime.run_verification_with_interrupt
+        resume_with_approval = _runtime.resume_with_approval
+        get_feature_summary = _runtime.get_feature_summary
+        has_pending_features = _runtime.has_pending_features
+        all_features_passed = _runtime.all_features_passed
 
 
 # Example 1: Basic orchestration
@@ -95,6 +150,7 @@ async def example_interrupt_verification():
         task_description="Add unit tests for authentication module",
         task_id="auth-tests-demo"
     )
+    initial_state["user_confirmed"] = True
 
     # Add a feature
     feature = create_feature(
@@ -109,7 +165,7 @@ async def example_interrupt_verification():
     initial_state["features"].append(feature)
 
     # Create and compile graph
-    graph = create_orchestrate_graph()
+    graph = compile_orchestrate_graph_with_interrupt()
 
     # Run with interrupt
     thread_id = "auth-tests-thread"
@@ -176,6 +232,7 @@ async def example_fixer_loop():
 
     # Check verification gate
     gate = VerificationGate(max_attempts=3)
+    fixer_loop = FixerLoop(max_iterations=3)
     gate_result = gate.check(state)
 
     print(f"Gate blocked: {gate_result.get('block')}")
@@ -183,7 +240,7 @@ async def example_fixer_loop():
     print(f"Reason: {gate_result.get('reason')}")
 
     # Get next feature to fix
-    next_feature_id = gate.get_next_feature_to_fix(state)
+    next_feature_id = fixer_loop.get_next_feature_to_fix(state)
     print(f"Next feature to fix: {next_feature_id}")
 
     return state
@@ -410,6 +467,14 @@ def test_feature_summary():
 
 async def run_all_examples():
     """Run all examples."""
+    if _RUNTIME_IMPORT_ERROR is not None:
+        print(
+            "Prerequisite missing for runtime example:",
+            _RUNTIME_IMPORT_ERROR,
+            "- install LangGraph/LangChain dependencies before running this example.",
+        )
+        return
+
     print("Running all examples...\n")
 
     await example_basic_orchestration()
@@ -444,8 +509,6 @@ def run_all_tests():
 
 
 if __name__ == "__main__":
-    import sys
-
     if len(sys.argv) > 1 and sys.argv[1] == "--test":
         run_all_tests()
     else:

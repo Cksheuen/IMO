@@ -3,7 +3,7 @@ Main Orchestrate StateGraph implementation.
 
 Wires together all nodes into a complete orchestration graph.
 """
-from typing import Literal
+from typing import Literal, Optional
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command
@@ -168,12 +168,24 @@ def resume_verification(
     """
     if approved:
         return compiled_graph.invoke(
-            Command(resume={"approved": True, "feature_results": feature_results}),
+            Command(
+                resume={"approved": True, "feature_results": feature_results},
+                update={
+                    "verification_approved": True,
+                    "verification_feature_results": feature_results or {},
+                },
+            ),
             config={"configurable": {"thread_id": thread_id}}
         )
     else:
         return compiled_graph.invoke(
-            Command(resume={"approved": False}),
+            Command(
+                resume={"approved": False},
+                update={
+                    "verification_approved": False,
+                    "verification_feature_results": {},
+                },
+            ),
             config={"configurable": {"thread_id": thread_id}}
         )
 
@@ -184,7 +196,8 @@ async def run_orchestration(
     task_description: str,
     task_id: str = None,
     llm=None,
-    checkpoint=False
+    checkpoint: bool = False,
+    thread_id: Optional[str] = None,
 ) -> OrchestrateState:
     """
     Run a complete orchestration.
@@ -194,6 +207,7 @@ async def run_orchestration(
         task_id: Optional task ID (auto-generated if not provided)
         llm: Optional LLM to use (defaults to Claude)
         checkpoint: Whether to use checkpointing for persistence
+        thread_id: Optional thread ID required when using checkpoint persistence
 
     Returns:
         Final state after orchestration completes
@@ -202,6 +216,7 @@ async def run_orchestration(
 
     # Create initial state
     initial_state = create_initial_state(task_description, task_id)
+    initial_state["user_confirmed"] = True
 
     # Create and compile graph
     if checkpoint:
@@ -210,6 +225,14 @@ async def run_orchestration(
         graph = compile_orchestrate_graph()
 
     # Run the graph
-    result = await graph.ainvoke(initial_state)
+    invoke_config = None
+    if checkpoint:
+        invoke_config = {
+            "configurable": {
+                "thread_id": thread_id or task_id or f"orchestrate:{initial_state['created_at']}",
+            }
+        }
+
+    result = await graph.ainvoke(initial_state, config=invoke_config)
 
     return result

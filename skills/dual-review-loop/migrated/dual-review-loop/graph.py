@@ -8,7 +8,7 @@ Migration Notes:
 - Loop control (max_rounds) becomes a conditional edge
 - dual-review-report.json updates happen in State transitions
 """
-from typing import Literal
+from typing import Literal, Optional
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command, interrupt
@@ -193,12 +193,18 @@ def resume_after_fix(
     """
     if approved:
         return compiled_graph.invoke(
-            Command(resume={"approved": True, "fix_results": fix_results}),
+            Command(
+                resume={"approved": True, "fix_results": fix_results},
+                update={"fix_approved": True},
+            ),
             config={"configurable": {"thread_id": thread_id}}
         )
     else:
         return compiled_graph.invoke(
-            Command(resume={"approved": False}),
+            Command(
+                resume={"approved": False},
+                update={"fix_approved": False},
+            ),
             config={"configurable": {"thread_id": thread_id}}
         )
 
@@ -210,7 +216,8 @@ async def run_dual_review_loop(
     scope: str = "auto",
     base: str = None,
     skip_rescue: bool = False,
-    checkpoint: bool = False
+    checkpoint: bool = False,
+    thread_id: Optional[str] = None,
 ) -> DualReviewState:
     """
     Run a complete dual review loop.
@@ -221,6 +228,7 @@ async def run_dual_review_loop(
         base: Base ref for comparison (optional)
         skip_rescue: Skip Codex rescue step (default: False)
         checkpoint: Whether to use checkpointing for persistence
+        thread_id: Optional thread ID required when using checkpoint persistence
 
     Returns:
         Final state after review loop completes
@@ -242,7 +250,15 @@ async def run_dual_review_loop(
         graph = create_dual_review_graph().compile()
 
     # Run the graph
-    result = await graph.ainvoke(initial_state)
+    invoke_config = None
+    if checkpoint:
+        invoke_config = {
+            "configurable": {
+                "thread_id": thread_id or f"dual-review:{initial_state['created_at']}",
+            }
+        }
+
+    result = await graph.ainvoke(initial_state, config=invoke_config)
 
     return result
 

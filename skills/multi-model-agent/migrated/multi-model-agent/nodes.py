@@ -39,8 +39,8 @@ def _classify_task_type(task_request: str, agent_role: str) -> str:
     return "general"
 
 
-def _matched_keywords(task_request: str, rules: List[Dict[str, Any]]) -> List[str]:
-    text = task_request.lower()
+def _matched_keywords(task_request: str, agent_role: str, rules: List[Dict[str, Any]]) -> List[str]:
+    text = f"{task_request} {agent_role}".lower()
     matched: List[str] = []
     for rule in rules:
         for keyword in rule.get("keywords", []):
@@ -63,20 +63,36 @@ def _estimate_turns(task_type: str, task_request: str) -> int:
 
 def _select_by_task_rules(state: MultiModelState, analysis: TaskAnalysis) -> RoutingDecision:
     current_model = state.get("current_agent_model")
+    matched_rule = None
+    task_type_rule = None
+    general_rule = None
 
     for rule in sorted(state["routing_rules"], key=lambda item: item["priority"], reverse=True):
-        if analysis["task_type"] not in rule["task_types"] and "general" not in rule["task_types"]:
+        is_task_type_rule = analysis["task_type"] in rule["task_types"]
+        is_general_rule = "general" in rule["task_types"]
+        if not is_task_type_rule and not is_general_rule:
             continue
         if rule["keywords"]:
-            if not any(keyword in analysis["matched_keywords"] for keyword in rule["keywords"]):
-                continue
-        selected_model = rule["route_to"]
+            if any(keyword in analysis["matched_keywords"] for keyword in rule["keywords"]):
+                matched_rule = rule
+                break
+            if is_task_type_rule and task_type_rule is None:
+                task_type_rule = rule
+            continue
+        if is_task_type_rule and task_type_rule is None:
+            task_type_rule = rule
+        elif is_general_rule and general_rule is None:
+            general_rule = rule
+
+    selected_rule = matched_rule or task_type_rule or general_rule
+    if selected_rule is not None:
+        selected_model = selected_rule["route_to"]
         return RoutingDecision(
             selected_model=selected_model,
             fallback_chain=get_default_fallback_chain(selected_model),
             source="task_type",
-            reason=rule["rationale"],
-            confidence=0.9,
+            reason=selected_rule["rationale"],
+            confidence=0.9 if matched_rule is not None else 0.75,
             requires_confirmation=False,
         )
 
@@ -156,7 +172,7 @@ def _build_cost_snapshot(selected_model: str, analysis: TaskAnalysis) -> CostSna
 async def analyze_task_node(state: MultiModelState) -> Dict[str, Any]:
     """Analyze task type, expected effort, and routing signals."""
     task_type = _classify_task_type(state["task_request"], state["agent_role"])
-    matched_keywords = _matched_keywords(state["task_request"], state["routing_rules"])
+    matched_keywords = _matched_keywords(state["task_request"], state["agent_role"], state["routing_rules"])
     estimated_turns = _estimate_turns(task_type, state["task_request"])
 
     analysis = TaskAnalysis(
@@ -212,21 +228,44 @@ async def apply_fallback_node(state: MultiModelState) -> Dict[str, Any]:
     if not decision or not monitoring or not analysis:
         return {"errors": ["Fallback requested without decision/monitoring/analysis."]}
 
+    if state.get("fallback_review_approved") is False:
+        return {
+            "errors": ["Fallback review declined; keeping the original routing decision."],
+            "routing_decision": {
+                **decision,
+                "requires_confirmation": False,
+            },
+        }
+
     available_models = monitoring["available_models"]
     fallback_choice = None
+    fallback_reason = f"Fallback applied because {decision['selected_model']} was unavailable or fallback was forced."
     for candidate in decision["fallback_chain"]:
         if candidate in available_models:
             fallback_choice = candidate
             break
 
     if fallback_choice is None:
-        fallback_choice = "claude-sonnet"
+        if available_models:
+            fallback_choice = available_models[0]
+            fallback_reason = (
+                f"No configured fallback was available for {decision['selected_model']}; "
+                f"used first available model {fallback_choice}."
+            )
+        else:
+            return {
+                "errors": [f"No available models to fall back from {decision['selected_model']}."],
+                "routing_decision": {
+                    **decision,
+                    "requires_confirmation": False,
+                },
+            }
 
     updated_decision = RoutingDecision(
         selected_model=fallback_choice,
         fallback_chain=[],
         source="fallback",
-        reason=f"Fallback applied because {decision['selected_model']} was unavailable or fallback was forced.",
+        reason=fallback_reason,
         confidence=0.7,
         requires_confirmation=False,
     )

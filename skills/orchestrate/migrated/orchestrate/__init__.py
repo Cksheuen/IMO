@@ -49,11 +49,13 @@ from .graph import (
     create_orchestrate_graph,
     compile_orchestrate_graph,
     compile_orchestrate_graph_with_checkpoint,
+    compile_orchestrate_graph_with_interrupt,
     run_orchestration,
 )
 
 from .verification import (
     VerificationGate,
+    FixerLoop,
     run_verification_with_interrupt,
     resume_with_approval,
     get_feature_summary,
@@ -89,9 +91,11 @@ __all__ = [
     "create_orchestrate_graph",
     "compile_orchestrate_graph",
     "compile_orchestrate_graph_with_checkpoint",
+    "compile_orchestrate_graph_with_interrupt",
     "run_orchestration",
     # Verification
     "VerificationGate",
+    "FixerLoop",
     "run_verification_with_interrupt",
     "resume_with_approval",
     "get_feature_summary",

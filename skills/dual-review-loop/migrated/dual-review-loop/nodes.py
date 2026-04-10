@@ -243,6 +243,19 @@ async def cc_fix_node(state: DualReviewState) -> Dict[str, Any]:
     Agent(subagent_type: "implementer", prompt: "修复以下审查发现的问题...")
     ```
     """
+    if state.get("fix_approved") is False:
+        return {
+            "status": "error",
+            "current_cc_fix": CCFixResult(
+                fixed=0,
+                commits=[],
+                files_changed=[],
+                raw_output="Fix application was not approved",
+            ),
+            "errors": ["Fix review was not approved."],
+            "fix_approved": None,
+        }
+
     cc_review = state.get("current_cc_review")
 
     if not cc_review:
@@ -251,7 +264,7 @@ async def cc_fix_node(state: DualReviewState) -> Dict[str, Any]:
             commits=[],
             files_changed=[],
             raw_output="No issues to fix"
-        )}
+        ), "fix_approved": None}
 
     issues = cc_review.get("issues", [])
 
@@ -273,7 +286,7 @@ async def cc_fix_node(state: DualReviewState) -> Dict[str, Any]:
         "raw_output": f"Simulated fixes for {fixed} issues"
     }
 
-    return {"current_cc_fix": cc_fix_result}
+    return {"current_cc_fix": cc_fix_result, "fix_approved": None}
 
 
 async def finalize_round_node(state: DualReviewState) -> Dict[str, Any]:

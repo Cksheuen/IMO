@@ -463,7 +463,8 @@ async def run_promotion(
     queue_path: Optional[str] = None,
     result_path: Optional[str] = None,
     llm: Optional[BaseChatModel] = None,
-    checkpoint: bool = False
+    checkpoint: bool = False,
+    thread_id: Optional[str] = None,
 ) -> PromoteNotesState:
     """
     Run the full promotion workflow.
@@ -474,6 +475,7 @@ async def run_promotion(
         result_path: Path to promotion-result.json
         llm: LLM for evaluation (optional - falls back to heuristics)
         checkpoint: Whether to use checkpointing
+        thread_id: Optional thread ID required when using checkpoint persistence
 
     Returns:
         Final state with processed/deferred/failed lists
@@ -495,6 +497,13 @@ async def run_promotion(
 
     # Compile and run
     graph = compile_promote_notes_graph(checkpoint=checkpoint)
-    result = await graph.ainvoke(initial_state)
+    invoke_config = None
+    if checkpoint:
+        invoke_config = {
+            "configurable": {
+                "thread_id": thread_id or f"promote-notes:{datetime.now().isoformat()}",
+            }
+        }
+    result = await graph.ainvoke(initial_state, config=invoke_config)
 
     return result

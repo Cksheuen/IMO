@@ -197,7 +197,11 @@ async def resume_with_approval(
         resume={
             "approved": approved,
             "feature_results": feature_results or {},
-        }
+        },
+        update={
+            "verification_approved": approved,
+            "verification_feature_results": feature_results or {},
+        },
     )
     return await graph.ainvoke(
         command,
