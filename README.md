@@ -65,6 +65,12 @@ AI 会根据当前上下文自动选择合适的技能和规范执行。
 - 若某个 MCP 仅在少数项目使用，优先放项目级 `.mcp.json`，不要提升到用户级共享基线
 - 示例文件可版本控制，真实本地文件不入库
 
+当前仓库已按这个边界收敛：
+
+- 根目录 `settings.json` 只保留共享 hooks、permissions 和稳定 marketplace
+- `ttcodex-local` 一类本机路径 marketplace 不再放共享层
+- `codemossProviderId` 一类个人 provider 标识只应放本地覆盖层
+
 ### 三层边界
 
 - **共享层**：`settings.json`
@@ -84,16 +90,19 @@ AI 会根据当前上下文自动选择合适的技能和规范执行。
 - 内网 registry，如 `bnpm.byted.org`
 - 办公环境专用 MCP，如 `semi-mcp`、`tiksearch`、`lark-docs`、`feishu`
 - 带租户/端口/本地路径的环境变量
+- 本机路径 marketplace，如 `ttcodex-local`
+- 个人 provider 标识，如 `codemossProviderId`
 - 临时授权过的高权限本地命令
 
 ### 推荐落地方式
 
 1. 复制 `settings.local.example.json` 为本机 `settings.local.json`
-2. 按实际办公环境删减不需要的 MCP
-3. 优先固定版本，不使用 `@latest`
-4. 对 Feishu 一类大工具面优先配置 `FEISHU_ENABLED_TOOLS`
-5. 项目特定工具再下沉到项目级 `.mcp.json`
-6. 参考 `.mcp.example.json` 为具体项目生成最小项目覆盖
+2. 把机器私有配置填到本地覆盖层，如 `ttcodex-local` 和 `codemossProviderId`
+3. 按实际办公环境删减不需要的 MCP
+4. 优先固定版本，不使用 `@latest`
+5. 对 Feishu 一类大工具面优先配置 `FEISHU_ENABLED_TOOLS`
+6. 项目特定工具再下沉到项目级 `.mcp.json`
+7. 参考 `.mcp.example.json` 为具体项目生成最小项目覆盖
 
 ## 架构设计
 

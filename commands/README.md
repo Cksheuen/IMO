@@ -22,5 +22,8 @@
 - `promotion-auto-on.md`
 - `promotion-auto-off.md`
 - `promotion-auto-status.md`
+- `task-audit.md`
 
 其中 `promotion-auto-*` 仅作为兼容别名，正文应始终保持一跳跳转到统一入口 `/promotion-mode`，避免重复维护。
+
+`task-audit.md` 是只读治理入口，用于人工扫描本地 `tasks/` 池中的重复主题、draft、legacy 和非标准目录；它不属于自动 hook，也不执行清理动作。

@@ -1,159 +1,62 @@
 # CLAUDE.md
 
+## 核心原则
+
+- **简洁优先**：每次只改完成目标所需的最小范围
+- **根因导向**：拒绝临时修补，优先修正真正的设计或流程问题
+- **最小影响**：不顺手扩范围，不混入无关清理
+
 ## 语言偏好
 
-- **默认使用中文**创建 skills、rules、notes 等持久化内容（SKILL.md、规范文档、笔记等）
-- description 字段（frontmatter）使用中文
-- 代码注释、变量名、API 调用保持英文
-- 如果原始参考资料为英文，关键术语保留英文原文并附中文说明
+- 持久化内容默认使用中文：`skills/`、`rules/`、`notes/`、`tasks/`
+- 代码、注释、变量名、API 名称保持英文
 
-## 设计哲学
+## 默认工作流
 
-三条不可违背的原则:
+`Plan -> Execute -> Verify -> Learn`
 
-- **简洁优先** - 每个变更尽可能简单，影响最少的代码
-- **根因导向** - 找到根因，拒绝临时修复，保持 Staff 级工程师标准
-- **最小影响** - 只触及必要部分，不引入新问题
+- `Plan`
+  - 非平凡任务先规划，再动手
+  - 优先使用 `tasks/` 记录当前任务事实
+  - 当前仓库位于 `~/.claude/`，因此根目录 `tasks/` 只属于这个仓库项目
+- `Execute`
+  - 先锁定改动边界，再开始修改
+  - 子任务可独立时优先委派或并行
+  - 用户已确认方向后，默认沿当前路径执行到闭环
+- `Verify`
+  - 未证明有效，不标记完成
+  - 结论必须附带文件路径、命令或日志证据
+- `Learn`
+  - 纠正、调研、设计结论先判断应写 `rules/`、`skills/`、`notes/` 还是 `tasks/`
 
-## 工作流: Plan -> Execute -> Verify -> Learn
+## 高优先级边界
 
-### Plan - 先规划，再动手
+- 当前任务事实写 `tasks/`
+- 跨任务复用结论写 `notes/`
+- 稳定事实快照写 `memory/declarative/`
+- 历史过程检索走 `recall/`
+- `hooks/` 只放事件脚本；未挂到 `settings.json` 或项目级 `.claude/settings.json` 前，不算已接通运行链
 
-- 非平凡任务 (3+ 步骤或架构决策) **必须进入 Plan 模式**
-- 拆成可验证的子任务，禁止一次性处理全部上下文
-- 信息不足时先用工具检索补齐事实，再推理
-- 预先编写详细规格说明以减少歧义
-- 执行中出现偏差 -> **立即停止重新规划**，不要硬推
+## 必查规则入口
 
-**任务组织（来自 Trellis）**：
-- 每个任务独立目录，包含 PRD + context + status
-- `tasks/` 默认是项目级目录：`<project>/.claude/tasks`
-- 当前仓库本身位于 `~/.claude/`，因此根目录下的 `tasks/` 只是这个仓库项目自己的 task 目录，不是其他项目共享的全局 task 池
-- `notes/` 维持用户级全局目录：`~/.claude/notes`
-- 任务目录名使用 `YYYY-MM-DD-slug`，禁止纯 UUID 命名
-- `tasks/` 只记录当前任务事实；跨任务结论沉淀到 `notes/`
-- 状态文件记录进度和 blockers，便于恢复
-- 评审标准明确（Acceptance Criteria）
+- 上下文注入：`rules/core/context-injection.md`
+- 任务工作流：`rules/core/task-centric-workflow.md`
+- task / notes 边界：`rules/core/task-notes-boundary.md`
+- 改动边界守卫：`rules/pattern/change-scope-guard.md`
+- 变更影响审查：`rules/pattern/change-impact-review.md`
+- 废弃方案清理：`rules/pattern/abandoned-solution-cleanup.md`
+- 闭环学习边界：`rules/pattern/closed-learning-loop.md`
 
-> task 与 note 的边界见 `rules/core/task-notes-boundary.md`
+## Notes 读取协议
 
-### Execute - 委派优先，聚焦执行
+- 被纠正、被质疑、被要求复盘：读 `notes/lessons/`
+- 做技术选型、brainstorm、方案探索：读 `notes/research/`
+- 做目录、调用链、迁移与架构设计：读 `notes/design/`
+- 普通实现任务不要默认全量读取 `notes/`
 
-**默认策略**: 能委派就委派，无依赖就并发，主 Agent 只做调度和结果聚合。
+## 自动化与治理
 
-- 用户已明确目标或已批准当前方向后，默认沿同一路径**连续执行到闭环**，不要在自然后续步骤之间反复发问“是否继续”
-- 只有遇到 **blocker / 高影响分叉 / 目标变化** 时，才暂停并重新确认
-- 默认先锁定改动边界：只修改完成当前目标所必需的文件和逻辑；发现无关问题只记录，不顺手修，除非它属于 blocker、同一根因链路，或用户已明确授权扩范围
-- 若用户否定先前方案或执行中确认旧路径已废弃，应在当前闭环内主动清理旧方案残留；仅保留仍直接服务当前批准方案的共享部分
-
-| 条件 | 调度方式 |
-|------|----------|
-| 子任务 ≥ 3 个 | **Agent Teams** - 并发协同 |
-| 子任务 1-2 个，完全独立 | **Subagents** - 单次委派 |
-| 简单搜索/定位 | 直接 Glob/Grep 或 Explore |
-
-**Subagent 策略**:
-- 大量使用 Subagents 保持主上下文窗口干净
-- 每个 Subagent 只专注一个方向，聚焦执行
-- 复杂问题通过多 Subagent 投入更多算力
-
-**并行任务隔离**（需要时）：
-- 使用 git worktree 为每个任务创建独立工作目录
-- 任务完成后及时清理，合并回主分支
-
-> 完整编排规范见 `orchestrate` skill (按需加载)
-> 改动边界守卫见 `rules/pattern/change-scope-guard.md`
-> 废弃方案回收见 `rules/pattern/abandoned-solution-cleanup.md`
-
-### Verify - 完成前必须验证
-
-- 永远不要在未证明有效的情况下标记任务完成
-- 相关时，对比 main 分支与修改后的行为差异
-- 自问: "一个 Staff 级工程师会批准这个吗？"
-- 运行测试、检查日志、展示正确性
-- 结论必须附带证据 (`file:line` / 命令输出 / 日志片段)
-
-### Learn - 持续自我改进
-
-- 收到用户**任何纠正**后，判断根因并写入对应的 `rules/` 文件或 `CLAUDE.md`
-- 为自己编写规则防止同类错误再次发生
-- 持续迭代直到错误率显著下降
-
-**知识沉淀调用规则**：
-- 当纠正、调研、设计讨论**暂时还不适合直接进入 `rules/` / `skills/`** 时，先写入 `notes/`
-- `notes/lessons/`：记录**按主题归并**的经验教训、纠正复盘、反模式
-- `notes/research/`：记录 brainstorm、方案比较、外部调研与收敛过程
-- `notes/design/`：记录目录设计、迁移方案、调用链设计
-- `notes/` 不是默认全量加载的知识库；必须按任务循环选择性读取对应子目录
-- 写入 `notes/lessons/` 前，先搜索是否已有同主题 note；如果已有，优先更新原 note，而不是新增同类流水账
-- `notes/lessons/` 默认维护“主题汇总页”，把新事件作为 `Source Cases` / 反例 / 新证据并入同一主题
-- lesson note 必须维护时效性：超过 90 天未被再次验证的结论标记为 `stale`，再次复用前先复核
-- 同类教训重复出现、且已形成稳定触发条件与执行步骤后，**自动**触发 `notes` 的被动晋升评估，再决定是否进入 `rules/`、`skills/` 或 `memory/`
-- 一旦某条 note 被重复复用或已经稳定，不默认调用 `eat`；优先走独立的 `notes -> rules/skills/memory` 自动晋升路径
-
-**Notes 使用循环**：
-- `Correction Loop`：用户纠正、追问、质疑或指出遗漏时，先查 `notes/lessons/`；问题解决后更新同主题 lesson
-- `Research Loop`：进入 brainstorm、技术选型、方案探索前，按主题查 `notes/research/`，避免重复调研；结束后写回收敛过程
-- `Design Loop`：修改目录、工作流、调用链、架构边界前，先查 `notes/design/` 与相关 lessons；方案收敛后更新设计 note 或 ADR
-- `Recovery Loop`：执行失败、反复返工、出现回滚/重试时，先查 `notes/lessons/`；定位根因后补充 Source Cases
-- `Promotion Loop`：当某条 note 满足稳定性条件时，自动触发晋升评估，决定是否提炼到 `rules/`、`skills/` 或 `memory/`
-- `Promotion Loop` 的完整晋升动作默认放在独立 subagent 中执行，避免污染用户当前主链路上下文
-- 用户的追问如果暴露了设计漏洞，即使没有直接说“你错了”，也按 `Correction Loop` 处理
-
-**Promotion Loop 自动触发条件**：
-- 更新 `notes/lessons/` 后，如果同主题再次命中或状态变为 `candidate-rule`，立即执行晋升评估
-- `brainstorm` 写完 `notes/research/` 后，如果结论已出现稳定触发条件与执行步骤，立即执行晋升评估
-- `Design Loop` 写完 `notes/design/` 后，如果设计决策已多次复用，立即执行晋升评估
-- `Recovery Loop` 中同类问题再次出现时，不等待人工提醒，直接触发晋升评估
-- 会话结束前（`Stop` / `SubagentStop` 语义点）若本轮更新了 note，默认做一次轻量晋升扫描
-
-**Notes 读取协议**：
-- 被质疑、被纠正、被要求复盘：优先读取 `notes/lessons/`
-- 做方案探索、技术选型、外部调研：优先读取 `notes/research/`，必要时补读相关 lessons
-- 做目录设计、迁移方案、调用链设计：优先读取 `notes/design/`，并补读相关 lessons
-- 普通实现任务默认不读取全部 `notes/`；只有出现阻塞、返工或明确复用信号时再定向读取
-
-**规范验证标准**（写入前必须满足）：
-
-| 要素 | 要求 | 验证问题 |
-|------|------|----------|
-| 触发条件 | 必须 | 什么情况下应用？ |
-| 执行步骤 | 必须 | 具体怎么做？ |
-| 决策框架 | 必须 | 如何判断/选择？ |
-| 时效性 | `notes/lessons/` 必须 | 最近一次验证是什么时候？是否仍然有效？ |
-| 相关链接 | 建议 | 与其他规范的关系？ |
-
-**修复上游设计**：发现错误后，不仅修复当前输出，还需：
-1. 分析根因：哪个设计导致了这个错误？
-2. 修复源头：修改 skill/规则防止同类问题
-3. 验证效果：确保修复后能正确触发
-
-**目录调用意识**：
-- 设计一个目录时，不只定义“放什么”，还要定义“什么时候写入 / 什么时候读取 / 谁来触发”
-- `hooks/` 若无 `settings.json` 或项目级 `.claude/settings.json` 挂载，不会自动生效
-- `notes/` 若无工作流触发条件，不会自然产生内容
-- `notes/` 若没有读取协议，也不会真正参与决策，只会退化成静态仓库资料
-- `notes/lessons/` 若只按日期不断追加、没有主题归并与过期处理，会退化成低价值日志
-- 任何新建的 loop / hook / 自动流程，必须同时定义真实载入要求：挂载位置、触发事件、消费方、验证方法
-- 未接入真实触发链路并验证前，只能标记为 `proposed` / `design`，不得写成“已落地”“自动触发”“当前运行时协议”
-
-## 自动索引触发条件
-
-当以下条件满足时，**主动**调用 `/locate` 技能执行代码索引：
-
-| 触发条件 | 示例 |
-|----------|------|
-| 学习了新的技术模式 | 吸收了一个新技能或规则 |
-| 发现了重要的项目结构 | 关键文件路径、架构决策 |
-| 解决了复杂问题 | 调试发现、troubleshooting 方法 |
-| 用户明确纠正 | 用户说"记住这个"、"以后要这样" |
-
-**执行方式**：使用 `/locate` 技能，按变更规模自动选择层级：
-- L1（< 50 行，单文件）→ 完整代码实现
-- L2（< 200 行，1-5 文件）→ 技术栈、架构、接口
-- L3（> 200 行，> 5 文件）→ 功能概述、核心路径
-
-**注意**：
-- 索引文件存放在 `~/.claude/memory/{L1-fragments,L2-modules,L3-systems}/`
-- 索引文件为 `~/.claude/memory/index.json`
-- 重复或过时的索引应更新或删除
+- 需要并行拆分时使用 `orchestrate`
+- 需要索引路径与代码地图时使用 `locate`
+- 写新规范时遵守 `rules/core/llm-friendly-format.md`
+- 若声称某条 hook/loop “已落地”，必须能指出挂载位置、触发事件、消费方和验证方法

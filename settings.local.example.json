@@ -1,4 +1,16 @@
 {
+  "extraKnownMarketplaces": {
+    "ttcodex-local": {
+      "source": {
+        "source": "path",
+        "path": "/Users/yourname/.claude/plugins/marketplaces/ttcodex-local"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "ttcodex@ttcodex-local": true
+  },
+  "codemossProviderId": "replace-with-your-provider-id",
   "mcpServers": {
     "semi-mcp": {
       "command": "bunx",

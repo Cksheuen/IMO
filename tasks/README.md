@@ -67,6 +67,34 @@
 - 若保留旧编号 JSON，建议补 `README.md` 说明其历史性质
 - 不再为 legacy 目录补新的 `.lock` / `.highwatermark` 一类运行时噪音文件
 
+## 生命周期治理
+
+当本地 `tasks/` 池开始出现以下信号时，运行只读审计工具：
+
+- 同主题目录反复出现
+- `draft-task-*` 持续堆积
+- 现代 task、legacy、特殊调研目录混杂后难以人工扫描
+
+推荐命令：
+
+```bash
+python3 ~/.claude/hooks/task-audit.py --root ~/.claude/tasks
+```
+
+工具输出会标记：
+
+- `modern`
+- `legacy`
+- `special`
+- `draft`
+- `nonstandard`
+- duplicate themes
+
+注意：
+
+- `task-audit.py` 只读，不自动删除、移动或合并任务目录
+- 它的作用是帮助人工决定后续归档、去重和整理动作
+
 ## 与 `notes/` 的区别
 
 - `tasks/`：项目级目录，服务当前任务闭环
