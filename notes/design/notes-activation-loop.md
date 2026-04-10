@@ -1,156 +1,43 @@
 # Notes Activation Loop
 
-- Status: proposed
+- Status: historical-background
 - Date: 2026-03-27
-- Trigger: 用户指出 `notes/` 只有存储语义，没有真正接入工作流循环
+- Trigger: 当时需要回答 `notes/` 何时被读、何时被写，而不只是定义“放什么”
 
-## 问题
+## 当前事实源
 
-当前 `notes/` 已经有“放什么”的定义，但还缺少两件关键的运行时设计：
+这份文档保留的是早期设计思路；当前规范入口以以下文件为准：
 
-1. 什么场景必须读取 `notes/`
-2. 什么场景必须把新信息写回 `notes/`
+- [`rules/pattern/closed-learning-loop.md`](../../rules/pattern/closed-learning-loop.md)
+- [`rules/pattern/task-notes-boundary.md`](../../rules/pattern/task-notes-boundary.md)
+- [`notes/README.md`](../README.md)
 
-没有这两条，`notes/` 只会是静态资料区，而不是工作流中的知识层。
+## 这份设计稿留下来的核心洞察
 
-## 设计目标
+它最重要的贡献不是“四条循环”本身，而是两条后来被保留下来的原则：
 
-- 让 `notes/` 在真正需要时被读取，而不是默认全量加载
-- 让 `notes/` 在关键反馈点稳定积累，而不是只靠“顺手记一下”
-- 区分 `notes/research`、`notes/design`、`notes/lessons` 的触发边界
-- 明确与 `hooks/` 的关系：`hooks` 负责事件自动化，`notes` 负责事件后的知识沉淀与决策支持
+- `notes/` 必须按需读取，不能默认全量注入
+- `notes/` 的写入触发要和工作流事件绑定，否则它只会变成静态资料堆
 
-## 核心原则
+## 仍然有参考价值的早期分层
 
-- 按循环读取，不按目录全量读取
-- 优先读取最接近当前问题类型的子目录
-- 用户反馈优先进入 `lessons`
-- 外部调研优先进入 `research`
-- 结构设计与迁移决策优先进入 `design`
+这份文档用四类高频场景来解释 `notes/` 的使用边界：
 
-## 四条主循环
+- correction 更靠近 `notes/lessons/`
+- research 更靠近 `notes/research/`
+- design 更靠近 `notes/design/`
+- recovery 会回到 lessons/rules 等更强约束层
 
-### 1. Correction Loop
+这套表述今天仍可作为背景理解，但“哪些事件必须触发、读取顺序如何定义、哪些层已经是 runtime contract”已经被后续规则吸收，不应继续以这份 note 为准。
 
-适用场景：
+## hooks 与 notes 的背景关系
 
-- 用户纠正 agent
-- 用户追问暴露遗漏、误判、设计漏洞
-- 代码评审中发现本可避免的问题
+当时这份设计稿强调了一条重要边界：`hooks/` 负责事件自动化，`notes/` 负责知识沉淀；hook 不应变成大段 note 原文的自动注入器。
 
-读取顺序：
+这条边界后来已被更完整的 learning-loop 规则覆盖，因此这里仅作为设计来历保留。
 
-1. `notes/lessons/`
-2. 相关 `rules/` 或 `skills/`
+## 为什么还保留这份文档
 
-写回动作：
+如果问题是“现在 notes 层应该怎么定义”，请看规则。
 
-- 若已有同主题 lesson：更新 `Last Verified`、`Source Cases`、`Decision`
-- 若没有：创建新的主题 lesson
-- 若教训已稳定：标记 `candidate-rule`
-
-### 2. Research Loop
-
-适用场景：
-
-- 使用 `brainstorm`
-- 做技术选型、方案比较、外部调研
-- 用户要求“研究一下”“看看最佳实践”
-
-读取顺序：
-
-1. `notes/research/`
-2. 相关 `notes/lessons/`
-3. 已提炼的 `rules/` / `skills/`
-
-写回动作：
-
-- 将新的对比、证据、收敛过程写入 `notes/research/`
-- 若调研中暴露重复错误模式，同步更新 `notes/lessons/`
-
-### 3. Design Loop
-
-适用场景：
-
-- 设计目录结构、调用链、迁移计划
-- 调整技能分层、规则边界、知识架构
-- 讨论“什么时候加载、什么时候触发”
-
-读取顺序：
-
-1. `notes/design/`
-2. 相关 `notes/lessons/`
-3. 必要时参考 `notes/research/`
-
-写回动作：
-
-- 设计收敛过程写入 `notes/design/`
-- 若某次设计暴露通用失误，额外更新 `notes/lessons/`
-
-### 4. Recovery Loop
-
-适用场景：
-
-- 执行失败
-- 多轮返工
-- 回滚、重试、补救
-- 同类问题再次出现
-
-读取顺序：
-
-1. `notes/lessons/`
-2. 相关 `memory/` 或 `rules/`
-
-写回动作：
-
-- 记录新的根因与补救方式到同主题 lesson
-- 若某补救流程已稳定，可提炼到 `rules/` 或 `skills/`
-
-## 与 hooks 的关系
-
-`hooks/` 不负责保存知识，只负责在事件点自动执行动作。
-
-两者关系应是：
-
-- `hooks/` 负责触发或提醒
-- `notes/` 负责沉淀和复用
-
-推荐连接方式：
-
-- `SessionStart` hook 可提示当前仓库有哪些高优先级 design / lesson 需要关注，但不应把整个 `notes/` 注入上下文
-- `Stop` / `SubagentStop` hook 可提醒检查本轮是否产生了新的 lesson / design / research
-- 真正的 note 内容读取仍由工作流自己决定，避免 hook 变成大段上下文注入器
-
-## 最小调用协议
-
-### 读取触发
-
-- 被纠正、被质疑、被要求复盘 → 读 `notes/lessons/`
-- 做调研、技术选型、方案比较 → 读 `notes/research/`
-- 做目录/架构/调用链设计 → 读 `notes/design/`
-- 执行失败或反复返工 → 回读 `notes/lessons/`
-
-### 写入触发
-
-- 用户纠正或追问暴露问题 → 写 `notes/lessons/`
-- 完成一次外部调研或方案收敛 → 写 `notes/research/`
-- 完成结构设计或迁移方案 → 写 `notes/design/`
-- 同类教训再次出现 → 更新已有 lesson，不新建流水账
-
-## 反模式
-
-- 把 `notes/` 当作默认全量知识库
-- 只设计写入触发，不设计读取触发
-- 让 hook 自动注入大量 note 原文
-- 用户已经指出漏洞，却不更新 `notes/lessons/`
-
-## 结论
-
-`notes/` 真正的价值不在于“有地方存”，而在于它被嵌入到几个高频循环里：
-
-- 纠错循环
-- 调研循环
-- 设计循环
-- 恢复循环
-
-只有这样，它才是一个活的知识层，而不是静态文档目录。
+如果问题是“为什么后来会强调按需读取 notes、为什么要把 lessons/research/design 分开”，这份设计稿仍然能提供历史上下文。

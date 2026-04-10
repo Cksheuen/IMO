@@ -8,12 +8,12 @@
 - `status`：查看当前模式
 
 执行要求：
-1. 当参数是 `on` 时，运行 `python3 "$HOME/.claude/hooks/promotion-mode.py" enable`
-2. 当参数是 `off` 时，运行 `python3 "$HOME/.claude/hooks/promotion-mode.py" disable`
-3. 当参数是 `status` 时，运行 `python3 "$HOME/.claude/hooks/promotion-mode.py" status`
-4. 返回当前模式，并说明下一步可用动作：
-   - 自动模式下可继续正常工作，promotion 会在后台自动处理
-   - 手动模式下如需执行晋升，运行 `/promote-notes`
+1. `on` → `python3 "$HOME/.claude/hooks/promotion-mode.py" enable`
+2. `off` → `python3 "$HOME/.claude/hooks/promotion-mode.py" disable`
+3. `status` → `python3 "$HOME/.claude/hooks/promotion-mode.py" status`
+4. 返回当前模式，并给出下一步动作：
+   - 自动模式：继续正常工作，后台会自动处理 promotion
+   - 手动模式：如需继续晋升，运行 `/promote-notes`
 
 兼容别名：
 - `/promotion-auto-on` = `/promotion-mode on`

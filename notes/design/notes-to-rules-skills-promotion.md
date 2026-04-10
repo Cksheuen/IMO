@@ -1,70 +1,37 @@
 # Notes to Rules/Skills Promotion
 
-- Status: proposed
+- Status: historical-background
 - Date: 2026-03-27
-- Trigger: 需要把 `notes` 真正接入提炼闭环，而不是停留在沉淀层
+- Trigger: 当时需要把 `notes/` 从沉淀层接到真正的知识晋升链
 
-## 问题
+## 当前事实源
 
-如果只有 `brainstorm -> notes`，没有独立的 `notes -> promotion -> rules/skills`，那么 `notes/` 仍然只是缓冲区，而不是知识演化链条的一部分。
+这份文档只保留设计背景；当前规范入口以以下文件为准：
 
-## 目标
+- [`rules/pattern/closed-learning-loop.md`](../../rules/pattern/closed-learning-loop.md)
+- [`rules/pattern/task-notes-boundary.md`](../../rules/pattern/task-notes-boundary.md)
+- [`skills/promote-notes/SKILL.md`](../../skills/promote-notes/SKILL.md)
 
-- 明确哪些 note 可以继续停留在 `notes/`
-- 明确什么时候应该被动晋升到 `rules/` 或 `skills/`
-- 将 `notes` 的晋升路径与 `eat` 解耦
+## 这份设计稿留下来的核心判断
 
-## 晋升闭环
+当时真正的缺口是：如果只有 `brainstorm -> notes`，没有独立的 `notes -> promotion -> rules/skills`，那么 `notes/` 只会持续堆积，不能进入更强约束的知识层。
 
-```text
-Correction / Research / Design / Recovery Loop
-                    │
-                    ▼
-                 notes/
-                    │
-        （复用验证 / 状态稳定 / 触发条件成形）
-                    │
-                    ▼
-             Promotion Loop
-                    │
-        ├─ 短而稳定、可执行 → rules/
-        ├─ 长且流程化、按需触发 → skills/
-        └─ 仍在变化 → 回写 notes/
-```
+后来被吸收到规则体系里的关键判断有三条：
 
-## 晋升触发条件
+- `notes/` 是中间层，不是终点
+- 晋升链要与 `eat` 解耦，不能把“吸收外部资料”和“提炼既有结论”混成一个动作
+- 去向判断必须区分 `rules/`、`skills/`、`notes/`
 
-满足任意两项时，被动触发 `Promotion Loop`：
+## 保留的历史启发
 
-- 同一主题被再次复用
-- 触发条件已经清晰
-- 执行步骤已经稳定
-- 决策框架已不再依赖单个案例
-- 不同任务中都出现相同教训或模式
+- `rules/` 更适合短、稳定、可执行、应被高频引用的约束
+- `skills/` 更适合长流程、工具导向、按需触发的操作资产
+- `notes/` 更适合仍在变化、主要提供解释背景的内容
 
-## 不应晋升的信号
+早期候选信号也仍可作为背景启发：同一主题被再次复用、触发条件清晰、步骤稳定、跨案例复现，都说明某条 note 已接近可晋升状态。
 
-- 只有一次案例
-- 仍高度依赖具体上下文
-- 主要价值是解释背景，而不是指导动作
-- 触发条件仍模糊
+## 为什么还保留这份文档
 
-## 去向判断
+它记录的是 Promotion Loop 的设计动机，而不是当前协议正文。
 
-- `rules/`：短、稳定、可执行、应被频繁引用
-- `skills/`：长流程、工具导向、低频但高步骤数
-- `notes/`：仍在探索、主要是解释、需要继续观察
-
-## 与现有循环的关系
-
-- `brainstorm` 负责把探索和调研写入 `notes/`
-- `CLAUDE.md` 的 Learn / Correction Loop 负责把错误与教训写入 `notes/lessons/`
-- `eat` 负责吸收新资料，而不是负责旧 note 的默认晋升
-- `Promotion Loop` 负责把已经稳定的 note 被动晋升为更强约束的知识资产
-
-## 结论
-
-`notes/` 不是终点，而是知识演化链条中的中间层。
-
-缺少提炼闭环时，它会越积越多；
-补上独立的 `Promotion Loop` 后，它才会持续收敛成更稳定的 `rules/` 与 `skills/`。
+如果问题是“现在应该如何定义晋升闭环”，请直接看上面的规则和技能；如果问题是“为什么后来需要独立的 Promotion Loop”，这份设计稿仍然有参考价值。

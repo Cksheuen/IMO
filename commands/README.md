@@ -15,4 +15,12 @@
 
 ## 当前状态
 
-Phase 1 仅创建目录与约束说明，具体 wrapper 在 skill 迁移稳定后补齐。
+当前只保留少量高频入口：
+
+- `promote-notes.md`
+- `promotion-mode.md`
+- `promotion-auto-on.md`
+- `promotion-auto-off.md`
+- `promotion-auto-status.md`
+
+其中 `promotion-auto-*` 仅作为兼容别名，正文应始终保持一跳跳转到统一入口 `/promotion-mode`，避免重复维护。

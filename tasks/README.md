@@ -4,15 +4,11 @@
 
 标准位置是 `<project>/.claude/tasks/`。
 
-当前仓库**已经**把 task bootstrap 接入共享运行时链路。
+当前仓库已经把 task bootstrap 接入运行时链路，但这里不重复维护具体挂载细节；若要确认当前是否真的接通、挂在哪些事件上，请直接查看：
 
-当前事实是：
-
-- 根目录 `settings.json` 在 `PreToolUse` 的 `Edit` / `Write` matcher 上挂载了 `hooks/scale-gate.sh`
-- `hooks/scale-gate.sh` 会在首次编辑前调用 `hooks/task-bootstrap.sh`，自动创建当前 task 目录并阻止直接开写
-- 因此当前共享运行时已经具备“首次进入 `Edit/Write` 前自动 bootstrap 当前 task 目录”的保证
-
-如果后续移除这些挂载，才需要把文档重新降级为“设计资产未接通”的描述。
+- `settings.json`
+- `hooks/README.md`
+- `rules/core/task-centric-workflow.md`
 
 当前仓库本身位于 `~/.claude/`，所以这里的 `tasks/` 只是这个仓库项目自己的任务目录；它不是其他项目共享的全局 task 池。
 
@@ -33,7 +29,6 @@
     ├── context.md
     ├── status.md
     ├── feature-list.json
-    └── 1.json
 ```
 
 ## 文件职责
@@ -58,11 +53,19 @@
 - 写结构化验证状态、attempt_count、passes、notes
 - 不写完整调研正文或设计长文
 
-### 编号子任务 JSON（如 `1.json`）
+## 目录类型
 
-- 仅作为轻量子任务清单
-- 建议只放 `subject`、`description`、`status`、依赖关系
-- 不要把它当成长期知识文档
+当前 `tasks/` 中允许三种目录并存：
+
+- **现代 task 目录**：包含 `prd.md / context.md / status.md / feature-list.json`
+- **legacy 目录**：只保留旧式编号 JSON（如 `1.json`、`2.json`），用于历史归档
+- **特殊调研目录**：只有 `design.md`、`plan.md`、`research.md` 一类文件，表示早期实验或专项设计稿
+
+### Legacy 目录约定
+
+- legacy 目录不视为当前 task workflow 的标准样式
+- 若保留旧编号 JSON，建议补 `README.md` 说明其历史性质
+- 不再为 legacy 目录补新的 `.lock` / `.highwatermark` 一类运行时噪音文件
 
 ## 与 `notes/` 的区别
 
