@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "last_sync": "2026-04-09T13:19:25.116850+00:00",
-  "rules_hash": "95f17809c91ac696e8f18d64e19e8025e222478c9f966ad9801712d8c1c1611c",
+  "last_sync": "2026-04-10T06:47:12.966150+00:00",
+  "rules_hash": "981d32820a11909c89c86d90c3b89aa3c994c6f0db2be852d1e32200eddb9763",
   "synced_rules": [
     "/Users/bytedance/.claude/CLAUDE.md",
     "/Users/bytedance/.claude/rules/core/context-injection.md",
@@ -9,6 +9,7 @@
     "/Users/bytedance/.claude/rules/core/proactive-delegation.md",
     "/Users/bytedance/.claude/rules/core/task-centric-workflow.md",
     "/Users/bytedance/.claude/rules/core/task-notes-boundary.md",
+    "/Users/bytedance/.claude/rules/pattern/abandoned-solution-cleanup.md",
     "/Users/bytedance/.claude/rules/pattern/animation-driven-design.md",
     "/Users/bytedance/.claude/rules/pattern/auto-created-feature-list-noise.md",
     "/Users/bytedance/.claude/rules/pattern/change-impact-review.md",
