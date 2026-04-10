@@ -1,14 +1,14 @@
 {
   "version": 1,
-  "last_sync": "2026-04-10T06:47:12.966150+00:00",
-  "rules_hash": "981d32820a11909c89c86d90c3b89aa3c994c6f0db2be852d1e32200eddb9763",
+  "last_sync": "2026-04-10T09:56:46.355482+00:00",
+  "rules_hash": "ff8e0ca823f7e7ab1c63317420f1b2347922ea3c8c2b2008d6cc10218f555bf0",
   "synced_rules": [
-    "/Users/bytedance/.claude/CLAUDE.md",
     "/Users/bytedance/.claude/rules/core/context-injection.md",
     "/Users/bytedance/.claude/rules/core/llm-friendly-format.md",
     "/Users/bytedance/.claude/rules/core/proactive-delegation.md",
     "/Users/bytedance/.claude/rules/core/task-centric-workflow.md",
     "/Users/bytedance/.claude/rules/core/task-notes-boundary.md",
+    "/Users/bytedance/.claude/rules/core/user-facing-language.md",
     "/Users/bytedance/.claude/rules/pattern/abandoned-solution-cleanup.md",
     "/Users/bytedance/.claude/rules/pattern/animation-driven-design.md",
     "/Users/bytedance/.claude/rules/pattern/auto-created-feature-list-noise.md",
