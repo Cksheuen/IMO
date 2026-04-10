@@ -3,6 +3,9 @@ Node implementations for Orchestrate LangGraph migration.
 
 Implements the core nodes: collect_context, decompose, execute, aggregate, verify.
 """
+import importlib.util
+from pathlib import Path
+import sys
 from typing import Dict, Any, List, Optional
 from langchain_core.runnables import RunnableLambda
 from langchain_core.messages import HumanMessage, AIMessage
@@ -17,6 +20,59 @@ from .state import (
     update_subtask_result,
     DeltaContext,
 )
+
+
+_MULTI_MODEL_MODULE = None
+
+
+def _load_multi_model_runtime():
+    """Load the migrated multi-model-agent runtime from its sibling directory."""
+    global _MULTI_MODEL_MODULE
+    if _MULTI_MODEL_MODULE is not None:
+        return _MULTI_MODEL_MODULE
+
+    module_path = (
+        Path(__file__).resolve().parents[3]
+        / "multi-model-agent"
+        / "migrated"
+        / "multi-model-agent"
+        / "__init__.py"
+    )
+    spec = importlib.util.spec_from_file_location(
+        "multi_model_agent_migrated_runtime",
+        module_path,
+        submodule_search_locations=[str(module_path.parent)],
+    )
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load multi-model runtime from {module_path}")
+
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    _MULTI_MODEL_MODULE = module
+    return module
+
+
+async def _route_subtask_model(subtask: Dict[str, Any]) -> Dict[str, Optional[str]]:
+    """
+    Route a subtask to the most suitable model using the migrated multi-model runtime.
+    """
+    runtime = _load_multi_model_runtime()
+
+    role_map = {
+        "implementer": "implementer",
+        "researcher": "researcher",
+        "reviewer": "reviewer",
+    }
+    routed_state = await runtime.run_multi_model_routing(
+        task_request=subtask["description"],
+        agent_role=role_map.get(subtask["agent_type"], "implementer"),
+    )
+    decision = routed_state.get("routing_decision") or {}
+    return {
+        "recommended_model": decision.get("selected_model"),
+        "routing_reason": routed_state.get("summary"),
+    }
 
 
 # Node functions
@@ -121,18 +177,28 @@ async def execute_subtask_node(state: OrchestrateState) -> Dict[str, Any]:
     if runnable_index is None:
         return {"fixer_loop_active": False}
 
+    routing = await _route_subtask_model(current_subtask)
+    current_subtask = {
+        **current_subtask,
+        **routing,
+    }
+
     # In production, this would:
     # 1. Create an isolated worktree
     # 2. Call implementer agent with the subtask prompt
     # 3. Collect results
 
     # Demo: Simulate execution
-    result = f"Simulated execution of subtask {current_subtask['id']}"
+    model_note = current_subtask.get("recommended_model") or "inherit"
+    result = (
+        f"Simulated execution of subtask {current_subtask['id']} "
+        f"with model {model_note}"
+    )
 
     updated_subtasks = []
     for idx, subtask in enumerate(subtasks):
         if idx == runnable_index:
-            updated_subtasks.append(dict(subtask, status="complete", result=result))
+            updated_subtasks.append(dict(current_subtask, status="complete", result=result))
         else:
             updated_subtasks.append(subtask)
 
@@ -261,6 +327,8 @@ Full PRD: See state['prd']
 ### Context
 - Overall task: {state['task_description']}
 - Position: Subtask #{subtask['id']} in the orchestration
+- Recommended model: {subtask.get('recommended_model') or 'inherit/default'}
+- Routing summary: {subtask.get('routing_reason') or 'No routing decision recorded yet'}
 
 ### File Ownership
 - Can modify: {subtask['files_to_modify']}

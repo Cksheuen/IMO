@@ -19,6 +19,7 @@ from .graph import (
     compile_orchestrate_graph_with_checkpoint,
     run_orchestration,
 )
+from .nodes import execute_subtask_node
 from .verification import (
     VerificationGate,
     run_verification_with_interrupt,
@@ -244,6 +245,72 @@ async def example_parallel_execution():
     )
 
     print(f"Subtask 3 dependencies satisfied: {deps_satisfied}")
+
+    return state
+
+
+# Example 6: Dynamic model routing for subtasks
+
+async def example_dynamic_model_routing():
+    """
+    Example showing how orchestrate can route different subtask types
+    to different models through the migrated multi-model runtime.
+    """
+    print("=== Example 6: Dynamic Model Routing ===\n")
+
+    state = create_initial_state(
+        task_description="Research, implement, and review a new feature",
+        task_id="dynamic-model-routing-demo"
+    )
+    state["user_confirmed"] = True
+    state["subtasks"] = [
+        create_subtask(
+            subtask_id=1,
+            description="Research the API options and summarize tradeoffs",
+            agent_type="researcher",
+            files_to_modify=[],
+            files_to_read=["docs/api.md"],
+            dependencies=[],
+        ),
+        create_subtask(
+            subtask_id=2,
+            description="Implement the selected API integration",
+            agent_type="implementer",
+            files_to_modify=["src/api/client.ts"],
+            files_to_read=["src/api/client.ts"],
+            dependencies=[1],
+        ),
+        create_subtask(
+            subtask_id=3,
+            description="Review the integration changes for correctness",
+            agent_type="reviewer",
+            files_to_modify=[],
+            files_to_read=["src/api/client.ts"],
+            dependencies=[2],
+        ),
+    ]
+
+    state = {
+        **state,
+        **(await execute_subtask_node(state)),
+    }
+    first = state["subtasks"][0]
+    print(f"Subtask 1 -> model: {first['recommended_model']}")
+    print(f"Routing summary: {first['routing_reason']}")
+
+    state = {
+        **state,
+        **(await execute_subtask_node(state)),
+    }
+    second = state["subtasks"][1]
+    print(f"Subtask 2 -> model: {second['recommended_model']}")
+
+    state = {
+        **state,
+        **(await execute_subtask_node(state)),
+    }
+    third = state["subtasks"][2]
+    print(f"Subtask 3 -> model: {third['recommended_model']}")
 
     return state
 

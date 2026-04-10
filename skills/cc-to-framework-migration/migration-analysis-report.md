@@ -1,228 +1,214 @@
 # CC 配置迁移分析报告
 
-> 生成时间：2026-04-07
-> 扫描范围：`~/.claude/`
+> 生成时间：2026-04-10
+> 扫描范围：`~/.claude/skills`、`~/.claude/rules`、`~/.claude/agents`
+> 结论口径：只评估“值得框架化并独立部署”的部分，不把 Markdown 规范和深度 CC 集成能力硬迁出去
 
 ## 扫描概览
 
-| 类型 | 数量 |
-|------|------|
-| **Skills** | 20 |
-| **Rules** | 38 |
-| **Agents** | 12 |
+| 类型 | 数量 | 统计命令 |
+|------|------|---------|
+| Skills | 22 | `find skills -mindepth 2 -maxdepth 2 -name SKILL.md | wc -l` |
+| Rules | 42 | `find rules -type f -name '*.md' | wc -l` |
+| Agents | 12 | `find agents -type f -name '*.md' | wc -l` |
+
+## 当前已存在的迁移样例
+
+这些对象已经有框架化原型，不应再被当成“从零开始”的第一批目标：
+
+| 名称 | 当前状态 | 位置 |
+|------|---------|------|
+| orchestrate | 已有 LangGraph 原型 + 对照文档 | `skills/orchestrate/migrated/orchestrate/` |
+| self-verification-mechanism | 已有 LangGraph 原型 + 对照文档 | `rules/pattern/migrated/self-verification/` |
+| dual-review-loop | 已有 LangGraph 原型 + 对照文档 | `skills/dual-review-loop/migrated/dual-review-loop/` |
+| promote-notes | 已有 LangChain 原型 + 对照文档 | `skills/promote-notes/migrated/promote-notes/` |
+
+这意味着当前阶段更需要的是：
+
+1. 刷新全局优先级，而不是重复生成旧样例。
+2. 识别“还没迁、但最值得迁”的对象。
+3. 把已有样例收敛成共享 runtime，而不是继续散落复制。
+
+## 评估标准
+
+### 维度
+
+- **复杂状态/循环**：是否有显式状态流转、条件边、重试或多阶段流程。
+- **生产化价值**：是否值得做成可观测、可 checkpoint、可独立部署的服务。
+- **CC 依赖强度**：是否强依赖 Bash / Edit / Write / MCP / `~/.claude` 文件结构。
+
+### 分档规则
+
+| 分数 | 档位 | 含义 |
+|------|------|------|
+| 7-10 | 高价值 | 推荐迁移，框架能明显放大价值 |
+| 4-6 | 中价值 | 可迁，但应排在高价值之后 |
+| 0-3 | 低价值 | 建议保留在 CC 配置中 |
+
+### 额外约束
+
+- 深度依赖 `~/.claude/tasks/`、`~/.claude/teams/`、`~/.claude/notes/` 目录语义的对象，即使流程复杂，也不应排进第一批。
+- 纯知识规则、纯声明式规范、MCP 强绑定技能，默认不迁。
 
 ## 迁移价值评估
 
-### 高价值迁移候选（推荐迁移）
+### 高价值迁移候选
 
-| 名称 | 类型 | 评分 | 迁移成本 | 迁移理由 | 框架推荐 |
-|------|------|------|---------|---------|---------|
-| **orchestrate** | skill | 9 | High | 复杂多 agent 编排、状态流转、并行执行、PRD/feature-list 管理 | LangGraph |
-| **self-verification-mechanism** | rule | 8 | High | 循环验证修复、feature list 状态机、checkpoint 需求 | LangGraph |
-| **dual-review-loop** | skill | 7 | Medium | 循环迭代、外部 Codex 集成、状态跟踪 | LangGraph |
-| **promote-notes** | skill | 6 | Medium | 状态评估、晋升决策、后台执行 | LangChain + Tool |
+| 名称 | 类型 | 评分 | 成本 | 当前状态 | 迁移理由 | 推荐框架 |
+|------|------|------|------|---------|---------|---------|
+| `multi-model-agent` | skill | 8 | Medium | 未迁移 | 有清晰路由规则、模型选择、fallback、成本治理，且天然适合服务化 | LangChain + LiteLLM |
+| `orchestrate` | skill | 8 | High | 已有原型 | 多 agent 编排、条件分支、并行执行、验证回路，是最像 LangGraph 的对象 | LangGraph |
+| `self-verification-mechanism` | rule | 8 | High | 已有原型 | `passes/null/false` 状态机、fixer loop、`delta_context`、`max_attempts` 非常适合图模型 | LangGraph |
+| `dual-review-loop` | skill | 7 | Medium | 已有原型 | 典型 review/fix/review 循环，可直接映射为条件边和回边 | LangGraph |
+| `generator-evaluator-pattern` | rule | 7 | Low | 未迁移 | Generator / Evaluator 分离是通用编排原语，复用面广 | LangGraph 子图 |
+| `long-running-agent-techniques` | rule | 7 | Medium | 未迁移 | Initializer + Coding Agent + feature list + handoff，本质是长时任务 harness | LangGraph |
 
-### 中价值迁移候选（可选迁移）
+### 中价值迁移候选
 
-| 名称 | 类型 | 评分 | 迁移成本 | 说明 |
-|------|------|------|---------|------|
-| **implementer** | agent | 5 | Medium | 独立实现 agent，可用 LangChain Agent 替代 |
-| **reviewer** | agent | 5 | Medium | 独立审查 agent，可用 LangChain Agent 替代 |
-| **researcher** | agent | 4 | Low | 纯研究 agent，迁移简单 |
-| **long-running-agent-techniques** | rule | 4 | Medium | Harness 设计模式，可指导 LangGraph 架构 |
-| **generator-evaluator-pattern** | rule | 4 | Low | 评估模式，LangChain 原生支持 |
+| 名称 | 类型 | 评分 | 成本 | 说明 |
+|------|------|------|------|------|
+| `implementer` | agent | 6 | Medium | 可抽成通用 worker 节点，但本身更像 runtime 组件，不该先于编排层迁移 |
+| `reviewer` | agent | 6 | Medium | 适合作为独立 evaluator 节点，与 `self-verification` 一起迁移价值更高 |
+| `researcher` | agent | 5 | Low | 只读研究 agent 易迁，但单独迁收益有限 |
+| `promote-notes` | skill | 5 | Medium | 已有 LangChain 原型，但对 `notes/`、`rules/`、`skills/` 边界语义依赖较强 |
+| `team-builder` | skill | 4 | High | 有 roster / OKR / 绩效流程，但重度绑定 `~/.claude/teams/` 目录语义 |
 
-### 低价值迁移候选（建议保留 CC 配置）
+### 低价值迁移候选
 
 | 名称 | 类型 | 评分 | 保留理由 |
 |------|------|------|---------|
-| **brainstorm** | skill | 2 | 深度依赖 CC 文件操作和用户交互 |
-| **eat** | skill | 2 | 依赖 WebSearch/Fetch 和 CC 文件写入 |
-| **design** | skill | 1 | 依赖 Pencil MCP、设计工具链 |
-| **freeze/thaw** | skill | 1 | 操作 CC 配置文件结构 |
-| **locate** | skill | 1 | 操作 CC memory 文件结构 |
-| **git-worktree-parallelism** | rule | 2 | CC 原生 worktree 工具支持 |
-| **browser-auth-reuse** | rule | 2 | 依赖 Chrome DevTools MCP |
-| **feishu-lark-mcp** | rule | 2 | MCP 工具依赖 |
-| **所有 domain rules** | rule | 1-2 | 纯声明式配置，无复杂逻辑 |
-| **所有 technique rules** | rule | 1-3 | CC 原生能力深度依赖 |
-| **所有 knowledge rules** | rule | 0 | 纯知识条目，无需迁移 |
+| `design` | skill | 2 | 依赖 Pencil MCP 和设计编辑器上下文，迁移后适配成本高 |
+| `docx` / `pdf` / `pptx` | skill | 2-3 | 主要价值在本地脚本与文件处理，不在图编排 |
+| `codex-cc-sync-check` | skill | 1 | 专门服务 CC / Codex 配置对齐，脱离当前生态价值极低 |
+| `freeze` / `thaw` / `locate` | skill | 1-2 | 直接操作本仓库知识结构，离开 `~/.claude` 目录语义即失效 |
+| `brainstorm` / `eat` | skill | 2-3 | 强依赖交互式上下文注入、Web/Search、文件沉淀流程 |
+| 大多数 `rules/domain/*`、`rules/tool/*`、`rules/knowledge/*` | rule | 0-2 | 规则本身是知识或约束，不是运行时流程 |
 
-## 详细分析
+## 重点判断
 
-### 高价值候选详解
+### 1. 现在最值得新迁移的不是 `orchestrate`
 
-#### 1. orchestrate (skill) - 评分: 9
+原因不是它不重要，而是它已经有样例。若现在继续投入，最合理的方向是：
 
-**迁移价值**：
-- ✅ 有完整的状态机（Step 0-7 流程）
-- ✅ 有循环/重试逻辑（Fixer Loop）
-- ✅ 有并行执行（并发 Agent）
-- ✅ 有 checkpoint 需求（feature-list.json）
-- ✅ 适合独立部署为任务编排服务
+- 把 `skills/orchestrate/migrated/orchestrate/`
+- `rules/pattern/migrated/self-verification/`
+- `skills/dual-review-loop/migrated/dual-review-loop/`
 
-**CC 依赖分析**：
-- Agent tool 调用 → LangGraph 节点
-- worktree isolation → 需外部实现
-- feature-list.json → State + Checkpointer
-- verification-gate → interrupt_before + Command
+中的共用概念收敛成统一 runtime，而不是再做第四套平行示例。
 
-**迁移成本**：High
-- 需要实现 worktree 隔离层
-- 需要设计 StateGraph 拓扑
-- 需要处理 subagent prompt 构建
+### 2. `multi-model-agent` 是当前最好的“下一批第一项”
 
-#### 2. self-verification-mechanism (rule) - 评分: 8
+理由：
 
-**迁移价值**：
-- ✅ 有完整状态机（passes/null/false）
-- ✅ 有循环逻辑（Fixer Loop）
-- ✅ 有 delta_context 传递机制
-- ✅ 有迭代上限保护（max_attempts）
-- ✅ 适合作为 LangGraph 子图
+- 还没有现成迁移产物，补齐后能扩大迁移覆盖面。
+- 其核心是模型路由和策略选择，不依赖 CC 文件结构。
+- 它能直接服务后续 `orchestrate` / `reviewer` / `researcher` 节点的模型分配。
 
-**CC 依赖分析**：
-- feature-list.json → State(TypedDict)
-- verification-gate → interrupt_before
-- delta_context → state['delta_context']
-- reviewer/implementer → 节点
+可映射对象：
 
-**迁移成本**：High
-- 需要精确映射 interrupt + resume 模式
-- 需要设计状态序列化
-- 需要实现外部恢复接口
+- 模型矩阵 -> 路由配置
+- 成本规则 -> policy layer
+- fallback -> router fallback chain
+- agent frontmatter 的 `model` -> 节点级模型覆盖
 
-#### 3. dual-review-loop (skill) - 评分: 7
+### 3. `generator-evaluator-pattern` 和 `long-running-agent-techniques` 应成套迁移
 
-**迁移价值**：
-- ✅ 有循环迭代逻辑
-- ✅ 有外部工具集成（Codex）
-- ✅ 有状态跟踪（dual-review-report.json）
-- ⚠️ 但依赖 Codex CLI 环境
+单独迁一个规则价值有限；一起迁移则能形成：
 
-**CC 依赖分析**：
-- Codex CLI 调用 → external tool
-- review 解析 → Tool output parsing
-- 循环判断 → Conditional edges
+- 长时任务初始化
+- 单 feature 递进执行
+- evaluator 独立审查
+- feature list / checkpoint 持久化
 
-**迁移成本**：Medium
-- Codex 调用可封装为 Tool
-- 循环逻辑用 LangGraph 条件边
+这套组合是构建生产级 agent harness 的骨架。
 
-#### 4. promote-notes (skill) - 评分: 6
+## 推荐迁移顺序
 
-**迁移价值**：
-- ✅ 有状态评估逻辑
-- ✅ 有晋升决策树
-- ⚠️ 但深度依赖 CC 文件结构
+### Phase 1：补齐未迁移的高价值能力
 
-**CC 依赖分析**：
-- notes/ 扫描 → Glob tool
-- rules/skills 更新 → Write tool
-- 后台执行 → 可用 LangGraph 后台任务
+1. `skills/multi-model-agent/SKILL.md`
+2. `rules/pattern/generator-evaluator-pattern.md`
+3. `rules/technique/long-running-agent-techniques.md`
 
-**迁移成本**：Medium
-- 文件操作可抽象为 Tool
-- 决策逻辑可转为 Chain
+目标：
 
-### 中价值候选详解
+- 增加一个未覆盖的生产能力面
+- 补齐共用 routing / evaluator / harness 原语
+- 为已有迁移样例提供共享基础设施
 
-#### implementer/reviewer/researcher agents
+### Phase 2：收敛已有迁移样例
 
-这些 agent 已经是独立角色，迁移为 LangChain Agent 相对简单：
+1. 收敛 `orchestrate`、`self-verification`、`dual-review-loop` 的共享状态结构
+2. 抽出共用节点接口：
+   - reviewer node
+   - implementer node
+   - delta context schema
+   - verification gate / interrupt adapter
+3. 减少各 `migrated/` 目录中的重复样板代码
 
-```python
-# CC agent
----
-name: implementer
-description: Implementation agent...
-model: inherit
-isolation: worktree
----
+### Phase 3：只在有明确服务化需求时再迁
 
-# LangChain 等价
-from langchain.agents import Agent
+- `promote-notes`
+- `team-builder`
+- `implementer` / `reviewer` / `researcher` 的独立 agent 包装
 
-implementer = Agent(
-    name="implementer",
-    model="inherit",
-    tools=[Read, Write, Edit, Bash],
-    system_prompt="You are a focused implementation agent..."
-)
-```
-
-**迁移建议**：保留 CC 配置用于日常开发，可选迁移为 LangChain Agent 用于生产部署。
-
-### 低价值候选原因
-
-1. **MCP 工具依赖**：design、browser-auth-reuse、feishu-lark-mcp 等依赖 MCP server，迁移后需要额外适配层
-2. **CC 文件结构依赖**：freeze/thaw、locate 等操作 `~/.claude/` 目录结构，迁移后失去意义
-3. **纯声明式配置**：domain rules、technique rules 大多是指导性规则，无复杂逻辑
-4. **深度 CC 集成**：brainstorm、eat 等依赖 CC 原生工具链（WebSearch、文件操作）
-
-## 迁移计划建议
-
-### Phase 1: 高优先级（推荐立即迁移）
-
-- [ ] **self-verification-mechanism** → LangGraph StateGraph
-  - 作为核心验证子图
-  - 支持 interrupt + resume
-  - 实现 delta_context 传递
-
-- [ ] **orchestrate** → LangGraph 完整编排
-  - 整合 verification 子图
-  - 实现并行节点
-  - 实现 worktree 隔离层
-
-### Phase 2: 中优先级（可选迁移）
-
-- [ ] **dual-review-loop** → LangGraph 循环图
-  - Codex CLI 封装为 Tool
-  - 条件边实现循环判断
-
-- [ ] **implementer/reviewer/researcher** → LangChain Agents
-  - 作为可复用 Agent 组件
-  - 支持独立部署
-
-### Phase 3: 观察期（暂不迁移）
-
-- 所有低价值候选
-- 保留 CC 配置用于日常开发
-- 监控是否有新的迁移需求
+这些对象适合在“确实要独立部署”为服务时再处理，不建议现在优先投入。
 
 ## 技术映射表
 
-| CC 概念 | LangChain/LangGraph 精确映射 |
-|---------|------------------------------|
-| `Agent(subagent_type='implementer')` | `graph.add_node('implement', implement_node)` |
-| `Agent(isolation='worktree')` | 需外部实现隔离机制（非 LangGraph 内置） |
-| `feature-list.json` | `State(TypedDict)` + `Checkpointer` |
-| `verification-gate` | `interrupt_before` + `Command(resume=...)` |
-| `delta_context` | `state['delta_context']` |
-| `Fixer Loop` | 条件边 + 循环回边 |
-| `max_attempts` | state['attempt_count'] + 条件判断 |
-| `PRD` | 可选：LangSmith dataset / 外部存储 |
-| `并行 Agent` | `asyncio.gather` 或并行节点 |
-| `researcher (haiku)` | 不同模型配置 |
-| `implementer (inherit)` | 继承父 graph 模型 |
+| CC 概念 | LangChain / LangGraph 映射 |
+|---------|----------------------------|
+| `Agent(subagent_type="implementer")` | 独立 worker node / tool-calling runnable |
+| `Agent(subagent_type="reviewer")` | evaluator node |
+| `feature-list.json` | `State(TypedDict)` + checkpointer |
+| `passes = null/false/true` | 有类型的验证状态机 |
+| `delta_context` | state 内结构化修复上下文 |
+| Stop hook gate | `interrupt_before` 或显式 gate node |
+| Fixer loop | 条件边 + 回边 |
+| worktree isolation | 框架外部执行器；不是 LangGraph 内置能力 |
+| agent frontmatter `model:` | 节点级 LLM 绑定 |
+| LiteLLM routing | LangChain model router / middleware |
 
-## 反模式警告
+## 风险与反模式
 
 | 反模式 | 正确做法 |
 |--------|----------|
-| 全部迁移 | 只迁移高价值部分 |
-| 删除原 CC 配置 | 保留原配置作为对照 |
-| 忽略 MCP 依赖 | 深度依赖 MCP 的保留 CC 配置 |
-| 不生成对照文档 | 每个迁移项必须有 COMPARISON.md |
-| 跳过验证 | reviewer 必须验证代码与原配置一致性 |
+| 看到规则复杂就全部迁 | 只迁“运行时逻辑”，不迁纯知识 |
+| 继续为已迁样例重复造 demo | 先收敛共享 runtime |
+| 忽略 `~/.claude` 目录语义 | 深度依赖本仓库结构的对象优先保留 |
+| 把 MCP 依赖硬塞进框架 | MCP 强绑定能力保持在 CC 侧 |
+| 先迁 agent persona，再迁 orchestration | 先迁编排层和状态层，再抽 persona |
 
-## 下一步
+## 建议的下一步
 
-1. **确认迁移范围**：用户选择要迁移的配置
-2. **调用 `/orchestrate`**：生成详细迁移任务
-3. **并发执行迁移**：使用 agent teams 并行处理
-4. **输出迁移产物**：代码 + 对照文档 + 测试
+如果继续执行迁移，建议只做下面一条，不要并行扩范围：
 
----
+1. 以 `skills/multi-model-agent/SKILL.md` 为目标，生成 `migrated/` 代码框架和 `COMPARISON.md`。
 
-*此报告由 `/cc-to-framework-migration` skill 自动生成*
+备选：
+
+2. 若目标是统一现有样例，则启动一次“shared runtime 收敛”任务，而不是新增第五个 demo。
+
+## 证据
+
+本报告基于以下本地证据生成：
+
+- 目录扫描：
+  - `find skills -mindepth 2 -maxdepth 2 -name SKILL.md | sort`
+  - `find rules -type f -name '*.md' | sort`
+  - `find agents -type f -name '*.md' | sort`
+- 核心对象抽样阅读：
+  - `skills/orchestrate/SKILL.md`
+  - `skills/dual-review-loop/SKILL.md`
+  - `skills/promote-notes/SKILL.md`
+  - `skills/multi-model-agent/SKILL.md`
+  - `rules/pattern/self-verification-mechanism.md`
+  - `rules/pattern/generator-evaluator-pattern.md`
+  - `rules/technique/long-running-agent-techniques.md`
+  - `agents/reviewer.md`
+  - `agents/implementer.md`
+- 既有迁移样例核对：
+  - `skills/orchestrate/migrated/orchestrate/COMPARISON.md`
+  - `rules/pattern/migrated/self-verification/COMPARISON.md`
+  - `skills/dual-review-loop/migrated/dual-review-loop/COMPARISON.md`
+  - `skills/promote-notes/migrated/promote-notes/COMPARISON.md`

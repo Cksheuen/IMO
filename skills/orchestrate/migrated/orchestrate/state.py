@@ -43,6 +43,8 @@ class Subtask(TypedDict):
     files_to_read: List[str]
     dependencies: List[int]  # IDs of dependent subtasks
     status: str  # pending, in_progress, complete, blocked
+    recommended_model: Optional[str]
+    routing_reason: Optional[str]
     result: Optional[str]
 
 
@@ -179,6 +181,8 @@ def create_subtask(
         files_to_read=files_to_read,
         dependencies=dependencies or [],
         status="pending",
+        recommended_model=None,
+        routing_reason=None,
         result=None
     )
 

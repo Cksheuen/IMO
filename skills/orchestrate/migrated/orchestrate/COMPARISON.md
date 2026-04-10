@@ -17,6 +17,7 @@
 | **PRD** | `state['prd']` 或外部存储 | 状态字段 |
 | **Worktree 隔离** | 需外部实现 | 非 LangGraph 内置 |
 | **Agent 类型选择** | 节点配置不同 LLM | `model` 参数 |
+| **Agent 动态模型分配** | 子任务执行前调用独立 routing runtime | 由 `multi-model-agent` 迁移样例提供 |
 
 ## 功能对照
 
@@ -113,6 +114,7 @@ def should_continue_execution(state: OrchestrateState) -> Literal["continue", "d
 | 同一消息中多个 Agent 调用 | 并行节点 / `asyncio.gather` |
 | `isolation: "worktree"` | 需外部实现隔离机制 |
 | 独立 prompt 注入 | 节点函数参数 |
+| implementer / reviewer / researcher 模型选择 | 子任务执行前动态路由 | 调用 `multi-model-agent` runtime |
 
 **迁移代码**：
 ```python
@@ -132,6 +134,13 @@ async def parallel_execute(state):
     ])
     return {"results": results}
 ```
+
+**新增接线说明**：
+
+- `execute_subtask_node()` 在执行前会调用 `multi-model-agent` 迁移样例
+- 根据 `subtask.agent_type + subtask.description` 生成 `recommended_model`
+- 路由结果会回写到 `subtask.recommended_model` 与 `subtask.routing_reason`
+- `format_subtask_prompt()` 会把推荐模型注入子任务 prompt
 
 ### Step 6: 结果聚合
 
