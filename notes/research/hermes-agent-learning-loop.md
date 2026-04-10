@@ -13,7 +13,7 @@
   - `rules/pattern/code-as-interface.md`（相关度：中）
   - `rules/pattern/living-spec.md`（相关度：低）
   - `rules/pattern/generator-evaluator-pattern.md`（相关度：低）
-- 当前处理策略：新增研究 note，并提炼一个新的 `rules/pattern/` 规则；不改动现有规则正文
+- 当前处理策略：先形成 research note，再直接回写本地 `rules/skills`；不把 Hermes 吸收停留在 note 层
 
 ## 时效性验证记录
 
@@ -156,6 +156,19 @@ Hermes 的 `delegate` 设计里，子 agent 默认拥有：
 4. 技能若进入主流程，就必须支持运行时 patch，而不是只读
 5. 程序化工具调用应优先走受限 RPC，而不是给脚本无限宿主权限
 
+## 本次本地落地
+
+这份调研最初只沉淀为 note + 单条规则，处理是不完整的。对于当前系统，这属于**高同构输入**：
+
+- Hermes 与本项目都在解决“Agent 如何持续学习、自我改进、跨 session 累积能力”的问题
+- 调研结果已经足够指出本地 `eat` 在“研究结束后是否直接改本地能力”上的缺口
+
+因此本次正确落地应是：
+
+1. 更新 `skills/eat/SKILL.md`
+2. 把“高同构输入优先回写本地能力”写成硬规则
+3. 用 `notes/research/` 保留证据，而不是把 note 当最终产物
+
 ## 适用场景
 
 - 设计长期运行的 coding agent / assistant
@@ -176,4 +189,3 @@ Hermes 的 `delegate` 设计里，子 agent 默认拥有：
 - [[code-as-interface]]
 - [[task-notes-boundary]]
 - [[generator-evaluator-pattern]]
-

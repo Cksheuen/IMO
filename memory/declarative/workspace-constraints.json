@@ -1,0 +1,22 @@
+{
+  "version": "0.1",
+  "kind": "constraint",
+  "records": [
+    {
+      "id": "workspace.root-path",
+      "kind": "constraint",
+      "subject": "workspace",
+      "key": "root.path",
+      "value": "/Users/bytedance/.claude",
+      "valueType": "string",
+      "scope": "cross-session",
+      "status": "active",
+      "source": {
+        "type": "explicit-user",
+        "ref": "conversation:2026-04-10-hermes-architecture-alignment"
+      },
+      "updatedAt": "2026-04-10",
+      "lastVerifiedAt": "2026-04-10"
+    }
+  ]
+}

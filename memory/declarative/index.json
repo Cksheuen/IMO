@@ -1,0 +1,60 @@
+{
+  "version": "0.1",
+  "namespace": "declarative",
+  "primaryKey": "subject+key",
+  "description": "Registry for declarative cross-session facts only. Not a locate L1/L2/L3 index.",
+  "files": [
+    {
+      "name": "user-preferences",
+      "path": "memory/declarative/user-preferences.json",
+      "kind": "preference"
+    },
+    {
+      "name": "workspace-constraints",
+      "path": "memory/declarative/workspace-constraints.json",
+      "kind": "constraint"
+    },
+    {
+      "name": "environment",
+      "path": "memory/declarative/environment.json",
+      "kind": "environment"
+    }
+  ],
+  "records": [
+    {
+      "id": "user.output-language",
+      "subject": "user",
+      "key": "output.language",
+      "kind": "preference",
+      "status": "active",
+      "file": "memory/declarative/user-preferences.json",
+      "updatedAt": "2026-04-10"
+    },
+    {
+      "id": "workspace.root-path",
+      "subject": "workspace",
+      "key": "root.path",
+      "kind": "constraint",
+      "status": "active",
+      "file": "memory/declarative/workspace-constraints.json",
+      "updatedAt": "2026-04-10"
+    },
+    {
+      "id": "runtime.default-shell",
+      "subject": "runtime",
+      "key": "shell.default",
+      "kind": "environment",
+      "status": "active",
+      "file": "memory/declarative/environment.json",
+      "updatedAt": "2026-04-10"
+    }
+  ],
+  "metadata": {
+    "createdAt": "2026-04-10",
+    "updatedAt": "2026-04-10",
+    "constraints": [
+      "No locate index fields (level/sourcePath/project).",
+      "No task status, notes body, or transcript process data."
+    ]
+  }
+}

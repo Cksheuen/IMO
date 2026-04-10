@@ -28,6 +28,25 @@ description: Multi-agent orchestration skill. Automatically decomposes large tas
 | **researcher** | `~/.claude/agents/researcher.md` | 搜索、阅读、调研 | 无 | haiku |
 | **reviewer** | `~/.claude/agents/reviewer.md` | 验证、测试、审查 | 无 | inherit |
 
+## Delegation Capability Boundary（Hermes 对标，最小落地）
+
+> 本 skill 当前落地的是 **workflow + gate 约束**，不是 Hermes 那种完整 delegation runtime。  
+> 可以声明边界、做部分守门，但不声称“能力隔离已完全自动化”。
+
+### 边界原则
+
+- **capability isolation ≠ worktree isolation**：worktree 仅隔离代码工作区，不自动隔离工具权限与副作用。
+- **默认禁止高风险能力**（除非显式授权）：递归 delegation、共享治理资产写入、高副作用外部动作。
+- **默认 summary-only 回流**：子 agent 返回结论、证据路径、风险，不回灌完整中间过程。
+- **深度预算默认 1**：只允许主 agent 委派一层子 agent；子 agent 再委派默认禁止。
+
+### 默认禁止项（子 agent）
+
+- 再次调用 `Agent(...)` 或发起新的 delegation
+- 修改共享治理资产（如 `rules/`、`hooks/`、`skills/`、`settings.json`、`AGENTS.md`）
+- 执行外部不可逆动作（如远端 push、系统级变更）且未显式授权
+- 回传完整中间日志/思考链路污染父上下文
+
 ## 执行流程
 
 ### Step 0: 上下文自动收集（新增）
@@ -413,6 +432,13 @@ mkdir -p "$TASK_DIR"
 - 可读取（参考）：{file3.ts}
 - 禁止修改：{其他所有文件}
 
+### 能力边界（Mandatory）
+- max_delegation_depth: 1
+- allow_recursive_delegation: false
+- shared_state_write: deny（除非显式 override）
+- high_side_effect_actions: deny（除非显式 override）
+- return_mode: summary_only
+
 ### 验收标准
 1. {具体的可验证行为}
 2. {具体的可验证行为}
@@ -421,7 +447,9 @@ mkdir -p "$TASK_DIR"
 {从 Step 0 提取的 Rules Pack，包含核心原则、领域规范、模式规范}
 
 ### 输出格式
-按 agent 类型要求的标准格式输出
+按 agent 类型要求输出，并满足：
+- 只返回结果摘要、关键证据、风险与 blocker
+- 中间日志写入 task artifacts，返回路径即可
 ```
 
 ### Step 5: 分配执行
@@ -443,6 +471,10 @@ Agent(subagent_type: "researcher", prompt: 子任务 #3 prompt)
 - 独立子任务**必须并行**发起（同一条消息中多个 Agent 调用）
 - implementer 类型子任务默认使用 `isolation: "worktree"`
 - researcher 类型不需要 worktree（只读）
+- 每个子任务 prompt 必须包含 capability boundary 字段（不允许只给文件所有权）
+- 子 agent 默认禁止递归 delegation；如需突破，必须显式 override 并记录理由
+- 共享治理资产写入默认禁止；只有当前任务必须修改且已显式授权时才允许
+- summary-only 回流：主 agent 只接收摘要，不拉取完整中间过程
 - 每个 agent 的 prompt 中包含完整上下文（不依赖主 agent 的对话历史）
 
 ### Step 6: 结果聚合
@@ -647,6 +679,9 @@ Agent(subagent_type: "researcher", prompt: 子任务 #3 prompt)
 | 未创建 feature-list.json | 分解后必须创建 feature-list.json |
 | 跳过验证门控 | 验证未通过时，会触发 Stop hook 阻止退出 |
 | **subagent 不继承 rules** | Step 0 提取 Rules Pack 并注入 prompt |
+| **把 worktree 当作完整能力隔离** | 额外声明 capability contract（工具/副作用/共享状态） |
+| **子 agent 继续递归委派** | 默认禁止递归，深度预算默认 1 |
+| **回传完整中间过程污染父上下文** | 默认 summary-only，日志落 task artifacts |
 | **主 agent 直接修改代码** | reviewer 失败后，spawn implementer 修复 |
 | **无 delta_context 修复** | reviewer 必须输出结构化问题定位 |
 | **无限修复循环** | max_attempts 保护，超限请求人工干预 |
@@ -667,6 +702,13 @@ Agent(subagent_type: "researcher", prompt: 子任务 #3 prompt)
 - [ ] Open Questions 是否只保留 Blocking/Preference？
 - [ ] Definition of Done 是否符合项目标准？
 - [ ] feature-list.json 是否同步创建？
+
+### Delegation Boundary（Step 4/5）
+
+- [ ] 子任务 prompt 是否声明 capability boundary？
+- [ ] 是否明确限制 delegation depth（默认 1）？
+- [ ] 是否避免把 worktree 误当作完整隔离？
+- [ ] 返回是否保持 summary-only（中间过程不污染父上下文）？
 
 ### Fixer Loop（Step 6.4）
 

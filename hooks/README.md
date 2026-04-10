@@ -101,7 +101,8 @@
 当前仓库开发态已接入运行时的最小实现：
 
 - 根目录 `settings.json` 在 `PreToolUse` 挂载 `hooks/pre-write-gate.sh`、`hooks/pre-edit-gate.sh`、`hooks/pre-agent-gate.sh`
-- 根目录 `settings.json` 在 `Stop` 挂载 `hooks/verification-gate.sh`、`hooks/lesson-capture/lesson-gate.sh`、`hooks/context-monitor.sh`
+- 根目录 `settings.json` 在 `UserPromptSubmit` 挂载 `hooks/skill-loader/skill-inject.sh`、`hooks/recall-entrypoint.py`
+- 根目录 `settings.json` 在 `Stop` 挂载 `hooks/recall-capture.py`、`hooks/verification-gate.sh`、`hooks/lesson-capture/lesson-gate.sh`、`hooks/context-monitor.sh`
 - 项目级 `.claude/settings.json` 在 `Stop` / `SubagentStop` 挂载 `.claude/hooks/promotion-scan.py`
 - 项目级 `.claude/settings.json` 在 `Stop` / `SubagentStop` 挂载 `.claude/hooks/promotion-gate.py`
 - 项目级 `.claude/settings.json` 在 `SessionStart` 挂载 `.claude/hooks/promotion-queue-status.py`
@@ -118,6 +119,84 @@
 - 根目录 `settings.json` 在 `PreToolUse` 的 `Edit` / `Write` matcher 上挂载了 `hooks/scale-gate.sh`
 - `hooks/scale-gate.sh` 在首次编辑前调用 `hooks/task-bootstrap.sh` 自动创建 task 目录
 - 当前共享链路已经可以把”大任务先做规模评估，再进入 task workflow”落成运行时守门
+
+### Minimal Recall Runtime（2026-04-10）
+
+挂载事实：
+
+- 挂载位置：根目录 `settings.json`
+- 触发事件：`UserPromptSubmit`（query）+ `Stop`（capture）
+- 脚本：
+  - `python3 "$HOME/.claude/hooks/recall-entrypoint.py"`
+  - `python3 "$HOME/.claude/hooks/recall-capture.py"`
+- 消费方：
+  - query 结果由 Claude Code hook runtime 注入 `hookSpecificOutput.additionalContext`，消费方是主 agent
+  - 同一 consumer path 现在同时承接两类上下文：
+    - `memory/declarative/` 的极短 declarative snapshot
+    - `recall/entries.jsonl` 的 episodic recall hints
+  - `notes/`、`eat`、`promote-notes` 不是 recall query 的消费方（它们各自走沉淀/晋升链路）
+  - capture 结果写入 `~/.claude/recall/entries.jsonl`，供下次 query 读取
+
+行为约束：
+
+- 显式 `recall.query ...` contract 优先于自动模式
+- 自动模式仅在明显跨轮/恢复信号时触发（如 `continue session`、`resume context`、`继续上次`、`恢复上下文`）
+- 自动模式默认 `k=1`，并使用更小注入预算（默认 `budget_chars=220`）
+- 自动模式有结果门控；命中不足时 `emit({})`，不注入 recall context
+- query 只搜索 `~/.claude/recall/entries.jsonl`，不扫描 `notes/` / `tasks/` 全文
+- declarative snapshot 只读取 `memory/declarative/index.json` 注册的文件，并过滤 `active` + `cross-session`
+- 注入有硬预算（默认短文本）
+- 只注入摘要 + 指针，不注入 transcript 原文
+- declarative snapshot 使用 fenced context，明确标注“不是新的用户输入”
+- capture 为 append-only，按 `entry_id = session_id:transcript_mtime` 去重
+
+### Declarative Snapshot Consumer Path（Batch 5）
+
+- 挂载位置：根目录 `settings.json` 的 `UserPromptSubmit` -> `hooks/recall-entrypoint.py`
+- 读取路径：`memory/declarative/runtime.py` 只读取 `memory/declarative/index.json` 注册的 leaf files
+- 消费规则：仅 `status=active` + `scope=cross-session`，按 `subject+key` 去重，输出极短 fenced snapshot（`<memory-context>...</memory-context>`）
+- 注入通道：与 recall hints 共用同一个 `hookSpecificOutput.additionalContext`
+- 边界约束：不改变 recall store 查询边界，recall 仍仅读取 `~/.claude/recall/entries.jsonl`
+- 兜底：无有效 declarative facts 时静默返回空，不输出异常堆栈到上下文
+
+### Declarative Read-Path Hardening（Batch 6）
+
+- runtime 只信任 `index.json` registry，不直接遍历目录
+- registry 与 leaf record 不一致时 fail-closed：
+  - `file`
+  - `id`
+  - `kind`
+  - `subject`
+  - `key`
+- 同一 `subject+key` 若出现多个不同有效 leaf record，则整项静默跳过，不做猜测合并
+- hook consumer 不负责修复 declarative 数据；冲突应由 owner 链路（`promote-notes`）后续处理
+
+### Declarative Consumer Helper（Batch 7 / 子任务 2）
+
+- 新增 `hooks/context-bundle.py`，用于承接 declarative consumer 的共享逻辑（从 `recall-entrypoint` 可复用抽离点）
+- helper 职责只包含三件事：
+  - declarative snapshot 加载（调用 `memory/declarative/runtime.py` 的 `build_snapshot`）
+  - session cache/frozen 语义
+  - declarative + recall context 的 combine 与 `additionalContext` payload 组装
+- session 语义：
+  - 有 `session_id`：first-turn frozen。首次成功读取后写入 session cache，后续同 session 固定复用
+  - 无 `session_id`：deterministic fallback。每次都从 runtime 重新读取，不依赖 cache
+- 默认 cache 文件：`~/.claude/recall/declarative-session-cache.json`（可通过 `CLAUDE_DECLARATIVE_SESSION_CACHE` 覆盖）
+
+边界约束：
+
+- helper 不查询 recall store，不负责 recall ranking/query contract
+- helper 不修复 declarative registry/leaf 冲突，仍遵循 read-side fail-closed
+- helper 不改 `settings.json` 挂载，不改 memory runtime、skills、notes 的 owner 链路
+
+最小验证方法：
+
+- query 本地验证：
+  - `printf '{"prompt":"recall.query query=\"scale gate\" k=2 budget_chars=240"}' | python3 ~/.claude/hooks/recall-entrypoint.py`
+- capture 本地验证：
+  - `printf '{"session_id":"test-session","transcript_path":"'"$HOME"'/.claude/history.jsonl"}' | python3 ~/.claude/hooks/recall-capture.py`
+- store 检查：
+  - `tail -n 3 ~/.claude/recall/entries.jsonl`
 
 ### Lesson Capture 后台执行机制
 

@@ -47,10 +47,19 @@ description: notes 晋升技能。当 `notes/` 中的 lesson、research、design
 
 - `eat`：吸收**新资料**，主动形成新知识
 - `promote-notes`：评估**旧 note** 是否成熟到可以被动升格
+- `promote-notes`：是 `memory/declarative/` 的 owner，负责 declarative 落盘决策与写入
 
 ```
 note 达到稳定门槛 → 晋升评估 → rules / skills / memory / 保持在 notes
 ```
+
+### Declarative Memory（target=memory）协议
+
+当晋升目标是 `memory/declarative/` 时，`promote-notes` 只能产出 **canonical fact candidate**，禁止把 note 原文直接搬运进 declarative store。
+
+- 允许内容：`subject`、`key`、`value`、`valueType`、`scope`、`source`、`updatedAt`、`lastVerifiedAt`
+- 禁止内容：note body、长段解释、task 进度叙述、transcript 过程复述
+- 写入要求：先 canonicalize 为 fact candidate，再按 contract `upsert(subject + key)`
 
 ## 核心原则
 
@@ -154,7 +163,8 @@ note 达到稳定门槛 → 晋升评估 → rules / skills / memory / 保持在
 |------|------|
 | 短、稳定、可执行、应频繁引用 | `rules/` |
 | 长流程、工具导向、适合按需触发 | `skills/` |
-| 主要是检索路标或项目索引 | `memory/` |
+| 跨 session 稳定事实（可 canonicalize） | `memory/declarative/`（canonical fact candidate） |
+| 主要是检索路标或项目索引 | `memory/`（非 declarative） |
 | 仍偏解释性、案例性 | 保持在 `notes/` |
 
 ### Step 3: 去重与冲突检查
@@ -179,6 +189,12 @@ note 达到稳定门槛 → 晋升评估 → rules / skills / memory / 保持在
 2. 在原 note 中记录晋升去向
 3. 更新原 note 的状态，例如 `promoted`
 4. 保留 `Source Cases` 作为来源链路
+
+若目标是 `memory/declarative/`，将第 1 步收紧为：
+
+1. 仅生成 canonical fact candidate（不复制 note 正文）
+2. 校验 candidate 满足 declarative contract
+3. 以 `subject + key` 执行 `upsert`
 
 若决定不晋升：
 

@@ -1,0 +1,22 @@
+{
+  "version": "0.1",
+  "kind": "environment",
+  "records": [
+    {
+      "id": "runtime.default-shell",
+      "kind": "environment",
+      "subject": "runtime",
+      "key": "shell.default",
+      "value": "zsh",
+      "valueType": "string",
+      "scope": "cross-session",
+      "status": "active",
+      "source": {
+        "type": "runtime-context",
+        "ref": "session-env:2026-04-10"
+      },
+      "updatedAt": "2026-04-10",
+      "lastVerifiedAt": "2026-04-10"
+    }
+  ]
+}

@@ -45,6 +45,10 @@
           {
             "type": "command",
             "command": "bash \"$HOME/.claude/hooks/skill-loader/skill-inject.sh\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$HOME/.claude/hooks/recall-entrypoint.py\""
           }
         ]
       }
@@ -99,6 +103,10 @@
       {
         "matcher": "",
         "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$HOME/.claude/hooks/recall-capture.py\""
+          },
           {
             "type": "command",
             "command": "bash \"$HOME/.claude/hooks/verification-gate.sh\""

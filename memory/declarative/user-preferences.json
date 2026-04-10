@@ -1,0 +1,22 @@
+{
+  "version": "0.1",
+  "kind": "preference",
+  "records": [
+    {
+      "id": "user.output-language",
+      "kind": "preference",
+      "subject": "user",
+      "key": "output.language",
+      "value": "zh-CN",
+      "valueType": "string",
+      "scope": "cross-session",
+      "status": "active",
+      "source": {
+        "type": "explicit-user",
+        "ref": "conversation:2026-04-10-hermes-architecture-alignment"
+      },
+      "updatedAt": "2026-04-10",
+      "lastVerifiedAt": "2026-04-10"
+    }
+  ]
+}

@@ -12,6 +12,17 @@
 | **范围** | 跨会话恢复 | 会话内预防 |
 | **成本** | 高（需 Handoff/Reset） | 低（仅委派决策） |
 
+## Delegation Capability Boundary（Hermes 对标，流程层）
+
+> 当前只落地在 rule + skill + gate 约束层，**不代表已经具备 Hermes 完整 delegation runtime**（如完整 capability sandbox、受控执行基座、统一回流总线）。
+
+### 核心补充
+
+- **capability isolation ≠ worktree isolation**：worktree 只隔离文件工作区，不自动隔离工具权限、外部副作用、共享状态写入权限。
+- **默认拒绝高副作用能力**：子 agent 默认不允许递归委派、不允许改共享治理资产、不允许执行外部不可逆动作。
+- **默认 summary-only 回流**：子 agent 向父 agent 返回摘要与证据路径，而不是完整中间过程/长日志。
+- **深度预算必须显式声明**：默认只允许 `parent -> child` 单层委派；需要更深层时必须显式授权并记录理由。
+
 ## 触发条件
 
 当接收到任务后，**执行前**评估任务规模：
@@ -68,7 +79,28 @@
 
   隔离策略:
     - > 3 个并行 Subagent → 考虑 git worktree
+
+  能力边界（默认）:
+    allow_recursive_delegation: false
+    max_delegation_depth: 1
+    shared_state_write: deny
+    high_side_effect_actions: deny
+    return_mode: summary_only
 ```
+
+### Step 2.1: 绑定 capability contract（必做）
+
+每个 subagent prompt 里必须包含边界字段，不得只写“请实现”：
+
+- 允许写入范围（file ownership）
+- 明确禁止项（递归 delegation、共享状态写入、高副作用动作）
+- `max_delegation_depth`
+- `return_mode: summary_only`
+
+若子任务确实要突破默认边界，必须满足三条：
+- 同一根因链路必须如此
+- 在 prompt 中显式标注 override（例如 `[ALLOW_SHARED_STATE_WRITE]`）
+- 在汇报中记录“为什么要扩边界”
 
 ### Step 3: 汇报聚合
 
@@ -86,9 +118,16 @@ Subagent 完成后，收集标准化汇报：
 ### 文件变更
 - file.ts: 变更摘要
 
+### 证据路径
+- task artifacts / test logs 路径
+
 ### 遗留问题
 - 问题: 描述
 ```
+
+汇报默认使用 **summary-only**：
+- 返回结论、关键证据、风险、下一步
+- 不回传完整中间日志或冗长推理过程
 
 ### Step 4: 综合输出
 
@@ -111,6 +150,10 @@ Subagent 完成后，收集标准化汇报：
 - [ ] 是否在执行前评估了任务规模？
 - [ ] 是否触发了主动委派？
 - [ ] 是否选择了正确的 Subagent 类型？
+- [ ] 是否显式声明了 capability contract（而不仅是 worktree）？
+- [ ] 是否限制了 delegation depth（默认 1）？
+- [ ] 是否禁止了默认共享状态写入与高副作用动作？
+- [ ] 子 agent 返回是否保持 summary-only（无中间过程污染）？
 - [ ] 是否收集了标准化汇报？
 - [ ] 是否更新了任务状态文件？
 
