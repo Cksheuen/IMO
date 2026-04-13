@@ -1,10 +1,11 @@
 {
   "version": 1,
-  "last_sync": "2026-04-13T06:38:24.648472+00:00",
-  "rules_hash": "e07729d8b1b6b082dde42da996ec5010d4109062a335269858027048acd4c747",
+  "last_sync": "2026-04-13T09:36:03.899295+00:00",
+  "rules_hash": "98d2dd1b4210d358aada5ed1fa892277e49ceaf0f82baf5f2dca473d4f964b4d",
   "synced_rules": [
     "/Users/bytedance/.claude/CLAUDE.md",
     "/Users/bytedance/.claude/rules/core/context-injection.md",
+    "/Users/bytedance/.claude/rules/core/global-governance-assets.md",
     "/Users/bytedance/.claude/rules/core/llm-friendly-format.md",
     "/Users/bytedance/.claude/rules/core/proactive-delegation.md",
     "/Users/bytedance/.claude/rules/core/project-architecture-first.md",
