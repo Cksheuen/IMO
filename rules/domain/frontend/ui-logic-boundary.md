@@ -27,6 +27,12 @@ triggers:
 
 **页面负责呈现，状态层负责编排，服务 / adapter 层负责对外调用，运行时 / 后端负责能力与事实。**
 
+补充约束：
+
+- `service / adapter / bridge / command handler` 是边界层，不是核心业务逻辑落点
+- 核心状态变更、校验、派生与 contract 拼装应收口到可直接引用、可直接测试的纯模块
+- UI 解耦不仅要求“页面不直连外部调用”，也要求“边界层不吞掉领域逻辑”
+
 ## 触发条件
 
 当满足以下任一条件时，必须应用本规范：
@@ -44,6 +50,11 @@ triggers:
 | **ViewModel / State** | `hooks/`、store、controller | 聚合 UI 所需状态、触发刷新、封装交互流程 | 直接操作 DOM 细节之外的系统能力 |
 | **Service / Adapter** | `api.ts`、`services/`、`adapters/`、`bridge/` | 唯一的外部调用入口，统一 contract 与错误边界 | 页面展示逻辑、视觉判断 |
 | **Runtime / Backend** | 本地 runtime、bridge handler、后端 command / API | 系统能力、运行时事实、持久化、配置生成 | 前端展示策略、页面文案判断 |
+
+补充说明：
+
+- 桌面应用中的 Tauri / Electron `invoke handler`、bridge command、controller endpoint，默认都归入 **Service / Adapter / Boundary** 角色，而不是领域实现本体。
+- 若某段逻辑离开 command handler 后仍然成立、仍需要复用或仍值得单测，则它不应继续留在 handler 内。
 
 ## 生命周期策略
 
@@ -153,6 +164,20 @@ triggers:
 - 优先让 `service` 或 `runtime` 直接返回前端可消费字段
 - 页面读取最终字段，优于自己拿多个 ID 再推导
 
+### 3.5. Bridge / Command 边界也要满足“纯模块可测”
+
+当项目存在桌面壳、本地 bridge、命令式 handler、controller 时：
+
+- handler 只负责取输入、调纯模块、落盘 / 发请求 / 调系统能力、返回结果
+- 领域状态变更、合法性校验、默认值补齐、派生字段拼装，优先抽到纯模块
+- contract 组装若不依赖真实外设 / 进程 / 网络，应抽为可直接单测的函数
+- 只有真正的 side effect 保留在 handler / runtime adapter 中
+
+判断门槛：
+
+- 如果一段逻辑可以在不启动 UI、不挂 bridge、不起进程的情况下验证，它应该存在于可直接引用的模块，而不是 handler 里
+- 如果测试某个核心行为必须先启动 UI 或完整 runtime，说明分层仍未完成
+
 ### 4. 允许的轻量例外
 
 以下情况**允许**留在页面，不必为了“纯粹分层”过度拆分：
@@ -198,6 +223,8 @@ triggers:
 - [ ] `store / hook / controller` 承担交互编排，而不是页面组件承担
 - [ ] `runtime / backend` 或 `service` 返回的是 UI 需要的最终字段，而不是迫使前端回推内部状态
 - [ ] 当前实现方式与项目所处阶段匹配，而不是继续套用过低阶段的豁免
+- [ ] bridge / command handler 中没有混入可独立存在的核心状态变更与 contract 拼装逻辑
+- [ ] 关键领域行为可以在不启动 UI 的情况下直接按模块引用测试
 
 ## 反模式
 
@@ -208,6 +235,8 @@ triggers:
 | 页面里同时写连接、重试、刷新、错误恢复流程 | 页面既是容器又是运行时编排器 | 抽到 store / hook / controller |
 | 因为项目小，就把所有逻辑都留在页面 | 规模会沿页面自然膨胀 | 允许小例外，但设置拆分门槛 |
 | 已经进入中期，还沿用 Bootstrap 阶段写法 | 轻量化变成长期债务 | 触发升级后立即切到更高阶段 |
+| Tauri / bridge command 一边取 state 一边写核心业务逻辑 | 边界层变成隐性 service 层，无法纯测 | command 只做 adapter，逻辑移到纯模块 |
+| 关键行为只有端到端 UI 测试能覆盖 | 测试成本高，回归定位慢 | 抽出可直接引用的纯模块单测，UI 只保交互闭环 |
 
 ## 与现有规则的关系
 
