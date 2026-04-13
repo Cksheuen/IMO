@@ -62,6 +62,13 @@
   - `runtime-storage-audit.py`
   - `task-audit.py`
   - `check-langchain-runtime-deps.py`
+  - `promote-notes-run.py`
+
+其中：
+
+- `promote-notes-run.py` 是 `promote-notes` 的人工执行 helper
+- 它不挂到 `settings.json`，不属于自动 hook
+- 它只包装既有 `promotion-dispatch.py` / `promotion-apply-result.py`，用于减少手工拼 `promotion-result.json`
 
 ### Runtime Profiles
 

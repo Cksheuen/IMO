@@ -42,15 +42,27 @@ def log(msg: str):
         f.write(line + "\n")
 
 
-def build_dispatch_prompt(candidate: dict) -> str:
-    """构造 promote-notes subagent prompt。"""
-    return (
-        "Process only the claimed promotion candidate from promotionDispatch.candidates. "
-        "Do not rescan the whole queue. Analyze the note, decide promote/merge/keep, "
-        "write promotion-result.json, then stop.\n\n"
-        f"Candidate: {candidate.get('path', '')}\n"
-        f"Reason: {candidate.get('reason', '')}"
-    )
+def build_dispatch_prompt(candidates: list[dict]) -> str:
+    """构造 promote-notes prompt，支持手动批量处理。"""
+    if not candidates:
+        return (
+            "No claimed promotion candidates were provided. "
+            "Do not rescan the queue; stop and report no-op."
+        )
+
+    lines = [
+        "Process only the claimed promotion candidates from promotionDispatch.candidates.",
+        "Do not rescan the whole queue.",
+        "For each candidate, decide promote / merge / keep / defer and write promotion-result.json.",
+        "",
+        f"Batch size: {len(candidates)}",
+    ]
+
+    for idx, candidate in enumerate(candidates, start=1):
+        lines.append(
+            f"{idx}. {candidate.get('path', '')} | reason={candidate.get('reason', '') or candidate.get('signal', '')}"
+        )
+    return "\n".join(lines)
 
 
 def now_iso() -> str:
@@ -370,37 +382,40 @@ def cmd_scan():
     print(f"\nQueue updated: {pending_count} pending, {processing_count} processing")
 
 
-def cmd_claim():
-    """获取待处理候选"""
-    claimed = None
+def cmd_claim(count: int = 1):
+    """获取待处理候选，支持手动批量 claim。"""
+    requested_count = max(1, min(count, 10))
+    claimed: list[dict] = []
 
     with locked_queue() as queue:
         claimable_statuses = ("pending", "failed")
         for candidate in queue["candidates"]:
+            if len(claimed) >= requested_count:
+                break
             if candidate.get("status") in claimable_statuses:
                 candidate["status"] = "processing"
                 candidate["claimed_at"] = now_iso()
                 candidate["attempts"] = candidate.get("attempts", 0) + 1
                 candidate.pop("last_error", None)
                 candidate.pop("lastError", None)
-                claimed = dict(candidate)
+                claimed.append(dict(candidate))
 
-                dispatch = queue["dispatch"]
-                dispatch["status"] = "running"
-                dispatch["requestedAt"] = dispatch.get("requestedAt") or now_iso()
-                dispatch["lastAttemptAt"] = now_iso()
-                dispatch["attempts"] = dispatch.get("attempts", 0) + 1
-                dispatch["lastError"] = None
-                break
+        if claimed:
+            dispatch = queue["dispatch"]
+            dispatch["status"] = "running"
+            dispatch["requestedAt"] = dispatch.get("requestedAt") or now_iso()
+            dispatch["lastAttemptAt"] = now_iso()
+            dispatch["attempts"] = dispatch.get("attempts", 0) + 1
+            dispatch["lastError"] = None
 
     if claimed:
-        log(f"Claimed candidate: {claimed['id']}")
+        log(f"Claimed candidates: {', '.join(item['id'] for item in claimed)}")
         payload = {
             "promotionDispatch": {
                 "subagentType": "promote-notes",
                 "queuePath": str(QUEUE_FILE.relative_to(BASE)),
                 "hasCandidates": True,
-                "candidates": [claimed],
+                "candidates": claimed,
                 "prompt": build_dispatch_prompt(claimed),
             }
         }
@@ -533,12 +548,13 @@ def main():
     parser.add_argument("candidate_id", nargs="?", help="Candidate ID for release")
     parser.add_argument("--error", help="Failure reason for fail command")
     parser.add_argument("--result-file", help="Result file for apply command")
+    parser.add_argument("--count", type=int, default=1, help="Batch size for claim command")
     args = parser.parse_args()
 
     if args.command == "scan":
         cmd_scan()
     elif args.command == "claim":
-        cmd_claim()
+        cmd_claim(args.count)
     elif args.command == "release":
         if not args.candidate_id:
             print("Error: candidate_id required for release")

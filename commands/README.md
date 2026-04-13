@@ -29,6 +29,8 @@
 
 其中 `promotion-auto-*` 仅作为兼容别名，正文应始终保持一跳跳转到统一入口 `/promotion-mode`，避免重复维护。
 
+`promote-notes.md` 现在对应一条明确的手动主路径：通过 `hooks/promote-notes-run.py` 串起 `scan -> list -> claim -> stub-result -> apply`。它仍是人工决策流，不把晋升判断自动化。
+
 `task-audit.md` 是只读治理入口，用于人工扫描本地 `tasks/` 池中的重复主题、draft、legacy 和非标准目录；它不属于自动 hook，也不执行清理动作。
 
 `runtime-profile-audit.md` 用于对比共享 runtime 与当前仓库开发态 runtime，帮助确认某条 hooks / plugins 配置属于哪一层。
