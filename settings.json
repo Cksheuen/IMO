@@ -48,6 +48,10 @@
           },
           {
             "type": "command",
+            "command": "python3 \"$HOME/.claude/hooks/project-architecture-inject.py\""
+          },
+          {
+            "type": "command",
             "command": "python3 \"$HOME/.claude/hooks/recall-entrypoint.py\""
           }
         ]

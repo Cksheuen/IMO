@@ -5,6 +5,7 @@
 - **简洁优先**：每次只改完成目标所需的最小范围
 - **根因导向**：拒绝临时修补，优先修正真正的设计或流程问题
 - **最小影响**：不顺手扩范围，不混入无关清理
+- **架构跟随**：进入新项目或陌生模块先读项目架构入口，再按现有分层、目录与命名方式扩展，不按个人偏好重塑结构
 
 ## 语言偏好
 
@@ -23,6 +24,7 @@
   - 当前仓库位于 `~/.claude/`，因此根目录 `tasks/` 只属于这个仓库项目
 - `Execute`
   - 先锁定改动边界，再开始修改
+  - 进入新项目或陌生模块时，先做项目架构预读
   - 子任务可独立时优先委派或并行
   - 用户已确认方向后，默认沿当前路径执行到闭环
 - `Verify`
@@ -42,12 +44,14 @@
 ## 必查规则入口
 
 - 上下文注入：`rules/core/context-injection.md`
+- 项目架构优先：`rules/core/project-architecture-first.md`
 - 任务工作流：`rules/core/task-centric-workflow.md`
 - task / notes 边界：`rules/core/task-notes-boundary.md`
 - 改动边界守卫：`rules/pattern/change-scope-guard.md`
 - 变更影响审查：`rules/pattern/change-impact-review.md`
 - 废弃方案清理：`rules/pattern/abandoned-solution-cleanup.md`
 - 闭环学习边界：`rules/pattern/closed-learning-loop.md`
+- UI / 逻辑边界：`rules/domain/frontend/ui-logic-boundary.md`
 - LangChain 迁移 runtime 依赖：`rules/tool/langchain-runtime-dependencies.md`
 
 ## Notes 读取协议

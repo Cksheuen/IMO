@@ -5,7 +5,7 @@ Reads rules from ~/.claude/ hierarchy and produces a single Markdown document
 that fits within Codex CLI's AGENTS.md size limit (default 28KB).
 
 Priority tiers control what gets included when space is tight:
-  P0: CLAUDE.md design philosophy (~1KB)
+  P0: CLAUDE.md core principles + must-check entries (~2KB)
   P1: rules/core/ (~4KB)
   P2: rules/pattern/ (~6KB)
   P3: notes/lessons/ active only (~4KB)
@@ -104,19 +104,22 @@ def extract_sections(body, keep=KEEP_HEADINGS, skip=SKIP_HEADINGS):
     return "\n".join(result).strip()
 
 
-def extract_design_philosophy(claude_md_path):
-    """Extract design philosophy section from CLAUDE.md."""
+def extract_claude_p0_sections(claude_md_path):
+    """Extract compact, high-signal sections from CLAUDE.md."""
     if not claude_md_path.exists():
         return ""
     text = claude_md_path.read_text(encoding="utf-8")
-    # Find 设计哲学 section
-    match = re.search(
-        r'^## 设计哲学\s*\n(.*?)(?=\n## |\Z)',
-        text, re.MULTILINE | re.DOTALL
-    )
-    if match:
-        return match.group(1).strip()
-    return ""
+    sections = []
+    for heading in ("核心原则", "高优先级边界", "必查规则入口"):
+        match = re.search(
+            rf'^## {re.escape(heading)}\s*\n(.*?)(?=\n## |\Z)',
+            text,
+            re.MULTILINE | re.DOTALL,
+        )
+        if match:
+            sections.append(f"## {heading}\n\n{match.group(1).strip()}")
+
+    return "\n\n".join(sections).strip()
 
 
 def process_rule_file(filepath):
@@ -195,13 +198,13 @@ def compile_agents_md(max_size=MAX_SIZE):
         "Follow them when implementing tasks.\n"
     )
 
-    # P0: Design philosophy
-    philosophy = extract_design_philosophy(CLAUDE_DIR / "CLAUDE.md")
-    if philosophy:
-        p0 = f"\n## 设计哲学\n\n{philosophy}"
-        sections.append(("P0", p0, 1024))
+    # P0: CLAUDE high-signal entry sections
+    claude_p0 = extract_claude_p0_sections(CLAUDE_DIR / "CLAUDE.md")
+    if claude_p0:
+        p0 = f"\n## 全局入口\n\n{claude_p0}"
+        sections.append(("P0", p0, 2048))
         source_files.append(str(CLAUDE_DIR / "CLAUDE.md"))
-        budgets["P0"] = 1024
+        budgets["P0"] = 2048
 
     # P1: rules/core/
     core_dir = CLAUDE_DIR / "rules" / "core"

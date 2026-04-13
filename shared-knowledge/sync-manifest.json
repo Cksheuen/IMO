@@ -1,11 +1,13 @@
 {
   "version": 1,
-  "last_sync": "2026-04-10T09:56:46.355482+00:00",
-  "rules_hash": "ff8e0ca823f7e7ab1c63317420f1b2347922ea3c8c2b2008d6cc10218f555bf0",
+  "last_sync": "2026-04-13T06:38:24.648472+00:00",
+  "rules_hash": "e07729d8b1b6b082dde42da996ec5010d4109062a335269858027048acd4c747",
   "synced_rules": [
+    "/Users/bytedance/.claude/CLAUDE.md",
     "/Users/bytedance/.claude/rules/core/context-injection.md",
     "/Users/bytedance/.claude/rules/core/llm-friendly-format.md",
     "/Users/bytedance/.claude/rules/core/proactive-delegation.md",
+    "/Users/bytedance/.claude/rules/core/project-architecture-first.md",
     "/Users/bytedance/.claude/rules/core/task-centric-workflow.md",
     "/Users/bytedance/.claude/rules/core/task-notes-boundary.md",
     "/Users/bytedance/.claude/rules/core/user-facing-language.md",
@@ -23,6 +25,7 @@
     "/Users/bytedance/.claude/rules/pattern/promotion-loop-background-execution.md",
     "/Users/bytedance/.claude/rules/pattern/requirements-confirmation.md",
     "/Users/bytedance/.claude/rules/pattern/self-verification-mechanism.md",
+    "/Users/bytedance/.claude/rules/domain/frontend/ui-logic-boundary.md",
     "/Users/bytedance/.claude/rules/domain/ml/ml-training-preflight-checks.md",
     "/Users/bytedance/.claude/rules/domain/native/rust-egui-testing.md",
     "/Users/bytedance/.claude/rules/domain/shared/testable-architecture.md"
