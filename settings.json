@@ -153,7 +153,8 @@
     "rust-analyzer-lsp@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "chrome-devtools-mcp@chrome-devtools-plugins": true,
-    "codex@openai-codex": true
+    "codex@openai-codex": true,
+    "warp@claude-code-warp": true
   },
   "extraKnownMarketplaces": {
     "chrome-devtools-plugins": {
@@ -172,6 +173,12 @@
       "source": {
         "source": "github",
         "repo": "openai/codex-plugin-cc"
+      }
+    },
+    "claude-code-warp": {
+      "source": {
+        "source": "github",
+        "repo": "warpdotdev/claude-code-warp"
       }
     }
   },
