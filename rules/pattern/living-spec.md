@@ -1,3 +1,11 @@
+---
+paths:
+  - "src/**/*"
+  - "lib/**/*"
+  - "app/**/*"
+  - "tasks/**/*"
+---
+
 # Living Spec Pattern
 
 > 来源：[Augment Code - What spec-driven development gets wrong](https://x.com/augmentcode/status/2025993446633492725)

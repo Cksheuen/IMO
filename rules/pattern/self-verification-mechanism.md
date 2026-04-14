@@ -1,3 +1,11 @@
+---
+paths:
+  - "src/**/*"
+  - "lib/**/*"
+  - "tasks/**/*"
+  - "**/feature-list.json"
+---
+
 # Agent 自验证机制
 
 > **来源**: harness 设计哲学 + long-running-agent-techniques
@@ -112,6 +120,6 @@ reviewer 判定失败
 
 ## 参考文件
 
-- `references/self-verification-protocol.md`：schema、jq 更新样例、完整 fixer loop
+- `notes/design/self-verification-protocol.md`：schema、jq 更新样例、完整 fixer loop
 - `rules/pattern/generator-evaluator-pattern.md`
 - `rules/technique/long-running-agent-techniques.md`

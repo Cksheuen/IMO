@@ -1,9 +1,6 @@
 ---
-name: codex-review-symlink-eisdir
-description: Codex review 在 symlink 指向目录时触发 EISDIR 错误的规避方案
-triggers:
-  - 运行 /codex:review 或 /codex:adversarial-review
-  - 项目工作树中存在 symlink 指向目录
+paths:
+  - ".claude/**/*"
 ---
 
 # Codex Review EISDIR 规避

@@ -1,6 +1,14 @@
 ---
-name: project-architecture-first
-description: 进入新项目或陌生模块时，先读取并对齐项目现有架构，再决定模块拆分、目录落点与编码方式
+paths:
+  - "src/**/*"
+  - "lib/**/*"
+  - "app/**/*"
+  - "AGENTS.md"
+  - "CLAUDE.md"
+  - "README.md"
+  - "package.json"
+  - "pyproject.toml"
+  - "Cargo.toml"
 ---
 
 # 项目架构优先规范

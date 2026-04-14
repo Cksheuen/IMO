@@ -1,3 +1,10 @@
+---
+paths:
+  - "src/**/*"
+  - "lib/**/*"
+  - "app/**/*"
+---
+
 # Generator-Evaluator 模式规范
 
 > 来源：[Anthropic Engineering](https://www.anthropic.com/engineering/harness-design-long-running-apps)

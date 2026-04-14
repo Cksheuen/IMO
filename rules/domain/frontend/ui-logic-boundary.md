@@ -1,10 +1,11 @@
 ---
-name: ui-logic-boundary
-description: 个人项目中前端 UI、状态、服务调用与运行时逻辑的边界约束
-triggers:
-  - 修改前端页面、组件、store、hook
-  - 在页面中新增请求、刷新、重试、连接、系统状态、bridge 调用
-  - 需要判断某段逻辑应留在页面还是应上移到状态层 / 服务层
+paths:
+  - "src/**/*.{ts,tsx,js,jsx}"
+  - "app/**/*.{ts,tsx,js,jsx}"
+  - "components/**/*.{ts,tsx}"
+  - "pages/**/*.{ts,tsx}"
+  - "hooks/**/*.{ts,tsx}"
+  - "store/**/*.{ts,tsx}"
 ---
 
 # 前端 UI / 逻辑边界规范

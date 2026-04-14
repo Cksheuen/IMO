@@ -1,3 +1,10 @@
+---
+paths:
+  - "src/**/*"
+  - "lib/**/*"
+  - "app/**/*"
+---
+
 # Code-as-Interface Pattern
 
 > 来源：[Sawyer Hood @sawyerhood](https://x.com/sawyerhood/status/2036842374933180660) | 吸收时间：2026-03-26

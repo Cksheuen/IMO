@@ -1,11 +1,13 @@
 ---
-name: backend-architecture-stages
-description: 后端项目三阶段架构演化定义，包含阶段特征、升级触发器与分层边界
-triggers:
-  - 修改或新建 handler、controller、router、service、repository
-  - 在 handler 中直接写数据库查询或业务逻辑
-  - 多个 handler 开始出现相同的数据处理模式
-  - 需要判断某段逻辑是否应该抽到 service 层或 repository 层
+paths:
+  - "src/api/**/*"
+  - "server/**/*"
+  - "services/**/*"
+  - "api/**/*"
+  - "handlers/**/*"
+  - "controllers/**/*"
+  - "routes/**/*"
+  - "repositories/**/*"
 ---
 
 # 后端架构阶段定义

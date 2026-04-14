@@ -1,11 +1,10 @@
 ---
-name: ui-logic-decoupled-testing
-description: 当前端已经完成 UI / 逻辑解耦时，功能测试应优先走前端 API / store 调用链，再按需桥接后端能力，而不是退回纯后端测试或直接上 UI 自动化。
-triggers:
-  - 为已解耦前端编写功能测试
-  - 需要决定测试应落在 UI、前端 API、store 还是后端纯逻辑层
-  - 用户要求“不要测 UI，但要保留真实调用链”
-  - 需要把测试链落成可执行测试代码
+paths:
+  - "src/**/*.{ts,tsx,js,jsx}"
+  - "app/**/*.{ts,tsx,js,jsx}"
+  - "components/**/*.{ts,tsx}"
+  - "**/*.{test,spec}.{ts,tsx,js,jsx}"
+  - "store/**/*.{ts,tsx}"
 ---
 
 # UI / 逻辑解耦后的测试编写规范

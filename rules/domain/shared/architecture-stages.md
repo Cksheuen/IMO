@@ -1,3 +1,12 @@
+---
+paths:
+  - "src/**/*"
+  - "lib/**/*"
+  - "app/**/*"
+  - "cli/**/*"
+  - "scripts/**/*"
+---
+
 # 通用/全栈领域架构阶段定义
 
 > 来源：从前端 `ui-logic-boundary.md` 验证的三阶段模式抽象，配合 `rules/core/architecture-evolution.md` 核心协议 | 吸收时间：2026-04-14

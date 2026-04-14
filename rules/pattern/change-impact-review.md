@@ -1,3 +1,10 @@
+---
+paths:
+  - "src/**/*"
+  - "lib/**/*"
+  - "app/**/*"
+---
+
 # 变更影响审查规范
 
 > 来源：notes/lessons/refactor-introduces-regression.md | 晋升时间：2026-03-30

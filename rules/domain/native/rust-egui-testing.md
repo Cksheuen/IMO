@@ -1,3 +1,10 @@
+---
+paths:
+  - "**/*.rs"
+  - "**/Cargo.toml"
+  - "**/egui*"
+---
+
 # Rust + egui 桌面应用测试方案
 
 > 来源：brainstorm 调研 | 吸收时间：2026-03-26

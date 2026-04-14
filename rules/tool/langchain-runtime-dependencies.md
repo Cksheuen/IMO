@@ -1,3 +1,11 @@
+---
+paths:
+  - "**/migrated/**"
+  - "**/langgraph*"
+  - "**/langchain*"
+  - "**/requirements.txt"
+---
+
 # LangChain 迁移 Runtime 依赖规范
 
 ## 触发条件

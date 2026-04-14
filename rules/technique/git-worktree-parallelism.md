@@ -1,3 +1,9 @@
+---
+paths:
+  - ".git/**/*"
+  - "**/.git/**/*"
+---
+
 # Git Worktree Parallelism
 
 > 来源：[Trellis](https://github.com/mindfold-ai/Trellis) | 吸收时间：2026-03-25

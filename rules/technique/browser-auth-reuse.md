@@ -1,3 +1,10 @@
+---
+paths:
+  - "**/browser*"
+  - "**/playwright*"
+  - "**/puppeteer*"
+---
+
 # 浏览器登录态复用技术
 
 > 来源：eat 鉴权问题调研 | 吸收时间：2026-03-26
@@ -130,7 +137,7 @@ cache:
 ## 相关规范
 
 - [[browser-agent-architecture]] - 浏览器 Agent 架构
-- [[agent-browser]] - AI-First 浏览器 CLI
+- `notes/research/agent-browser.md` - AI-First 浏览器 CLI
 - [[code-as-interface]] - 代码生成模式
 
 ## 参考

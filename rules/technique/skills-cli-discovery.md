@@ -1,3 +1,9 @@
+---
+paths:
+  - "skills/**/*"
+  - ".claude/skills/**/*"
+---
+
 # Skills CLI 发现与安装规范
 
 > 来源：[skills.sh/vercel-labs/skills/find-skills](https://skills.sh/vercel-labs/skills/find-skills)

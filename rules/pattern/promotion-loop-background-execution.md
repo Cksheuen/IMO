@@ -1,3 +1,9 @@
+---
+paths:
+  - "hooks/**/*"
+  - "**/promotion*"
+---
+
 # Promotion Loop 后台执行约束
 
 > 来源：`notes/lessons/promotion-loop-background-execution.md` | 晋升时间：2026-04-03

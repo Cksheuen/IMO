@@ -1,3 +1,10 @@
+---
+paths:
+  - "src/**/*.{ts,tsx,rs,py}"
+  - "server/**/*"
+  - "api/**/*"
+---
+
 # 跨层功能预检规范
 
 > 来源：notes/lessons/cross-layer-iterative-fix-antipattern.md | 晋升时间：2026-03-30

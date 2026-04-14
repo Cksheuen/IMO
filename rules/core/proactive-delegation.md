@@ -1,3 +1,12 @@
+---
+paths:
+  - "src/**/*"
+  - "lib/**/*"
+  - "app/**/*"
+  - "server/**/*"
+  - "api/**/*"
+---
+
 # 主动委派决策框架
 
 > 来源：brainstorm 调研（JetBrains Research、dev.to、Claude Code Docs）| 吸收时间：2026-03-26

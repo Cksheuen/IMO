@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/feature-list.json"
+  - "hooks/**/*"
+---
+
 # 自动创建的 Feature List 噪音处理
 
 > 来源：`notes/lessons/auto-bootstrapped-feature-list-noise.md` | 晋升时间：2026-04-03

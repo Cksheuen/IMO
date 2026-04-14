@@ -1,3 +1,11 @@
+---
+paths:
+  - "**/feature-list.json"
+  - "**/progress*"
+  - "**/handoff*"
+  - "**/init.sh"
+---
+
 # 长时运行 Agent 技术规范
 
 > 来源：[Anthropic Engineering - Effective Harnesses](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) (2025-11-26)

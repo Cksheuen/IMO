@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/rate-limit*"
+  - "hooks/**/*"
+---
+
 # Claude Code Rate Limit 自动管理
 
 > 来源：brainstorm 调研 + 实现 | 吸收时间：2026-03-26

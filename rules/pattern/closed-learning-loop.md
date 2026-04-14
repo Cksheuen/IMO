@@ -1,3 +1,12 @@
+---
+paths:
+  - "src/**/*"
+  - "lib/**/*"
+  - "app/**/*"
+  - "recall/**/*"
+  - "memory/**/*"
+---
+
 # Closed Learning Loop Pattern
 
 > 来源：
