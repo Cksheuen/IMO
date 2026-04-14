@@ -1,9 +1,10 @@
 {
   "version": 1,
-  "last_sync": "2026-04-13T09:36:03.899295+00:00",
-  "rules_hash": "98d2dd1b4210d358aada5ed1fa892277e49ceaf0f82baf5f2dca473d4f964b4d",
+  "last_sync": "2026-04-14T10:07:15.599409+00:00",
+  "rules_hash": "ac7e5565a07f6f4643766736fe8c13dc3db1ea57a918769b99796d95939aacd9",
   "synced_rules": [
     "/Users/bytedance/.claude/CLAUDE.md",
+    "/Users/bytedance/.claude/rules/core/architecture-evolution.md",
     "/Users/bytedance/.claude/rules/core/context-injection.md",
     "/Users/bytedance/.claude/rules/core/global-governance-assets.md",
     "/Users/bytedance/.claude/rules/core/llm-friendly-format.md",
@@ -26,9 +27,12 @@
     "/Users/bytedance/.claude/rules/pattern/promotion-loop-background-execution.md",
     "/Users/bytedance/.claude/rules/pattern/requirements-confirmation.md",
     "/Users/bytedance/.claude/rules/pattern/self-verification-mechanism.md",
+    "/Users/bytedance/.claude/rules/domain/backend/architecture-stages.md",
     "/Users/bytedance/.claude/rules/domain/frontend/ui-logic-boundary.md",
+    "/Users/bytedance/.claude/rules/domain/frontend/ui-logic-decoupled-testing.md",
     "/Users/bytedance/.claude/rules/domain/ml/ml-training-preflight-checks.md",
     "/Users/bytedance/.claude/rules/domain/native/rust-egui-testing.md",
+    "/Users/bytedance/.claude/rules/domain/shared/architecture-stages.md",
     "/Users/bytedance/.claude/rules/domain/shared/testable-architecture.md"
   ],
   "feedback_count": 0,
