@@ -1,248 +1,210 @@
 # Claude Code 配置仓库
 
-> 一个持续进化的 AI 助手配置系统，通过规范、技能和记忆管理实现能力的增量积累。
+> 一个把 Claude Code 从“提示词集合”收敛成“可执行工作流”的配置仓库。
 
-## 核心理念
-
-**简洁优先 | 根因导向 | 最小影响**
-
-这个仓库不是静态配置，而是一个**会学习的系统**：
-- 每次纠正都会沉淀为规范
-- 每次学习都会转化为能力
-- 每次索引都是未来快速定位的路标
+这个仓库现在的重点不是罗列目录，而是把几条真正会影响日常使用的运行链做实：任务闭环、上下文注入、自动治理、知识晋升。
 
 ## 安装方式
 
-### 用户级安装（推荐）
+### 用户级安装
 
-将配置放到 `~/.claude/` 目录，对所有项目生效：
+把仓库放到 `~/.claude/`，让 Claude Code 默认读取这套配置：
 
 ```bash
-# 克隆到用户配置目录
-git clone https://github.com/your-repo/claude-config.git ~/.claude
+git clone <repo-url> ~/.claude
 ```
 
 ### 项目级安装
 
-将配置放到项目的 `.claude/` 目录，仅对当前项目生效：
+如果只想让某个项目使用这套配置，把仓库放到项目根下的 `.claude/`：
 
 ```bash
-# 在项目根目录
-git clone https://github.com/your-repo/claude-config.git .claude
+git clone <repo-url> .claude
 ```
 
-### 组合使用
+### 安装后先做的 3 件事
 
-项目级配置会覆盖用户级配置。常见做法：
-- 用户级：放通用规则和技能
-- 项目级：放项目特定的上下文和规则
+1. 看 [`settings.json`](./settings.json)，确认 hooks 和权限是不是你要的默认基线。
+2. 执行 `/promotion-mode status`，确认 Promotion Loop 当前是不是自动后台模式。
+3. 看 [`CLAUDE.md`](./CLAUDE.md)，确认默认工作流和边界是否符合你的习惯。
 
-### LangChain / LangGraph 迁移 runtime 依赖
+## 先看这个风险：Promotion Loop 不要默认一直后台跑
 
-当前仓库里的 `skills/*/migrated/` 与部分 `rules/pattern/migrated/` 样例统一使用仓库本地 `.venv`。
+`promotion-mode` 是最容易被误解的功能之一。它不是一个“开了总是更好”的开关。
 
-共享基础依赖入口：
+当前仓库提交状态下，[`promotion-config.json`](./promotion-config.json) 里的 `autoBackgroundEnabled` 为 `true`。也就是说，如果你直接按当前配置使用，后台自动链路是允许继续工作的。
+
+- `/promotion-mode on`：允许后台自动链路继续工作，可能带来额外 token 消耗
+- `/promotion-mode off`：关闭后台自动模式，回到手动主路径
+- `/promotion-mode status`：查看当前模式
+- `/promote-notes`：手动推进 note 晋升
+
+当前仓库的设计已经收敛为：
+
+- 默认推荐理解：**手动 `/promote-notes` 为主**
+- 自动模式的价值：保留扫描、排队、提醒等后台能力
+- 自动模式的代价：可能产生你并不想要的后台 token 消耗
+
+所以安装后不要假设它应该一直开着。更稳妥的做法是：
+
+1. 先 `/promotion-mode status`
+2. 如果你不希望后台持续消耗，立即 `/promotion-mode off`
+3. 真要晋升时，再手动 `/promote-notes`
+
+手动主路径：
 
 ```bash
-./.venv/bin/pip install -r skills/migrated/requirements.txt
+python3 "$HOME/.claude/hooks/promote-notes-run.py" scan
+python3 "$HOME/.claude/hooks/promote-notes-run.py" list
+python3 "$HOME/.claude/hooks/promote-notes-run.py" claim --count 1
+python3 "$HOME/.claude/hooks/promote-notes-run.py" stub-result
+# 手动编辑 promotion-result.json
+python3 "$HOME/.claude/hooks/promote-notes-run.py" apply
 ```
 
-如只想按 runtime 局部安装，也可以使用各自入口：
+## 你实际高频使用的功能
 
-```bash
-./.venv/bin/pip install -r skills/orchestrate/migrated/requirements.txt
-```
+下面这组优先级不是拍脑袋写的，而是参考了本地 `~/.claude/history.jsonl` 和 `~/.codex/history.jsonl` 的使用记录后收敛出来的。
 
-运行前可先检查：
+### 1. `/brainstorm`
 
-```bash
-python3 ~/.claude/hooks/check-langchain-runtime-deps.py --runtime orchestrate
-```
+这是最明显的高频显式入口，适合在实现前先做需求发现、技术选型和结构收敛。
 
-若当前任务需要运行 migrated runtime 且检查显示缺依赖，agent 应直接申请安装，而不是停留在 `ModuleNotFoundError` 说明层。
+适合什么时候用：
 
-## 如何使用
+- 需求还不够清楚
+- 方案不止一条，需要调研后再收敛
+- 你想先把边界、风险、未来演化想明白，再开始实现
 
-**直接问 AI**。这个仓库本身就是配置，AI 启动后会自动读取。
+典型用法：
 
-你可以这样问：
-- "有哪些可用的技能？"
-- "这个项目怎么用的？"
-- "帮我看看 rules 目录里有什么规范"
-- "检查哪些 notes 可以晋升成规则或技能"
+- `/brainstorm`
+- “先帮我调研，再给 MVP 路线”
 
-AI 会根据当前上下文自动选择合适的技能和规范执行。
+### 2. `review / 审查`
 
-## 配置分层
+从本地记录看，review 类请求一直很高频。这个仓库也确实更适合在这些场景里发挥价值：
 
-为避免把办公环境、内网 registry、个人机器偏好误同步到所有环境，配置按两层管理：
+- 改完 `rules/`、`skills/`、`hooks/` 后做风险审查
+- 检查新流程有没有假闭环
+- 先找 regression / 风险，再谈优化
 
-- `settings.json`：共享基线。只放跨环境稳定、适合版本控制的公共配置。
-- `settings.local.json`：本地覆盖。只放办公场景、内网 MCP、机器私有路径、个人偏好。
-- `settings.local.example.json`：本地覆盖模板。用于展示推荐结构，不直接生效。
-- `.mcp.example.json`：项目级 MCP 模板。用于展示“仅当前项目需要”的附加工具如何下沉。
+典型用法：
 
-推荐原则：
+- `/review`
+- “帮我审一下这次改动”
+- “重点看行为回归和漏测”
 
-- 共享基线中不放依赖内网、租户、办公网络的 `mcpServers`
-- 办公场景 MCP 优先放到本地覆盖层，或按项目放在项目级 `.claude/settings.local.json`
-- 若某个 MCP 仅在少数项目使用，优先放项目级 `.mcp.json`，不要提升到用户级共享基线
-- 示例文件可版本控制，真实本地文件不入库
+### 3. `skills / plugins` 相关探索
 
-当前仓库已按这个边界收敛：
+从调用记录看，你对 skill / plugin 的边界、同步和扩展非常高频。这也是这个仓库最核心的使用方向之一。
 
-- 根目录 `settings.json` 只保留共享 hooks、permissions 和稳定 marketplace
-- `ttcodex-local` 一类本机路径 marketplace 不再放共享层
-- `codemossProviderId` 一类个人 provider 标识只应放本地覆盖层
+适合什么时候看这里：
 
-### 三层边界
+- 想知道一个能力应该做成 `skill` 还是 `plugin`
+- 想给 Claude / Codex 增加新能力
+- 想确认高频能力是否应该进入 `commands/` 成为显式入口
 
-- **共享层**：`settings.json`
-  适合所有项目、所有环境都稳定成立的配置。
-- **办公层**：`settings.local.json`
-  适合当前机器、当前办公网络、当前租户的长期工具。
-- **项目层**：`.mcp.json`
-  只适合某个项目当前需要的附加 MCP，不应污染用户级配置。
+优先入口：
 
-### 办公场景建议放置位置
+- [`skills/`](./skills/)
+- [`commands/README.md`](./commands/README.md)
+- [`settings.json`](./settings.json)
 
-- 用户级长期办公工具：`~/.claude/settings.local.json`
-- 项目特定办公工具：`<project>/.claude/settings.local.json` 或 `<project>/.mcp.json`
+### 4. `/design`
 
-典型应放入本地覆盖层的内容：
+你本地记录里 design 相关使用频率也不低。这里的 `design` 不是“给点颜色建议”，而是完整的 Pencil MCP 设计链。
 
-- 内网 registry，如 `bnpm.byted.org`
-- 办公环境专用 MCP，如 `semi-mcp`、`tiksearch`、`lark-docs`、`feishu`
-- 带租户/端口/本地路径的环境变量
-- 本机路径 marketplace，如 `ttcodex-local`
-- 个人 provider 标识，如 `codemossProviderId`
-- 临时授权过的高权限本地命令
+适合什么时候用：
 
-### 推荐落地方式
+- 想做页面、原型、仪表盘、登录页
+- 希望从模糊需求一路走到 `.pen` 文件和截图验证
 
-1. 复制 `settings.local.example.json` 为本机 `settings.local.json`
-2. 把机器私有配置填到本地覆盖层，如 `ttcodex-local` 和 `codemossProviderId`
-3. 按实际办公环境删减不需要的 MCP
-4. 优先固定版本，不使用 `@latest`
-5. 对 Feishu 一类大工具面优先配置 `FEISHU_ENABLED_TOOLS`
-6. 项目特定工具再下沉到项目级 `.mcp.json`
-7. 参考 `.mcp.example.json` 为具体项目生成最小项目覆盖
+典型用法：
 
-### 运行时 Profile 审计
+- `/design`
+- “帮我做一个 dashboard 的 UI 设计”
 
-当前仓库有两套长期并存的 runtime profile：
+### 5. `/orchestrate`
 
-- 共享 profile：根目录 `settings.json`
-- 仓库开发态 profile：仓库内 `.claude/settings.json`
+`orchestrate` 的显式触发次数不算最多，但在 Codex 侧明显更常被用于大任务拆分。
 
-需要确认某条 hook、plugin 或 marketplace 配置属于哪一层时，运行：
+适合什么时候用：
 
-```bash
-python3 ~/.claude/hooks/runtime-profile-audit.py
-```
+- 任务会改 `3+` 个文件
+- 跨 `2+` 个领域
+- 你明确想并行执行
 
-这个工具只做对照，不修改任何配置。
+典型用法：
 
-## 架构设计
+- `/orchestrate`
+- “先拆分执行，再并行推进”
 
-用户级与项目级目录分工如下：
+## 这个项目真正有特色的地方
 
-- `~/.claude/notes`：全局共享知识沉淀
-- `<project>/.claude/tasks`：当前项目自己的任务规格与状态
-- 当前仓库本身就是放在 `~/.claude/` 的一个项目，因此仓库根下的 `tasks/` 只是这个仓库自己的项目级 tasks 目录
+### 1. Hook-first，而不是 prompt-only
 
-```
+很多能力不是“写在文档里希望 agent 记住”，而是直接挂进运行时：
+
+- `UserPromptSubmit`：注入 `skill-loader`、项目架构上下文和 recall 入口
+- `PreToolUse`：经过 `scale-gate`、`pre-write-gate`、`pre-edit-gate`、`pre-agent-gate`
+- `Stop`：执行 recall capture、verification gate、lesson capture、context monitor
+
+真实挂载入口见 [`settings.json`](./settings.json) 和 [`hooks/README.md`](./hooks/README.md)。
+
+### 2. `tasks / notes / recall / memory` 分层明确
+
+这里不把“当前任务”“长期知识”“跨轮恢复”“稳定事实”混在一起：
+
+- [`tasks/`](./tasks/README.md)：当前任务事实
+- [`notes/`](./notes/README.md)：可复用知识沉淀
+- `recall/`：跨轮恢复提示
+- `memory/`：更稳定的 declarative snapshot
+
+### 3. Note 不是终点，Promotion Loop 才是闭环
+
+`notes/` 不是最终仓库。稳定内容还会继续进入：
+
+- `rules/`
+- `skills/`
+- `memory/`
+
+但这条链路现在已经明确成了“**手动晋升为主，自动后台为辅**”，不会再把自动晋升包装成默认无害能力。
+
+### 4. 有一整套治理型守门机制
+
+这个仓库的强项不是功能堆叠，而是避免流程失真：
+
+- `project-architecture-inject.py`
+- `scale-gate.sh`
+- `task-bootstrap.sh`
+- `verification-gate.sh`
+- `audit-runtime-links.py`
+- `runtime-profile-audit.py`
+
+## 仓库入口
+
+如果你只想快速理解这个项目，从这几个入口开始就够了：
+
+- [`CLAUDE.md`](./CLAUDE.md)：最小原则、默认工作流、必查规则入口
+- [`settings.json`](./settings.json)：共享 runtime 的真实挂载点
+- [`hooks/README.md`](./hooks/README.md)：hook 的边界、调用链和已接通链路
+- [`rules/`](./rules/)：执行规范
+- [`skills/`](./skills/)：可触发的完整工作流
+- [`commands/README.md`](./commands/README.md)：显式 slash 命令入口
+
+最小目录图：
+
+```text
 ~/.claude/
-├── CLAUDE.md              # 核心配置：工作流、原则、触发条件
-├── hooks/                 # 自定义 hooks（事件钩子脚本）
-├── notes/                 # 知识沉淀（经验教训、笔记）
-├── skills/                # 可扩展技能模块
-├── rules/                 # 执行规范（pattern/technique/tool/knowledge）
-├── memory/                # 分层记忆系统（L1/L2/L3）
-└── .cold-storage/         # 冷存储（上下文管理）
-
-<project>/
-└── .claude/
-    └── tasks/             # 当前项目自己的任务目录
+├── CLAUDE.md
+├── settings.json
+├── hooks/
+├── rules/
+├── skills/
+├── commands/
+├── tasks/
+├── notes/
+├── recall/
+└── memory/
 ```
-
-### 三层能力体系
-
-| 层级 | 职责 | 特点 |
-|------|------|------|
-| **hooks/** | 事件钩子脚本 | 由 hooks 事件触发的脚本资产 |
-| **tasks/** | 任务规格与状态 | 项目级目录，按 `YYYY-MM-DD-slug` 组织，便于扫描与恢复 |
-| **notes/** | 知识沉淀 | 承接经验教训、笔记、调研与设计思考 |
-| **skills/** | 完整工作流 | 用户可调用，有明确触发条件 |
-| **rules/** | 执行规范 | 被 CLAUDE.md 或 skills 引用 |
-| **memory/** | 知识索引 | 跨会话持久化 |
-
-### hooks / notes 的定位
-
-- `hooks/`：放自定义事件钩子脚本，配合 `settings.json` 或项目级 `.claude/settings.json` 使用。
-- `notes/`：放经验教训、笔记、调研与设计思考，作为 `rules/` / `skills/` 之前的知识沉淀层，并按任务循环定向读取；它是用户级全局目录，位于 `~/.claude/notes/`。
-- `tasks/`：是项目级目录，标准位置为 `<project>/.claude/tasks/`。
-- `tasks/` 与 `notes/` 的边界：`tasks/` 记录当前任务事实，`notes/` 沉淀跨任务可复用知识；详见 `rules/core/task-notes-boundary.md`。
-- 当前仓库位于 `~/.claude/`，所以仓库根下的 `tasks/` 只是这个仓库自身项目的 task 目录；它不代表其他项目共用同一个全局 task 池。
-- 当前仓库内 `.claude/hooks/` 与 `.claude/settings.json` 用于开发当前仓库这个项目；根目录 `hooks/` 面向配置仓库自身的可同步资产。
-
-### notes 的工作流循环
-
-- `Correction Loop`：用户纠正、追问、质疑、复盘时，读取并更新 `notes/lessons/`
-- `Research Loop`：技术选型、方案探索、brainstorm 时，读取并更新 `notes/research/`
-- `Design Loop`：目录、调用链、迁移与结构设计时，读取并更新 `notes/design/`
-- `Recovery Loop`：执行失败、返工、回滚时，回读并更新 `notes/lessons/`
-- `Promotion Loop`：当 note 满足稳定条件时，被动评估是否晋升为 `rules/`、`skills/` 或 `memory/`
-
-### hooks 与 notes 的关系
-
-- `hooks/` 负责事件点自动动作或提醒
-- `notes/` 负责事件后的知识沉淀、复盘与后续复用
-- hook 可以提示“该检查哪类 note”，但不应自动注入整篇 note 内容
-
-### 链路审计
-
-- 根目录提供 `hooks/audit-runtime-links.py`，用于人工执行的静态审计：检查文档里声称已接通的运行链，是否真的在 `settings.json` 或 `.claude/settings.json` 中挂载
-- 它是只读审计工具，不属于自动 hook，不会自行运行，也不应被当作需要挂载的运行时脚本
-- 用途是防止“脚本已创建 / 设计已写出，但真实触发链路并未接通”再次被误写为已落地
-
-### 为什么以前会空着
-
-- `hooks/` 以前缺少正式设计说明，也缺少“需要在 settings 中挂载才会生效”的显式提醒。
-- `notes/` 以前缺少“什么时候写入”的工作流触发条件，因此即使目录存在，也不会自然积累内容。
-- 目录设计如果只有语义、没有调用链，最终仍然会是空目录。
-
-### Runtime-heavy 目录
-
-以下目录主要属于本地运行时资产，不应进入 git 白名单：
-
-- `plugins/`：plugin cache、marketplace clone、本地 plugin data
-- `projects/`：按项目路径聚合的本地 session / runtime 状态
-- `file-history/`：本地历史快照
-- `specs/`：工作流产出的规格资产
-
-需要查看这些目录的体积与职责边界时，运行：
-
-```bash
-python3 ~/.claude/hooks/runtime-storage-audit.py
-```
-
-这个工具只做容量观测与建议输出，不删除、不移动任何目录内容。
-
-## 核心工作流
-
-**Plan → Execute → Verify → Learn**
-
-| 阶段 | 要点 |
-|------|------|
-| **Plan** | 非平凡任务必须规划，拆成可验证的子任务 |
-| **Execute** | 能委派就委派，无依赖就并发；已获方向后默认连续执行到闭环 |
-| **Verify** | 未证明有效不标记完成 |
-| **Learn** | 收到纠正后分析根因，写入规范 |
-
-## 设计原则
-
-1. **提取而非复制** - 不存储原文，提取可迁移的模式
-2. **原子化** - 每个 rule 聚焦单一概念，便于组合
-3. **可检索** - 命名清晰，便于触发和查找
-4. **增量积累** - 新知识与现有规则建立关联
