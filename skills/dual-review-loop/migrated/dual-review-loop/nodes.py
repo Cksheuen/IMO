@@ -4,6 +4,10 @@ Node implementations for Dual Review Loop LangGraph migration.
 Implements the core nodes: codex_review, rescue, cc_review, cc_fix, finalize_round.
 """
 from typing import Dict, Any, List, Optional
+from skills.migrated.shared_runtime.agent_protocols import (
+    build_delta_context,
+    build_review_issue,
+)
 from langchain_core.runnables import RunnableLambda
 from langchain_core.messages import HumanMessage, AIMessage
 
@@ -172,50 +176,50 @@ async def cc_review_node(state: DualReviewState) -> Dict[str, Any]:
         # Critical/High findings are usually real
         # Medium/Low might be false positives
         if finding["severity"] in ("critical", "high"):
-            confirmed_issues.append({
-                **finding,
-                "delta_context": {
-                    "problem_location": {
-                        "file": finding["file"],
-                        "lines": f"{finding['line_start']}-{finding['line_end']}",
-                        "code_snippet": "(to be extracted)"
-                    },
-                    "root_cause": rescue.get("root_causes", ["Unknown"])[0] if rescue else "Unknown",
-                    "fix_suggestion": {
-                        "action": "fix",
-                        "target": finding["title"],
-                        "details": finding["recommendation"],
-                        "reference_example": None
-                    },
-                    "files_to_read": [finding["file"]],
-                    "files_to_skip": []
-                }
-            })
+            confirmed_issues.append(
+                build_review_issue(
+                    severity=finding["severity"],
+                    title=finding["title"],
+                    file=finding["file"],
+                    line_start=finding["line_start"],
+                    line_end=finding["line_end"],
+                    recommendation=finding["recommendation"],
+                    delta_context=build_delta_context(
+                        file=finding["file"],
+                        lines=f"{finding['line_start']}-{finding['line_end']}",
+                        code_snippet="(to be extracted)",
+                        root_cause=rescue.get("root_causes", ["Unknown"])[0] if rescue else "Unknown",
+                        target=finding["title"],
+                        details=finding["recommendation"],
+                        files_to_read=[finding["file"]],
+                    ),
+                )
+            )
         else:
             # Medium/low might be false positive - simulate 50% rate
             # In production, reviewer decides based on context
             if len(false_positives) < len(findings) // 3:
                 false_positives.append(finding)
             else:
-                confirmed_issues.append({
-                    **finding,
-                    "delta_context": {
-                        "problem_location": {
-                            "file": finding["file"],
-                            "lines": f"{finding['line_start']}-{finding['line_end']}",
-                            "code_snippet": "(to be extracted)"
-                        },
-                        "root_cause": "Minor issue",
-                        "fix_suggestion": {
-                            "action": "fix",
-                            "target": finding["title"],
-                            "details": finding["recommendation"],
-                            "reference_example": None
-                        },
-                        "files_to_read": [finding["file"]],
-                        "files_to_skip": []
-                    }
-                })
+                confirmed_issues.append(
+                    build_review_issue(
+                        severity=finding["severity"],
+                        title=finding["title"],
+                        file=finding["file"],
+                        line_start=finding["line_start"],
+                        line_end=finding["line_end"],
+                        recommendation=finding["recommendation"],
+                        delta_context=build_delta_context(
+                            file=finding["file"],
+                            lines=f"{finding['line_start']}-{finding['line_end']}",
+                            code_snippet="(to be extracted)",
+                            root_cause="Minor issue",
+                            target=finding["title"],
+                            details=finding["recommendation"],
+                            files_to_read=[finding["file"]],
+                        ),
+                    )
+                )
 
     cc_review_result: CCReviewResult = {
         "confirmed_issues": len(confirmed_issues),

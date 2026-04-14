@@ -13,6 +13,7 @@ LangGraph StateGraph 定义 - Self-Verification Mechanism
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 from typing import Any, Dict, List, Literal, Optional
+from skills.migrated.shared_runtime.graph_helpers import compile_graph
 
 from .state import VerificationGateState, FeatureList
 from .nodes import (
@@ -140,7 +141,8 @@ class VerificationGate:
 
         # 编译图 - 关键: interrupt_before=["reviewer", "implementer"]
         # 允许外部在执行验证/修复前注入输入
-        self.graph = builder.compile(
+        self.graph = compile_graph(
+            builder,
             checkpointer=self.checkpointer,
             interrupt_before=["reviewer", "implementer"],
         )

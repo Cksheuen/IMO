@@ -11,45 +11,19 @@ LangGraph State 定义 - Self-Verification Mechanism
 
 from typing import Any, Dict, List, Literal, Optional, TypedDict
 
-
-class ProblemLocation(TypedDict):
-    """问题位置定义"""
-    file: str
-    lines: str
-    code_snippet: str
-
-
-class FixSuggestion(TypedDict):
-    """修复建议"""
-    action: str
-    target: str
-    details: str
-    reference_example: Optional[str]
-
-
-class DeltaContext(TypedDict):
-    """
-    修复上下文 - 当 passes=false 时由 reviewer 填充
-
-    用途:
-    - problem_location: 精确定位
-    - root_cause: 避免新 implementer 重新诊断
-    - fix_suggestion: 具体指导
-    - files_to_read: 收窄上下文
-    - files_to_skip: 避免 token 浪费
-    """
-    problem_location: ProblemLocation
-    root_cause: str
-    fix_suggestion: FixSuggestion
-    files_to_read: List[str]
-    files_to_skip: List[str]
+from skills.migrated.shared_runtime.types import (
+    DeltaContext,
+    FixSuggestion,
+    ProblemLocation,
+    ReviewableFeature,
+)
 
 
 # 验证状态枚举
 VerificationStatus = Literal["pending", "passed", "failed"]
 
 
-class Feature(TypedDict):
+class Feature(ReviewableFeature, total=False):
     """
     单个 Feature 定义
 
@@ -60,16 +34,6 @@ class Feature(TypedDict):
     - notes: 失败原因或备注
     - delta_context: 修复上下文，失败时由 reviewer 填充
     """
-    id: str
-    category: str
-    description: str
-    acceptance_criteria: List[str]
-    verification_method: str  # "e2e", "unit", "manual"
-    passes: Optional[bool]  # null=pending, true=passed, false=failed
-    verified_at: Optional[str]
-    attempt_count: int
-    max_attempts: int
-    notes: str
     delta_context: Optional[DeltaContext]
 
 

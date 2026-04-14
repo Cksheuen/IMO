@@ -12,6 +12,7 @@ LangGraph 节点函数 - Self-Verification Mechanism
 
 from datetime import datetime
 from typing import Dict, List, Literal, Optional, Tuple
+from skills.migrated.shared_runtime.agent_protocols import build_delta_context
 from .state import (
     VerificationGateState,
     Feature,
@@ -176,7 +177,16 @@ def _run_verification(feature: Feature) -> Tuple[bool, Optional[str], Optional[D
     """
     # 占位符实现
     # 实际应该调用外部验证工具
-    return True, None, None
+    if feature.get("acceptance_criteria"):
+        return True, None, None
+    return False, "Missing acceptance criteria", build_delta_context(
+        file="(unknown)",
+        lines="(unknown)",
+        code_snippet="(unknown)",
+        root_cause="Acceptance criteria are empty",
+        target=feature["description"],
+        details="Provide concrete acceptance criteria before verification.",
+    )
 
 
 # ==================== Implementer Node ====================

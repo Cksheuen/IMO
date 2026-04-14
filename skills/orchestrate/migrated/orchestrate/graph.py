@@ -7,6 +7,7 @@ from typing import Literal, Optional
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command
+from skills.migrated.shared_runtime.graph_helpers import compile_graph
 
 from .state import OrchestrateState, DeltaContext
 from .nodes import (
@@ -127,12 +128,12 @@ def compile_orchestrate_graph_with_checkpoint():
     """Compile the graph with memory checkpointing."""
     graph = create_orchestrate_graph()
     checkpointer = MemorySaver()
-    return graph.compile(checkpointer=checkpointer)
+    return compile_graph(graph, checkpointer=checkpointer)
 
 
 def compile_orchestrate_graph():
     """Compile the graph without checkpointing."""
-    return create_orchestrate_graph().compile()
+    return compile_graph(create_orchestrate_graph())
 
 
 def compile_orchestrate_graph_with_interrupt():
@@ -145,9 +146,10 @@ def compile_orchestrate_graph_with_interrupt():
     """
     graph = create_orchestrate_graph()
     checkpointer = MemorySaver()
-    return graph.compile(
+    return compile_graph(
+        graph,
         checkpointer=checkpointer,
-        interrupt_before=["verify"]  # Interrupt before verification
+        interrupt_before=["verify"],
     )
 
 

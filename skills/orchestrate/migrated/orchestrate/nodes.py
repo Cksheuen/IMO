@@ -9,6 +9,7 @@ import sys
 from typing import Dict, Any, List, Optional
 from langchain_core.runnables import RunnableLambda
 from langchain_core.messages import HumanMessage, AIMessage
+from skills.migrated.shared_runtime.agent_protocols import build_delta_context
 
 from .state import (
     OrchestrateState,
@@ -280,22 +281,14 @@ async def fixer_node(state: OrchestrateState) -> Dict[str, Any]:
     for feature in state["features"]:
         if feature["passes"] is False and feature["attempt_count"] < feature["max_attempts"]:
             # Create delta context for fixer
-            delta_context: DeltaContext = {
-                "problem_location": {
-                    "file": "(auto-detected)",
-                    "lines": "(auto-detected)",
-                    "code_snippet": "(auto-detected)",
-                },
-                "root_cause": "Feature verification failed",
-                "fix_suggestion": {
-                    "action": "fix",
-                    "target": feature["description"],
-                    "details": "Address the verification failure",
-                    "reference_example": None,
-                },
-                "files_to_read": [],
-                "files_to_skip": [],
-            }
+            delta_context: DeltaContext = build_delta_context(
+                file="(auto-detected)",
+                lines="(auto-detected)",
+                code_snippet="(auto-detected)",
+                root_cause="Feature verification failed",
+                target=feature["description"],
+                details="Address the verification failure",
+            )
 
             return {
                 "delta_context": delta_context,

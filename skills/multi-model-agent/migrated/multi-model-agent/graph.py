@@ -10,6 +10,7 @@ from typing import Literal, Optional
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from langgraph.types import Command
+from skills.migrated.shared_runtime.graph_helpers import compile_graph
 
 from .nodes import (
     analyze_task_runnable,
@@ -67,14 +68,14 @@ def route_after_selection(state: MultiModelState) -> Literal["fallback", "summar
 
 def compile_multi_model_graph():
     """Compile the graph without persistence."""
-    return create_multi_model_graph().compile()
+    return compile_graph(create_multi_model_graph())
 
 
 def compile_multi_model_graph_with_checkpoint():
     """Compile the graph with MemorySaver persistence."""
     graph = create_multi_model_graph()
     checkpointer = MemorySaver()
-    return graph.compile(checkpointer=checkpointer)
+    return compile_graph(graph, checkpointer=checkpointer)
 
 
 def compile_multi_model_graph_with_interrupt():
@@ -85,7 +86,8 @@ def compile_multi_model_graph_with_interrupt():
     """
     graph = create_multi_model_graph()
     checkpointer = MemorySaver()
-    return graph.compile(
+    return compile_graph(
+        graph,
         checkpointer=checkpointer,
         interrupt_before=["apply_fallback"],
     )
