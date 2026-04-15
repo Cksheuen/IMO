@@ -101,9 +101,13 @@ python3 ~/.claude/hooks/check-langchain-runtime-deps.py --runtime all
 
 只有当任务实际需要某个 provider 示例或真实 LLM 调用时，才按需额外安装。
 
+## 与通用规范的关系
+
+本规范是 `rules/tool/runtime-dependency-resolution.md` 的 LangChain 专属子集。通用的依赖检测→申请→安装→验证流程见该规范。
+
 ## 反模式
 
-- 看到 `ModuleNotFoundError` 只在回复里说“环境没装”
+- 看到 `ModuleNotFoundError` 只在回复里说”环境没装”
 - 直接用系统 Python / 全局 pip 安装
 - 把 provider integration 混进共享基础依赖
 - 不验证安装后是否真能运行
