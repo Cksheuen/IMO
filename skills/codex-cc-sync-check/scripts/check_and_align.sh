@@ -5,7 +5,6 @@ set -euo pipefail
 CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
 CODEX_DIR="${CODEX_DIR:-$HOME/.codex}"
 CLAUDE_AGENTS="$CLAUDE_DIR/shared-knowledge/AGENTS.md"
-CODEX_OVERRIDE="$CODEX_DIR/AGENTS.override.md"
 CODEX_AGENTS="$CODEX_DIR/AGENTS.md"
 CLAUDE_SKILLS_DIR="$CLAUDE_DIR/skills"
 CODEX_SKILLS_DIR="$CODEX_DIR/skills"
@@ -62,16 +61,14 @@ sync_agents() {
     return
   fi
 
-  if { [ ! -L "$CODEX_OVERRIDE" ] || [ "$(readlink "$CODEX_OVERRIDE" 2>/dev/null || true)" != "$CLAUDE_AGENTS" ]; } \
-    || { [ ! -L "$CODEX_AGENTS" ] || [ "$(readlink "$CODEX_AGENTS" 2>/dev/null || true)" != "$CLAUDE_AGENTS" ]; }; then
+  if [ ! -L "$CODEX_AGENTS" ] || [ "$(readlink "$CODEX_AGENTS" 2>/dev/null || true)" != "$CLAUDE_AGENTS" ]; then
     if [ -x "$SYNC_SCRIPT" ]; then
       bash "$SYNC_SCRIPT" --force >/dev/null
-      ACTIONS+=("rules: ran $SYNC_SCRIPT --force to repair Codex AGENTS links")
+      ACTIONS+=("rules: ran $SYNC_SCRIPT --force to repair Codex AGENTS link")
     fi
   fi
 
-  ensure_symlink "$CLAUDE_AGENTS" "$CODEX_OVERRIDE" "rules override"
-  ensure_symlink "$CLAUDE_AGENTS" "$CODEX_AGENTS" "rules legacy"
+  ensure_symlink "$CLAUDE_AGENTS" "$CODEX_AGENTS" "rules agents"
 }
 
 generate_command_stub() {

@@ -6,10 +6,10 @@ that fits within Codex CLI's AGENTS.md size limit (default <12KB).
 
 Priority tiers control what gets included when space is tight:
   P0: CLAUDE.md core principles + must-check entries (~2KB)
-  P1: rules/core/ (~4KB)
-  P2: rules/pattern/ (~6KB)
+  P1: rules/core/ + rules-library/core/ (~4KB)
+  P2: rules/pattern/ + rules-library/pattern/ (~6KB)
   P3: notes/lessons/ active only (~4KB)
-  P4: rules/domain/ (~4KB)
+  P4: rules/domain/ + rules-library/domain/ (~4KB)
 """
 
 import argparse

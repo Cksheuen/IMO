@@ -10,9 +10,7 @@ Use this skill to verify that Codex is consuming the same global configuration a
 ## What this skill checks
 
 - Shared rules via `~/.claude/shared-knowledge/AGENTS.md`
-- Codex global instruction entrypoints:
-  - `~/.codex/AGENTS.override.md`
-  - `~/.codex/AGENTS.md`
+- Codex global instruction entrypoint: `~/.codex/AGENTS.md`
 - Custom Claude skills under `~/.claude/skills/`
 - Corresponding Codex-visible skill links under `~/.codex/skills/`
 - Corresponding direct-invocation command wrappers under `~/.codex/commands/*.md`
