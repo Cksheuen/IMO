@@ -32,9 +32,16 @@ skills/**/*-workspace/
 !hooks/
 !hooks/**
 
-# 自定义 rules (用户规则)
+# 自定义 rules (始终加载的核心规则)
 !rules/
 !rules/**
+
+# 按需加载的规则库
+!rules-library/
+!rules-library/**
+
+# 规则触发索引（由 build-rules-index.py 生成）
+!rules-index.json
 
 # 知识沉淀（全局用户级，位于 ~/.claude/notes）
 !notes/

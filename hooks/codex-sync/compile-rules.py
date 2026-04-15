@@ -278,6 +278,22 @@ def process_lessons(lessons_dir):
     return results
 
 
+def collect_rule_parts(directories, processor, recursive=False):
+    """Collect processed rule fragments from multiple directories."""
+    parts = []
+    source_files = []
+    for directory in directories:
+        if not directory.exists():
+            continue
+        files = directory.rglob("*.md") if recursive else directory.glob("*.md")
+        for f in sorted(files):
+            result = processor(f)
+            if result:
+                parts.append(result)
+                source_files.append(str(f))
+    return parts, source_files
+
+
 def compile_agents_md(max_size=MAX_SIZE):
     """Compile all sources into AGENTS.md content."""
     sections = []
@@ -304,30 +320,20 @@ def compile_agents_md(max_size=MAX_SIZE):
         budgets["P0"] = 2048
 
     # P1: rules/core/
-    core_dir = CLAUDE_DIR / "rules" / "core"
-    if core_dir.exists():
-        core_parts = []
-        for f in sorted(core_dir.glob("*.md")):
-            result = process_rule_file(f)
-            if result:
-                core_parts.append(result)
-                source_files.append(str(f))
-        if core_parts:
-            p1 = "\n## 核心规范\n\n" + "\n\n".join(core_parts)
-            sections.append(("P1", p1, 4096))
+    core_dirs = [CLAUDE_DIR / "rules" / "core", CLAUDE_DIR / "rules-library" / "core"]
+    core_parts, core_sources = collect_rule_parts(core_dirs, process_rule_file)
+    if core_parts:
+        p1 = "\n## 核心规范\n\n" + "\n\n".join(core_parts)
+        sections.append(("P1", p1, 4096))
+        source_files.extend(core_sources)
 
     # P2: rules/pattern/
-    pattern_dir = CLAUDE_DIR / "rules" / "pattern"
-    if pattern_dir.exists():
-        pattern_parts = []
-        for f in sorted(pattern_dir.glob("*.md")):
-            result = process_rule_file_as_index(f)
-            if result:
-                pattern_parts.append(result)
-                source_files.append(str(f))
-        if pattern_parts:
-            p2 = "\n## 架构模式（索引）\n\n> 触发条件匹配时，用 cat 读取对应路径获取完整规则\n\n" + "\n".join(pattern_parts)
-            sections.append(("P2", p2, 6144))
+    pattern_dirs = [CLAUDE_DIR / "rules" / "pattern", CLAUDE_DIR / "rules-library" / "pattern"]
+    pattern_parts, pattern_sources = collect_rule_parts(pattern_dirs, process_rule_file_as_index)
+    if pattern_parts:
+        p2 = "\n## 架构模式（索引）\n\n> 触发条件匹配时，用 cat 读取对应路径获取完整规则\n\n" + "\n".join(pattern_parts)
+        sections.append(("P2", p2, 6144))
+        source_files.extend(pattern_sources)
 
     # P3: notes/lessons/ (active only)
     lessons = process_lessons(CLAUDE_DIR / "notes" / "lessons")
@@ -337,17 +343,12 @@ def compile_agents_md(max_size=MAX_SIZE):
         source_files.append(str(CLAUDE_DIR / "notes" / "lessons"))
 
     # P4: rules/domain/
-    domain_dir = CLAUDE_DIR / "rules" / "domain"
-    if domain_dir.exists():
-        domain_parts = []
-        for f in sorted(domain_dir.rglob("*.md")):
-            result = process_rule_file_as_index(f)
-            if result:
-                domain_parts.append(result)
-                source_files.append(str(f))
-        if domain_parts:
-            p4 = "\n## 领域规则（索引）\n\n> 触发条件匹配时，用 cat 读取对应路径获取完整规则\n\n" + "\n".join(domain_parts)
-            sections.append(("P4", p4, 4096))
+    domain_dirs = [CLAUDE_DIR / "rules" / "domain", CLAUDE_DIR / "rules-library" / "domain"]
+    domain_parts, domain_sources = collect_rule_parts(domain_dirs, process_rule_file_as_index, recursive=True)
+    if domain_parts:
+        p4 = "\n## 领域规则（索引）\n\n> 触发条件匹配时，用 cat 读取对应路径获取完整规则\n\n" + "\n".join(domain_parts)
+        sections.append(("P4", p4, 4096))
+        source_files.extend(domain_sources)
 
     # Assemble, respecting max_size. Reserve space for later index sections so
     # a large P1 full-text block does not crowd out the short P2/P4 routing hints.

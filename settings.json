@@ -5,7 +5,7 @@
   },
   "permissions": {
     "allow": [
-      "Bash(bash ~/.claude/rules/technique/rate-limit-management/scripts/*)",
+      "Bash(bash ~/.claude/rules-library/technique/rate-limit-management/scripts/*)",
       "Bash(bash ~/.claude/hooks/*)",
       "Bash(bash ~/.claude/hooks/lesson-capture/*)",
       "Bash(bash ~/.claude/hooks/consolidate/*)",
@@ -53,6 +53,10 @@
           {
             "type": "command",
             "command": "python3 \"$HOME/.claude/hooks/recall-entrypoint.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"/Users/bytedance/.claude/hooks/rules-inject.py\""
           }
         ]
       }
@@ -135,7 +139,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$HOME/.claude/rules/technique/rate-limit-management/scripts/on-rate-limit-stop.sh\""
+            "command": "bash \"$HOME/.claude/rules-library/technique/rate-limit-management/scripts/on-rate-limit-stop.sh\""
           }
         ]
       }

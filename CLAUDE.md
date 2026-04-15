@@ -44,15 +44,15 @@
 ## 必查规则入口
 
 - 上下文注入：`rules/core/context-injection.md`
-- 项目架构优先：`rules/core/project-architecture-first.md`
-- 任务工作流：`rules/core/task-centric-workflow.md`
-- task / notes 边界：`rules/core/task-notes-boundary.md`
-- 改动边界守卫：`rules/pattern/change-scope-guard.md`
-- 变更影响审查：`rules/pattern/change-impact-review.md`
-- 废弃方案清理：`rules/pattern/abandoned-solution-cleanup.md`
-- 闭环学习边界：`rules/pattern/closed-learning-loop.md`
-- UI / 逻辑边界：`rules/domain/frontend/ui-logic-boundary.md`
-- LangChain 迁移 runtime 依赖：`rules/tool/langchain-runtime-dependencies.md`
+- 项目架构优先：`rules-library/core/project-architecture-first.md`
+- 任务工作流：`rules-library/core/task-centric-workflow.md`
+- task / notes 边界：`rules-library/core/task-notes-boundary.md`
+- 改动边界守卫：`rules-library/pattern/change-scope-guard.md`
+- 变更影响审查：`rules-library/pattern/change-impact-review.md`
+- 废弃方案清理：`rules-library/pattern/abandoned-solution-cleanup.md`
+- 闭环学习边界：`rules-library/pattern/closed-learning-loop.md`
+- UI / 逻辑边界：`rules-library/domain/frontend/ui-logic-boundary.md`
+- LangChain 迁移 runtime 依赖：`rules-library/tool/langchain-runtime-dependencies.md`
 
 ## Notes 读取协议
 
