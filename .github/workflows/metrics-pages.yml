@@ -51,6 +51,8 @@ jobs:
 
       - name: Generate SVG preview
         run: python3 hooks/metrics/gen_svg.py
+        env:
+          CLAUDE_HOME: ${{ github.workspace }}
 
       - name: Commit SVG preview
         run: |
