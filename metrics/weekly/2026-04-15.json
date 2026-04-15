@@ -1,0 +1,167 @@
+{
+  "period": {
+    "start": "2026-04-09",
+    "end": "2026-04-15"
+  },
+  "data_days": 1,
+  "summary": {
+    "sessions": 9,
+    "total_events": 210,
+    "hook_runs": 98,
+    "gate_decisions": 105,
+    "session_boundaries": 7,
+    "overall_success_rate": 0.981,
+    "overall_avg_duration_ms": 2
+  },
+  "by_hook": {
+    "context-monitor": {
+      "run_count": 17,
+      "success_count": 17,
+      "avg_duration_ms": 0,
+      "active_days": 1,
+      "avg_daily_runs": 17.0
+    },
+    "pre-agent-gate": {
+      "run_count": 6,
+      "allowed_count": 5,
+      "blocked_count": 1,
+      "avg_duration_ms": 0,
+      "block_reasons": [
+        {
+          "reason": "涉及写文件的子代理必须使用 worktree 隔离",
+          "count": 1
+        }
+      ],
+      "active_days": 1,
+      "avg_daily_runs": 6.0
+    },
+    "pre-edit-gate": {
+      "run_count": 46,
+      "allowed_count": 46,
+      "avg_duration_ms": 0,
+      "active_days": 1,
+      "avg_daily_runs": 46.0
+    },
+    "pre-write-gate": {
+      "run_count": 3,
+      "allowed_count": 3,
+      "avg_duration_ms": 0,
+      "active_days": 1,
+      "avg_daily_runs": 3.0
+    },
+    "project-architecture-inject": {
+      "run_count": 16,
+      "success_count": 16,
+      "avg_duration_ms": 6,
+      "active_days": 1,
+      "avg_daily_runs": 16.0
+    },
+    "recall-capture": {
+      "run_count": 16,
+      "success_count": 16,
+      "avg_duration_ms": 13,
+      "active_days": 1,
+      "avg_daily_runs": 16.0
+    },
+    "recall-entrypoint": {
+      "run_count": 16,
+      "success_count": 16,
+      "avg_duration_ms": 1,
+      "active_days": 1,
+      "avg_daily_runs": 16.0
+    },
+    "rules-inject": {
+      "run_count": 16,
+      "success_count": 16,
+      "avg_duration_ms": 3,
+      "active_days": 1,
+      "avg_daily_runs": 16.0
+    },
+    "scale-gate": {
+      "run_count": 50,
+      "allowed_count": 1,
+      "blocked_count": 49,
+      "avg_duration_ms": 0,
+      "block_reasons": [
+        {
+          "reason": "Scale assessment required before editing files",
+          "count": 49
+        }
+      ],
+      "active_days": 1,
+      "avg_daily_runs": 50.0
+    },
+    "session-end-consolidate": {
+      "run_count": 7,
+      "success_count": 5,
+      "error_count": 2,
+      "avg_duration_ms": 0,
+      "active_days": 1,
+      "avg_daily_runs": 7.0
+    },
+    "skill-inject": {
+      "run_count": 17,
+      "success_count": 17,
+      "avg_duration_ms": 0,
+      "active_days": 1,
+      "avg_daily_runs": 17.0
+    }
+  },
+  "by_hook_event": {
+    "PreToolUse": 105,
+    "SessionEnd": 7,
+    "Stop": 33,
+    "UserPromptSubmit": 65
+  },
+  "daily_trend": [
+    {
+      "date": "2026-04-09",
+      "sessions": 0,
+      "total_events": 0,
+      "hook_runs": 0,
+      "gate_decisions": 0
+    },
+    {
+      "date": "2026-04-10",
+      "sessions": 0,
+      "total_events": 0,
+      "hook_runs": 0,
+      "gate_decisions": 0
+    },
+    {
+      "date": "2026-04-11",
+      "sessions": 0,
+      "total_events": 0,
+      "hook_runs": 0,
+      "gate_decisions": 0
+    },
+    {
+      "date": "2026-04-12",
+      "sessions": 0,
+      "total_events": 0,
+      "hook_runs": 0,
+      "gate_decisions": 0
+    },
+    {
+      "date": "2026-04-13",
+      "sessions": 0,
+      "total_events": 0,
+      "hook_runs": 0,
+      "gate_decisions": 0
+    },
+    {
+      "date": "2026-04-14",
+      "sessions": 0,
+      "total_events": 0,
+      "hook_runs": 0,
+      "gate_decisions": 0
+    },
+    {
+      "date": "2026-04-15",
+      "sessions": 9,
+      "total_events": 210,
+      "hook_runs": 98,
+      "gate_decisions": 105
+    }
+  ]
+}

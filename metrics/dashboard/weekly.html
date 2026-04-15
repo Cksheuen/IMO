@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metrics Weekly</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0A0A0A;
+      --panel: #111111;
+      --panel-2: #151515;
+      --text: #FFFFFF;
+      --muted: #9A9A9A;
+      --border: #333333;
+      --gold: #C9A962;
+      --green: #22c55e;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --gray-dot: #5A5A5A;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top right, rgba(201, 169, 98, 0.12), transparent 28%), var(--bg);
+      color: var(--text);
+      font-family: "IBM Plex Mono", monospace;
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 32px 20px 40px;
+    }
+
+    .section {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 100%), var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .title {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(28px, 5vw, 42px);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      margin: 0;
+    }
+
+    .subtitle,
+    .meta,
+    .label,
+    .small {
+      color: var(--muted);
+    }
+
+    .meta {
+      text-align: right;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .week-selector {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 13px;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .week-selector:hover,
+    .week-selector:focus {
+      border-color: var(--gold);
+    }
+
+    .loading-state {
+      color: var(--muted);
+      font-size: 16px;
+      padding: 40px 0;
+      text-align: center;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      min-height: 128px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .card-value {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(26px, 4vw, 40px);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .progress-track,
+    .bar-track {
+      width: 100%;
+      background: #1D1D1D;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-track {
+      height: 10px;
+    }
+
+    .progress-fill,
+    .bar-fill {
+      height: 100%;
+      border-radius: inherit;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 20px;
+      letter-spacing: 0.04em;
+    }
+
+    .trend-chart {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 12px;
+      align-items: end;
+      min-height: 280px;
+      padding-top: 8px;
+    }
+
+    .trend-day {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: end;
+      gap: 10px;
+      height: 100%;
+    }
+
+    .trend-bars {
+      height: 220px;
+      display: flex;
+      align-items: end;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 4px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .trend-bar {
+      width: 22px;
+      min-height: 6px;
+      border-radius: 10px 10px 4px 4px;
+      opacity: 0.95;
+    }
+
+    .trend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--gray-dot);
+      margin-bottom: 6px;
+    }
+
+    .trend-date {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .columns {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: 16px;
+    }
+
+    .table,
+    .event-list,
+    .issues-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .table-header,
+    .hook-row {
+      display: grid;
+      grid-template-columns: minmax(150px, 1.3fr) minmax(160px, 1.2fr) 72px 90px 86px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .table-header {
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .hook-row {
+      min-height: 48px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(51, 51, 51, 0.45);
+    }
+
+    .hook-name {
+      min-width: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .mono {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tag {
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .value-block {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .bar-track {
+      height: 8px;
+      flex: 1;
+      min-width: 70px;
+    }
+
+    .bar-value,
+    .cell-right {
+      text-align: right;
+      font-size: 12px;
+    }
+
+    .event-row {
+      display: grid;
+      grid-template-columns: minmax(130px, 1fr) minmax(120px, 1.2fr) 64px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .issue-row {
+      display: grid;
+      grid-template-columns: 12px minmax(160px, auto) 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(51, 51, 51, 0.45);
+    }
+
+    .issue-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-top: 4px;
+    }
+
+    .issue-title {
+      font-size: 13px;
+    }
+
+    .issue-desc {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .empty-state {
+      color: var(--green);
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 22px;
+      padding: 12px 0 4px;
+    }
+
+    @media (max-width: 1100px) {
+      .summary-grid,
+      .columns {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .columns > .section {
+        margin-bottom: 0;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .page {
+        padding: 20px 14px 28px;
+      }
+
+      .header,
+      .section-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .meta {
+        text-align: left;
+      }
+
+      .summary-grid,
+      .columns {
+        grid-template-columns: 1fr;
+      }
+
+      .trend-chart {
+        gap: 8px;
+      }
+
+      .table-header {
+        display: none;
+      }
+
+      .hook-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        padding: 12px 0;
+      }
+
+      .hook-row > div {
+        text-align: left;
+      }
+
+      .event-row,
+      .issue-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="section header">
+      <div>
+        <p class="subtitle">Operational telemetry</p>
+        <h1 class="title">METRICS WEEKLY</h1>
+      </div>
+      <div style="display:flex; align-items:flex-end; gap:16px;">
+        <select id="week-selector" class="week-selector" style="display:none;"></select>
+        <div id="header-meta" class="meta"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div id="summary-cards" class="summary-grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">Daily Trend</h2>
+        <div id="trend-meta" class="small"></div>
+      </div>
+      <div id="trend-chart" class="trend-chart"></div>
+    </section>
+
+    <section class="columns">
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">Hook Usage Table</h2>
+          <div id="hook-count" class="small"></div>
+        </div>
+        <div class="table">
+          <div class="table-header">
+            <div>Hook</div>
+            <div>Run Count</div>
+            <div class="cell-right">Days</div>
+            <div class="cell-right">Daily Avg</div>
+            <div class="cell-right">Avg ms</div>
+          </div>
+          <div id="hook-table"></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">Event Distribution</h2>
+          <div id="event-total" class="small"></div>
+        </div>
+        <div id="event-distribution" class="event-list"></div>
+      </section>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">Issues Panel</h2>
+        <div class="small">Failures, gate pressure, low activity</div>
+      </div>
+      <div id="issues-panel"></div>
+    </section>
+  </main>
+
+  <script>
+    const DATA = /*__DATA__*/{"period":{"start":"0000-00-00","end":"0000-00-00"},"data_days":0,"summary":{"sessions":0,"total_events":0,"hook_runs":0,"gate_decisions":0,"session_boundaries":0,"overall_success_rate":null,"overall_avg_duration_ms":null},"by_hook":{},"by_hook_event":{},"daily_trend":[]}/*__DATA__*/;
+
+    const COLORS = {
+      gold: "#C9A962",
+      green: "#22c55e",
+      yellow: "#f59e0b",
+      red: "#ef4444",
+      blue: "#3b82f6",
+      gray: "#5A5A5A"
+    };
+
+    function n(value, fallback = 0) {
+      return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+    }
+
+    function formatNumber(value) {
+      return new Intl.NumberFormat("en-US").format(n(value));
+    }
+
+    function formatPercent(value) {
+      if (typeof value !== "number" || !Number.isFinite(value)) {
+        return "n/a";
+      }
+      return `${(value * 100).toFixed(1)}%`;
+    }
+
+    function formatDate(value) {
+      if (!value) {
+        return "--";
+      }
+      return value.slice(5);
+    }
+
+    function successColor(rate) {
+      if (typeof rate !== "number") {
+        return COLORS.gray;
+      }
+      if (rate > 0.95) {
+        return COLORS.green;
+      }
+      if (rate > 0.8) {
+        return COLORS.yellow;
+      }
+      return COLORS.red;
+    }
+
+    function createCard(title, value, detailHtml) {
+      const card = document.createElement("article");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="card-title">${title}</div>
+        <div class="card-value">${value}</div>
+        <div>${detailHtml || ""}</div>
+      `;
+      return card;
+    }
+
+    // IDs of all dynamic containers that need clearing on re-render
+    const DYNAMIC_IDS = ["header-meta", "summary-cards", "trend-chart", "trend-meta", "hook-table", "hook-count", "event-distribution", "event-total", "issues-panel"];
+
+    function clearAll() {
+      DYNAMIC_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = "";
+      });
+    }
+
+    function renderHeader(data) {
+      const period = data.period || {};
+      const meta = document.getElementById("header-meta");
+      meta.innerHTML = `
+        <div>${period.start || "--"} ~ ${period.end || "--"}</div>
+        <div>有效数据: ${formatNumber(data.data_days)} / 7 天</div>
+      `;
+    }
+
+    function renderSummary(data) {
+      const summary = data.summary || {};
+      const cards = document.getElementById("summary-cards");
+      const rate = summary.overall_success_rate;
+      const rateColor = successColor(rate);
+      const rateWidth = typeof rate === "number" ? Math.max(0, Math.min(100, rate * 100)) : 0;
+
+      cards.appendChild(createCard("总会话数", formatNumber(summary.sessions), `<div class="small">Weekly total</div>`));
+      cards.appendChild(createCard("总事件量", formatNumber(summary.total_events), `<div class="small">Across all tracked events</div>`));
+      cards.appendChild(
+        createCard(
+          "Hook 成功率",
+          formatPercent(rate),
+          `<div class="progress-track"><div class="progress-fill" style="width:${rateWidth}%; background:${rateColor};"></div></div>`
+        )
+      );
+      cards.appendChild(
+        createCard(
+          "平均耗时",
+          summary.overall_avg_duration_ms == null ? "n/a" : `${formatNumber(summary.overall_avg_duration_ms)} ms`,
+          `<div class="small">Average hook duration</div>`
+        )
+      );
+    }
+
+    function renderTrend(data) {
+      const trend = Array.isArray(data.daily_trend) ? data.daily_trend : [];
+      const trendChart = document.getElementById("trend-chart");
+      const maxSessions = Math.max(0, ...trend.map((item) => n(item.sessions)));
+      const maxEvents = Math.max(0, ...trend.map((item) => n(item.total_events)));
+      const eventScale = maxEvents > 0 ? Math.max(1, Math.ceil(maxEvents / Math.max(1, maxSessions || 8))) : 1;
+      const normalizedMax = Math.max(1, ...trend.map((item) => Math.max(n(item.sessions), n(item.total_events) / eventScale)));
+
+      document.getElementById("trend-meta").textContent = `blue = sessions, gold = events / ${eventScale}`;
+
+      trend.forEach((item) => {
+        const day = document.createElement("div");
+        day.className = "trend-day";
+
+        const sessions = n(item.sessions);
+        const totalEvents = n(item.total_events);
+        const noData = sessions === 0 && totalEvents === 0;
+
+        if (noData) {
+          day.innerHTML = `
+            <div class="trend-bars">
+              <div class="trend-dot"></div>
+            </div>
+            <div class="trend-date">${formatDate(item.date)}</div>
+          `;
+        } else {
+          const sessionHeight = `${Math.max(6, (sessions / normalizedMax) * 100)}%`;
+          const eventHeight = `${Math.max(6, ((totalEvents / eventScale) / normalizedMax) * 100)}%`;
+          day.innerHTML = `
+            <div class="trend-bars">
+              <div class="trend-bar" style="height:${sessionHeight}; background:${COLORS.blue};" title="sessions: ${sessions}"></div>
+              <div class="trend-bar" style="height:${eventHeight}; background:${COLORS.gold};" title="total_events: ${totalEvents}"></div>
+            </div>
+            <div class="trend-date">${formatDate(item.date)}</div>
+          `;
+        }
+
+        trendChart.appendChild(day);
+      });
+    }
+
+    function renderHookTable(data) {
+      const byHook = data.by_hook || {};
+      const table = document.getElementById("hook-table");
+      const hooks = Object.entries(byHook).sort((a, b) => n(b[1].run_count) - n(a[1].run_count));
+      const maxRun = Math.max(1, ...hooks.map(([, stats]) => n(stats.run_count)));
+
+      document.getElementById("hook-count").textContent = `${hooks.length} hooks`;
+
+      hooks.forEach(([hook, stats]) => {
+        const row = document.createElement("div");
+        row.className = "hook-row";
+
+        const blocked = n(stats.blocked_count);
+        const runCount = n(stats.run_count);
+        const blockedRate = runCount > 0 ? blocked / runCount : 0;
+        const barWidth = `${Math.max(3, (runCount / maxRun) * 100)}%`;
+        const barColor = blockedRate > 0.9 ? COLORS.red : COLORS.blue;
+        const blockedTag = blocked
+          ? `<span class="tag" style="color:${COLORS.red};">blocked ${(blockedRate * 100).toFixed(0)}%</span>`
+          : "";
+
+        row.innerHTML = `
+          <div class="hook-name">
+            <span class="mono">${hook}</span>
+            ${blockedTag}
+          </div>
+          <div class="value-block">
+            <div class="bar-track"><div class="bar-fill" style="width:${barWidth}; background:${barColor};"></div></div>
+            <div class="bar-value">${formatNumber(runCount)}</div>
+          </div>
+          <div class="cell-right">${formatNumber(stats.active_days)}</div>
+          <div class="cell-right">${n(stats.avg_daily_runs).toFixed(1)}</div>
+          <div class="cell-right">${formatNumber(stats.avg_duration_ms)}</div>
+        `;
+        table.appendChild(row);
+      });
+    }
+
+    function renderEventDistribution(data) {
+      const root = document.getElementById("event-distribution");
+      const entries = Object.entries(data.by_hook_event || {}).sort((a, b) => n(b[1]) - n(a[1]));
+      const total = entries.reduce((sum, [, count]) => sum + n(count), 0);
+      document.getElementById("event-total").textContent = `${formatNumber(total)} events`;
+
+      entries.forEach(([name, count]) => {
+        const percentage = total > 0 ? (n(count) / total) * 100 : 0;
+        const row = document.createElement("div");
+        row.className = "event-row";
+        row.innerHTML = `
+          <div class="mono">${name}</div>
+          <div class="value-block">
+            <div class="bar-track"><div class="bar-fill" style="width:${percentage}%; background:${COLORS.gold};"></div></div>
+          </div>
+          <div class="cell-right">${percentage.toFixed(1)}%</div>
+        `;
+        root.appendChild(row);
+      });
+    }
+
+    function issueItem(color, title, description) {
+      const row = document.createElement("div");
+      row.className = "issue-row";
+      row.innerHTML = `
+        <div class="issue-dot" style="background:${color};"></div>
+        <div class="issue-title mono">${title}</div>
+        <div class="issue-desc">${description}</div>
+      `;
+      return row;
+    }
+
+    function renderIssues(data) {
+      const root = document.getElementById("issues-panel");
+      const list = document.createElement("div");
+      list.className = "issues-list";
+      const hooks = Object.entries(data.by_hook || {});
+      const issues = [];
+
+      hooks.forEach(([hook, stats]) => {
+        const runCount = Math.max(1, n(stats.run_count));
+        const errorCount = n(stats.error_count);
+        const blockedCount = n(stats.blocked_count);
+        const activeDays = n(stats.active_days);
+        const failureRate = errorCount > 0 ? errorCount / runCount : 0;
+        const blockedRate = blockedCount > 0 ? blockedCount / runCount : 0;
+        const topReason = Array.isArray(stats.block_reasons) && stats.block_reasons[0] ? stats.block_reasons[0].reason : "unknown";
+
+        if (errorCount > 0) {
+          issues.push(
+            issueItem(
+              COLORS.red,
+              hook,
+              `失败 ${formatNumber(errorCount)} 次 · failure_rate ${formatPercent(failureRate)}`
+            )
+          );
+        }
+
+        if (blockedCount > 0 && blockedRate > 0.9) {
+          issues.push(
+            issueItem(
+              COLORS.yellow,
+              hook,
+              `阻断率 ${formatPercent(blockedRate)} · top reason: ${topReason}`
+            )
+          );
+        }
+
+        if (data.data_days > 1 && activeDays <= 1) {
+          issues.push(
+            issueItem(
+              COLORS.gray,
+              hook,
+              `低活跃，仅 ${formatNumber(activeDays)} 天活跃`
+            )
+          );
+        }
+      });
+
+      if (!issues.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent = "无异常";
+        root.appendChild(empty);
+        return;
+      }
+
+      issues.forEach((node) => list.appendChild(node));
+      root.appendChild(list);
+    }
+
+    function render(data) {
+      clearAll();
+      renderHeader(data);
+      renderSummary(data);
+      renderTrend(data);
+      renderHookTable(data);
+      renderEventDistribution(data);
+      renderIssues(data);
+    }
+
+    // ── Mode detection & week switching ──
+
+    const isLocalFile = window.location.protocol === "file:";
+
+    async function fetchJSON(url) {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error(`fetch ${url}: ${resp.status}`);
+      return resp.json();
+    }
+
+    async function initOnline() {
+      const selector = document.getElementById("week-selector");
+      let weeks;
+      try {
+        weeks = await fetchJSON("weeks-index.json");
+      } catch {
+        // No index available — render embedded fallback
+        render(DATA);
+        return;
+      }
+      if (!Array.isArray(weeks) || weeks.length === 0) {
+        render(DATA);
+        return;
+      }
+
+      // Populate selector (newest first)
+      selector.style.display = "";
+      const sorted = [...weeks].sort().reverse();
+      sorted.forEach(w => {
+        const opt = document.createElement("option");
+        opt.value = w;
+        opt.textContent = w;
+        selector.appendChild(opt);
+      });
+
+      // Load & render the latest week
+      const latestWeek = sorted[0];
+      selector.value = latestWeek;
+      const data = await fetchJSON(`weekly/${latestWeek}.json`);
+      render(data);
+
+      // Switch handler
+      selector.addEventListener("change", async () => {
+        const weekDate = selector.value;
+        try {
+          const weekData = await fetchJSON(`weekly/${weekDate}.json`);
+          render(weekData);
+        } catch (err) {
+          clearAll();
+          document.getElementById("header-meta").textContent = `加载失败: ${err.message}`;
+        }
+      });
+    }
+
+    // Boot
+    if (isLocalFile) {
+      // Local mode: use /*__DATA__*/ injected data directly
+      render(DATA);
+    } else {
+      // Online mode: fetch from server
+      initOnline();
+    }
+  </script>
+</body>
+</html>
