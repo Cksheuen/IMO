@@ -74,6 +74,98 @@ sync_agents() {
   ensure_symlink "$CLAUDE_AGENTS" "$CODEX_AGENTS" "rules legacy"
 }
 
+generate_command_stub() {
+  local skill_md="$1"
+  local target="$2"
+  local label="$3"
+
+  local title trigger_line tmp_file stub_size
+  # 优先从 frontmatter 提取 name 字段
+  title=$(awk '
+    BEGIN { in_frontmatter=0 }
+    /^---$/ {
+      if (!in_frontmatter) { in_frontmatter=1; next }
+      exit
+    }
+    in_frontmatter && /^name:/ {
+      sub(/^name:[[:space:]]*/, "")
+      sub(/^[\"\047]/, "")
+      sub(/[\"\047]$/, "")
+      print
+      exit
+    }
+  ' "$skill_md")
+  if [ -z "$title" ]; then
+    # fallback: 跳过 frontmatter 后取第一个 # heading
+    title=$(sed '1,/^---$/{ /^---$/!d; }; /^---$/d' "$skill_md" | grep -m1 '^#' | sed 's/^#\+[[:space:]]*//')
+  fi
+  if [ -z "$title" ]; then
+    title=$(basename "$(dirname "$skill_md")")
+  fi
+
+  # 提取 body（跳过 frontmatter）
+  local body
+  body=$(awk 'BEGIN{skip=0; count=0} /^---$/{count++; if(count<=2){skip=1-skip; next}} !skip{print}' "$skill_md")
+
+  # 在 body 中查找触发条件/何时使用 heading 后的第一行有意义内容
+  trigger_line=$(echo "$body" | awk '
+    /^##[[:space:]]+(触发条件|何时使用|When to [Uu]se|Trigger)/ { found=1; next }
+    found && /^##/ { exit }
+    found && /^[[:space:]]*$/ { next }
+    found && /^[>|`]/ { next }
+    found && /^[-*+][[:space:]]/ { sub(/^[-*+][[:space:]]+/, ""); print; exit }
+    found { print; exit }
+  ' | head -c 150)
+
+  # fallback: 从 frontmatter 提取 description 字段
+  if [ -z "$trigger_line" ]; then
+    trigger_line=$(awk '
+      BEGIN { in_frontmatter=0 }
+      /^---$/ {
+        if (!in_frontmatter) { in_frontmatter=1; next }
+        exit
+      }
+      in_frontmatter && /^description:/ {
+        sub(/^description:[[:space:]]*/, "")
+        sub(/^[\"\047]/, "")
+        sub(/[\"\047]$/, "")
+        print
+        exit
+      }
+    ' "$skill_md" | head -c 150)
+  fi
+
+  if [ -e "$target" ] && [ ! -L "$target" ] && ! grep -Fqx "Full spec: $skill_md" "$target" 2>/dev/null; then
+    record_conflict "$label: target exists and is not a managed stub: $target"
+    return 1
+  fi
+
+  tmp_file="$(mktemp "${TMPDIR:-/tmp}/codex-command-stub.XXXXXX")"
+  {
+    echo "$title"
+    echo ""
+    if [ -n "$trigger_line" ]; then
+      echo "Trigger: $trigger_line"
+      echo ""
+    fi
+    echo "---"
+    echo "Full spec: $skill_md"
+  } > "$tmp_file"
+
+  if [ -f "$target" ] && [ ! -L "$target" ] && cmp -s "$tmp_file" "$target"; then
+    CHECKS+=("$label: ok ($target)")
+    rm -f "$tmp_file"
+    return 0
+  fi
+
+  rm -f "$target"
+  mv "$tmp_file" "$target"
+
+  stub_size=$(wc -c < "$target" | tr -d ' ')
+  ACTIONS+=("$label: generated stub ($stub_size bytes) at $target")
+  mark_repaired
+}
+
 sync_skills() {
   local linked_count=0
   local command_count=0
@@ -96,7 +188,10 @@ sync_skills() {
       linked_count=$((linked_count + 1))
     fi
 
-    if ensure_symlink "$source_skill/SKILL.md" "$target_command" "command $skill_name"; then
+    if [ -f "$target_command" ] && [ -L "$target_command" ]; then
+      rm -f "$target_command"
+    fi
+    if generate_command_stub "$source_skill/SKILL.md" "$target_command" "command $skill_name"; then
       command_count=$((command_count + 1))
     fi
   done

@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "last_sync": "2026-04-15T06:55:47.115411+00:00",
-  "rules_hash": "463166ca9d36f7972ec5ebaec60e790df37f0651be6be8c1cc51e693ba2f88fd",
+  "last_sync": "2026-04-15T07:46:05.853246+00:00",
+  "rules_hash": "f51a78e950ce9aa1f93b2233916c81f740fb456a6ddbeaaa00fa4d9ff70c9a1b",
   "synced_rules": [
     "/Users/bytedance/.claude/CLAUDE.md",
     "/Users/bytedance/.claude/rules/core/architecture-evolution.md",
