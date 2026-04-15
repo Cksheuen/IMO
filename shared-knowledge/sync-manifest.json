@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "last_sync": "2026-04-14T10:07:15.599409+00:00",
-  "rules_hash": "ac7e5565a07f6f4643766736fe8c13dc3db1ea57a918769b99796d95939aacd9",
+  "last_sync": "2026-04-15T06:55:47.115411+00:00",
+  "rules_hash": "463166ca9d36f7972ec5ebaec60e790df37f0651be6be8c1cc51e693ba2f88fd",
   "synced_rules": [
     "/Users/bytedance/.claude/CLAUDE.md",
     "/Users/bytedance/.claude/rules/core/architecture-evolution.md",
@@ -14,7 +14,6 @@
     "/Users/bytedance/.claude/rules/core/task-notes-boundary.md",
     "/Users/bytedance/.claude/rules/core/user-facing-language.md",
     "/Users/bytedance/.claude/rules/pattern/abandoned-solution-cleanup.md",
-    "/Users/bytedance/.claude/rules/pattern/animation-driven-design.md",
     "/Users/bytedance/.claude/rules/pattern/auto-created-feature-list-noise.md",
     "/Users/bytedance/.claude/rules/pattern/change-impact-review.md",
     "/Users/bytedance/.claude/rules/pattern/change-scope-guard.md",
