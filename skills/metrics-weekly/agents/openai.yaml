@@ -1,0 +1,4 @@
+interface:
+  display_name: "Metrics Weekly"
+  short_description: "Weekly hook metrics analysis with effectiveness evaluation and optimization recommendations"
+  default_prompt: "Use --weekly to aggregate the last 7 days of local hook metrics, analyze hook effectiveness, and provide configuration optimization suggestions."
