@@ -52,6 +52,11 @@ This produces:
    python3 ~/.claude/hooks/metrics/render_dashboard.py --weekly --open
    ```
    This opens `~/.claude/metrics/dashboard/weekly-rendered.html` in the browser.
+5. Update the SVG preview card (for README display):
+   ```bash
+   python3 ~/.claude/hooks/metrics/gen_svg.py
+   ```
+   This updates `~/.claude/metrics/dashboard/preview.svg` so the README badge reflects the latest data before push.
 
 If mode is data-only, **stop here**. Do not proceed to Steps 4-5.
 
