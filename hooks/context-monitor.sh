@@ -11,15 +11,51 @@
 
 set -euo pipefail
 
+METRICS_STATUS="ok"
+METRICS_LIB="$HOME/.claude/hooks/metrics/emit.sh"
+
 # 读取 stdin JSON
-read -r stdin_json
+stdin_json=$(cat)
+
+session_id=$(printf '%s' "$stdin_json" | jq -r '.session_id // .sessionId // ""')
+export METRICS_SESSION_ID="$session_id"
+export METRICS_SCOPE="global"
+
+if [ -f "$METRICS_LIB" ]; then
+    # shellcheck disable=SC1090
+    . "$METRICS_LIB"
+fi
+
+metrics_start_ms=0
+if command -v metrics_now_ms >/dev/null 2>&1; then
+    metrics_start_ms=$(metrics_now_ms)
+fi
+
+metrics_finalize() {
+    local exit_code=$?
+    local duration_ms=""
+
+    if [ "$exit_code" -ne 0 ]; then
+        METRICS_STATUS="error"
+    fi
+
+    if command -v metrics_now_ms >/dev/null 2>&1 && [ "${metrics_start_ms:-0}" -gt 0 ] 2>/dev/null; then
+        duration_ms=$(( $(metrics_now_ms) - metrics_start_ms ))
+    fi
+
+    if command -v metrics_emit >/dev/null 2>&1; then
+        metrics_emit "context-monitor" "Stop" "hook_run" "$METRICS_STATUS" "$duration_ms"
+    fi
+}
+
+trap metrics_finalize EXIT
 
 # 提取上下文信息
 # 注意: Claude Code 的 Stop hook 可能不直接提供 token 统计
 # 这里主要依赖 Claude 的自我报告
 
-session_id=$(echo "$stdin_json" | jq -r '.session_id // ""')
-transcript_path=$(echo "$stdin_json" | jq -r '.transcript_path // ""')
+session_id=$(printf '%s' "$stdin_json" | jq -r '.session_id // .sessionId // ""')
+transcript_path=$(printf '%s' "$stdin_json" | jq -r '.transcript_path // .transcriptPath // ""')
 
 # 检查是否有上下文警告信号
 # 这需要 Claude 在会话中主动报告

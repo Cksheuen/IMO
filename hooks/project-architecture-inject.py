@@ -15,11 +15,14 @@ import os
 import re
 import subprocess
 import sys
+import time
+import importlib.util
 from pathlib import Path
 from typing import Any
 
 CACHE_PATH = Path.home() / ".claude" / "cache" / "project-architecture-session-cache.json"
 MAX_CONTEXT_CHARS = 520
+METRICS_EMIT_PATH = Path.home() / ".claude" / "hooks" / "metrics" / "emit.py"
 
 IMPLEMENT_INTENT_PATTERNS = (
     r"\bimplement\b",
@@ -59,6 +62,17 @@ ARCHITECTURE_PATTERNS = (
 
 def emit(payload: dict[str, Any]) -> None:
     print(json.dumps(payload, ensure_ascii=False))
+
+
+def load_metrics_emit():
+    if not METRICS_EMIT_PATH.exists():
+        return None
+    spec = importlib.util.spec_from_file_location("metrics_emit", METRICS_EMIT_PATH)
+    if spec is None or spec.loader is None:
+        return None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return getattr(module, "emit_event", None)
 
 
 def parse_payload() -> dict[str, Any]:
@@ -250,32 +264,58 @@ def build_context(root: Path) -> str:
 
 
 def main() -> None:
-    payload = parse_payload()
-    prompt = str(payload.get("prompt", "")).strip()
-    if not should_trigger(prompt):
-        emit({})
-        return
+    emit_event = load_metrics_emit()
+    start = time.monotonic()
+    session_id = ""
+    response: dict[str, Any] = {}
+    status = "ok"
+    meta: dict[str, Any] = {"context_chars": 0}
 
-    cwd = Path(os.getcwd())
-    root = resolve_project_root(cwd)
-    session_id = str(payload.get("session_id") or payload.get("sessionId") or "").strip()
-    cache = load_cache()
-    root_key = str(root)
+    try:
+        payload = parse_payload()
+        prompt = str(payload.get("prompt", "")).strip()
+        session_id = str(payload.get("session_id") or payload.get("sessionId") or "").strip()
+        triggered = should_trigger(prompt)
+        meta["triggered"] = triggered
+        if not triggered:
+            return
 
-    if session_id and cache.get(session_id) == root_key and not explicit_architecture_request(prompt):
-        emit({})
-        return
+        cwd = Path(os.getcwd())
+        root = resolve_project_root(cwd)
+        cache = load_cache()
+        root_key = str(root)
 
-    context = build_context(root)
-    if not context:
-        emit({})
-        return
+        if session_id and cache.get(session_id) == root_key and not explicit_architecture_request(prompt):
+            meta["cache_hit"] = True
+            return
 
-    if session_id:
-        cache[session_id] = root_key
-        save_cache(cache)
+        context = build_context(root)
+        if not context:
+            meta["context_chars"] = 0
+            return
 
-    emit({"hookSpecificOutput": {"additionalContext": context}})
+        if session_id:
+            cache[session_id] = root_key
+            save_cache(cache)
+
+        meta["context_chars"] = len(context)
+        response = {"hookSpecificOutput": {"additionalContext": context}}
+    except Exception:
+        status = "error"
+        response = {}
+    finally:
+        if callable(emit_event):
+            emit_event(
+                hook_id="project-architecture-inject",
+                hook_event="UserPromptSubmit",
+                event="hook_run",
+                status=status,
+                duration_ms=int((time.monotonic() - start) * 1000),
+                session_id=session_id,
+                scope="global",
+                meta=meta,
+            )
+        emit(response)
 
 
 if __name__ == "__main__":

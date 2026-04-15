@@ -8,22 +8,57 @@ SUSPENDED_FILE="$STATE_DIR/suspended-task.json"
 RATE_STATE_FILE="$STATE_DIR/rate-limit-state.json"
 RESUME_SCRIPT="$SCRIPT_DIR/resume-task.sh"
 RESUME_PID_FILE="$STATE_DIR/.resume-pid"
+METRICS_LIB="$HOME/.claude/hooks/metrics/emit.sh"
 
 INPUT=$(cat)
+SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // .sessionId // empty')
+export METRICS_SESSION_ID="$SESSION_ID"
+export METRICS_SCOPE="global"
+
+if [ -f "$METRICS_LIB" ]; then
+  # shellcheck disable=SC1090
+  . "$METRICS_LIB"
+fi
+
+metrics_start_ms=0
+if command -v metrics_now_ms >/dev/null 2>&1; then
+  metrics_start_ms=$(metrics_now_ms)
+fi
+
+emit_result() {
+  local status="$1"
+  local reason="${2:-}"
+  local duration_ms=""
+  local meta_json=""
+
+  if command -v metrics_now_ms >/dev/null 2>&1 && [ "${metrics_start_ms:-0}" -gt 0 ] 2>/dev/null; then
+    duration_ms=$(( $(metrics_now_ms) - metrics_start_ms ))
+  fi
+
+  if [ -n "$reason" ]; then
+    meta_json=$(jq -cn --arg reason "$reason" '{reason:$reason}' 2>/dev/null || printf '')
+  fi
+
+  if command -v metrics_emit >/dev/null 2>&1; then
+    metrics_emit "on-rate-limit-stop" "StopFailure" "hook_run" "$status" "$duration_ms" "$meta_json"
+  fi
+}
 
 # Only handle rate limit errors
-ERROR=$(echo "$INPUT" | jq -r '.error // empty')
-ERROR_DETAILS=$(echo "$INPUT" | jq -r '.error_details // empty')
+ERROR=$(printf '%s' "$INPUT" | jq -r '.error // empty')
+ERROR_DETAILS=$(printf '%s' "$INPUT" | jq -r '.error_details // empty')
 
 case "$ERROR$ERROR_DETAILS" in
   *rate_limit*|*Rate*limit*|*429*|*Too*Many*) ;;
-  *) exit 0 ;;  # Not a rate limit error, ignore
+  *)
+    emit_result "skipped" "not_rate_limit"
+    exit 0
+    ;;
 esac
 
 # Extract session info
-SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty')
-TRANSCRIPT_PATH=$(echo "$INPUT" | jq -r '.transcript_path // empty')
-CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
+TRANSCRIPT_PATH=$(printf '%s' "$INPUT" | jq -r '.transcript_path // .transcriptPath // empty')
+CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty')
 
 # Determine reset time from state file (written by rate-limit-monitor)
 # Reads binding_window's resets_at (whichever window is the constraint)
@@ -86,3 +121,5 @@ osascript -e "display notification \"Rate limit hit. Auto-resume scheduled at ${
 
 # Log
 echo "[$(date)] Rate limit stop: session=$SESSION_ID, resets_at=$RESET_TIME, resume_pid=$RESUME_PID" >> "$STATE_DIR/rate-limit.log"
+
+emit_result "ok"

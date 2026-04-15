@@ -12,10 +12,45 @@
 set -euo pipefail
 
 OUTPUT="{}"
+METRICS_STATUS="ok"
+METRICS_LIB="$HOME/.claude/hooks/metrics/emit.sh"
 
 # 读取完整 stdin JSON。
 # UserPromptSubmit hook 的 payload 可能是多行 JSON，单行 read 会截断并导致 jq 解析失败。
 stdin_json=$(cat)
+
+session_id=$(printf '%s' "$stdin_json" | jq -r '.session_id // .sessionId // ""')
+export METRICS_SESSION_ID="$session_id"
+export METRICS_SCOPE="global"
+
+if [ -f "$METRICS_LIB" ]; then
+    # shellcheck disable=SC1090
+    . "$METRICS_LIB"
+fi
+
+metrics_start_ms=0
+if command -v metrics_now_ms >/dev/null 2>&1; then
+    metrics_start_ms=$(metrics_now_ms)
+fi
+
+metrics_finalize() {
+    local exit_code=$?
+    local duration_ms=""
+
+    if [ "$exit_code" -ne 0 ]; then
+        METRICS_STATUS="error"
+    fi
+
+    if command -v metrics_now_ms >/dev/null 2>&1 && [ "${metrics_start_ms:-0}" -gt 0 ] 2>/dev/null; then
+        duration_ms=$(( $(metrics_now_ms) - metrics_start_ms ))
+    fi
+
+    if command -v metrics_emit >/dev/null 2>&1; then
+        metrics_emit "skill-inject" "UserPromptSubmit" "hook_run" "$METRICS_STATUS" "$duration_ms"
+    fi
+}
+
+trap metrics_finalize EXIT
 
 if [ -z "$stdin_json" ]; then
     echo "$OUTPUT"

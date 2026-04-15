@@ -1,0 +1,4 @@
+interface:
+  display_name: "Metrics Daily"
+  short_description: "Aggregate local hook events into a daily text report"
+  default_prompt: "Use -daily to aggregate today's local hook metrics and print the daily report."
