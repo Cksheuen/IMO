@@ -15,6 +15,10 @@ CLAUDE_DIR = Path.home() / ".claude"
 INDEX_PATH = CLAUDE_DIR / "rules-index.json"
 MAX_RULES = 3
 MAX_TOTAL_SIZE = 30 * 1024
+STRONG_WEIGHT = 3
+WEAK_WEIGHT = 1
+LARGE_RULE_THRESHOLD = 5000
+LARGE_RULE_MIN_SCORE = 6
 METRICS_EMIT_PATH = Path.home() / ".claude" / "hooks" / "metrics" / "emit.py"
 
 
@@ -60,15 +64,48 @@ def match_entries(prompt: str, entries: list[dict[str, Any]]) -> list[tuple[int,
     for entry in entries:
         if entry.get("always_loaded") is True:
             continue
-        keywords = entry.get("keywords")
-        if not isinstance(keywords, list):
+
+        strong_keywords = entry.get("strong_keywords")
+        weak_keywords = entry.get("keywords")
+
+        # Backward compat: old index without strong_keywords
+        if not isinstance(strong_keywords, list):
+            if not isinstance(weak_keywords, list):
+                continue
+            matched = {
+                kw for kw in weak_keywords
+                if isinstance(kw, str) and kw and kw in lowered
+            }
+            if matched:
+                ranked.append((len(matched), entry))
             continue
-        matched = {
-            keyword for keyword in keywords
-            if isinstance(keyword, str) and keyword and keyword in lowered
-        }
-        if matched:
-            ranked.append((len(matched), entry))
+
+        if not isinstance(weak_keywords, list):
+            weak_keywords = []
+
+        strong_matched = sum(
+            1 for kw in strong_keywords
+            if isinstance(kw, str) and kw and kw in lowered
+        )
+        weak_matched = sum(
+            1 for kw in weak_keywords
+            if isinstance(kw, str) and kw and kw in lowered
+        )
+
+        # Gate: must hit at least 1 strong keyword
+        if strong_matched == 0:
+            continue
+
+        score = strong_matched * STRONG_WEIGHT + weak_matched * WEAK_WEIGHT
+
+        # Large rules need higher score
+        size = entry.get("size_bytes", 0)
+        if isinstance(size, (int, float)) and size > LARGE_RULE_THRESHOLD:
+            if score < LARGE_RULE_MIN_SCORE:
+                continue
+
+        ranked.append((score, entry))
+
     ranked.sort(key=lambda item: (-item[0], str(item[1].get("path", ""))))
     return ranked
 
