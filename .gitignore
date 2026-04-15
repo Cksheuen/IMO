@@ -7,6 +7,8 @@
 # ===== 白名单 =====
 
 # 核心配置
+!.github/
+!.github/**
 !.gitignore
 !CLAUDE.md
 !README.md
@@ -61,6 +63,21 @@ shared-knowledge/sync.log
 # 这里只同步目录说明文档；具体 task 实例默认不入库
 !tasks/
 !tasks/README.md
+
+# Metrics 周报数据（发布到 GitHub Pages）
+# 只放行 weekly JSON 和 dashboard 模板，其他运行时数据（events/daily/reports）不入库
+!metrics/
+!metrics/weekly/
+!metrics/weekly/*.json
+!metrics/dashboard/
+!metrics/dashboard/weekly.html
+!metrics/dashboard/preview.svg
+# 显式排除运行时产物
+metrics/events/
+metrics/daily/
+metrics/reports/
+metrics/dashboard/weekly-rendered.html
+metrics/asset-catalog.yaml
 
 # ===== 显式忽略（已被 * 覆盖，此处为文档说明）=====
 

@@ -1,6 +1,8 @@
 # Claude Code 配置仓库
 
-> 一个把 Claude Code 从“提示词集合”收敛成“可执行工作流”的配置仓库。
+[![Metrics Weekly](metrics/dashboard/preview.svg)](https://cksheuen.github.io/.claude/)
+
+> 一个把 Claude Code 从”提示词集合”收敛成”可执行工作流”的配置仓库。
 
 这个仓库现在的重点不是罗列目录，而是把几条真正会影响日常使用的运行链做实：任务闭环、上下文注入、自动治理、知识晋升。
 
