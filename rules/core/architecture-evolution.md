@@ -154,6 +154,7 @@ AI agent 在架构演化中的特殊弱点：
 ### Step 3: 执行小手术
 
 - 每次只做一个升级动作（抽 hook / 拆 service / 建 contract）
+- 文件操作方式遵循 [[agent-file-operations]]：纯搬迁用 `mv`，按行号提取用 `sed`，精确小改用 Edit
 - 升级完成后立即验证：原有行为不变 + 新结构可用
 - 更新 status / spec 中的架构阶段标注
 
@@ -248,6 +249,7 @@ python3 ~/.claude/hooks/architecture-fitness.py --path /project/dir --domain fro
 | `rules/domain/frontend/ui-logic-boundary.md` | 前端领域的已验证实现；本规范从中抽象 |
 | `rules/pattern/change-scope-guard.md` | 限制升级不超出当前任务边界 |
 | `rules/pattern/change-impact-review.md` | 升级后必须做回归验证 |
+| `rules/tool/agent-file-operations.md` | 升级执行时的文件操作工具选择，控制 token 消耗 |
 | `skills/shit` | 治理资产的结构精简（阈值：skills>20, rules>500行） |
 | `skills/freeze` | 冷热存储管理，与阶段演化互补 |
 
