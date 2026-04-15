@@ -208,9 +208,9 @@ Rules Pack 只保留三层：
 ## 参考文件
 
 - `references/playbook.md`：详细模板与长示例
-- `rules/core/proactive-delegation.md`
-- `rules/core/task-centric-workflow.md`
-- `rules/pattern/change-impact-review.md`
-- `rules/pattern/generator-evaluator-pattern.md`
-- `rules/pattern/self-verification-mechanism.md`
-- `rules/technique/git-worktree-parallelism.md`
+- `rules-library/core/proactive-delegation.md`
+- `rules-library/core/task-centric-workflow.md`
+- `rules-library/pattern/change-impact-review.md`
+- `rules-library/pattern/generator-evaluator-pattern.md`
+- `rules-library/pattern/self-verification-mechanism.md`
+- `rules-library/technique/git-worktree-parallelism.md`

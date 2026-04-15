@@ -53,7 +53,7 @@ Grep pattern="react-query" path="~/.claude/notes/lessons"
 知识库检索记录：
 - 检索关键词：...
 - 命中结果：
-  - rules/technique/xxx.md（相关度：高/中/低）
+  - rules-library/technique/xxx.md（相关度：高/中/低）
   - skills/xxx/SKILL.md（相关度：高/中/低）
   - notes/research/xxx.md（相关度：高/中/低）
   - notes/lessons/xxx.md（相关度：高/中/低）
@@ -229,7 +229,7 @@ Repo 调研记录：
 - 处理动作：更新已有主题 / 新建主题 / 标记 stale / 提炼 rule
 - 是否需要 eat：是/否
 - 理由：...
-- 建议存储位置：rules/technique/ 或 rules/pattern/ 或 rules/best-practice/
+- 建议存储位置：rules-library/technique/ 或 rules-library/pattern/
 ```
 
 ## 输出：调研结果

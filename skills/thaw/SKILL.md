@@ -65,7 +65,7 @@ for entry in index.entries:
 
 | 序号 | 文件 | 类型 | 冻结时间 | 摘要 |
 |------|------|------|----------|------|
-| 1 | rules/technique/old-pattern.md | technique | 2025-01-15 | 旧的性能优化模式 |
+| 1 | rules-library/technique/old-pattern.md | technique | 2025-01-15 | 旧的性能优化模式 |
 
 **发现匹配项，是否解冻？**（输入序号确认，或输入 "all" 解冻全部）
 ```
@@ -73,11 +73,11 @@ for entry in index.entries:
 ### Step 4: 用户确认后自动执行
 
 ```bash
-# 自动创建目标目录
-mkdir -p ~/.claude/rules/technique
+# 自动创建目标目录（注意：大多数规则应恢复到 rules-library/，仅元级约束恢复到 rules/）
+mkdir -p ~/.claude/rules-library/technique
 
-# 自动移动文件
-mv ~/.claude/.cold-storage/rules/old-pattern.md ~/.claude/rules/technique/
+# 自动移动文件（cold-storage 内部保持扁平结构，按 index.json 的 originalPath 恢复到正确位置）
+mv ~/.claude/.cold-storage/rules/old-pattern.md ~/.claude/rules-library/technique/
 
 # 自动更新索引（移除该条目）
 update_index --remove "old-pattern"
@@ -90,7 +90,7 @@ update_index --remove "old-pattern"
 ```json
 // 解冻前
 {"entries": [
-  {"originalPath": "rules/technique/old-pattern.md", ...}
+  {"originalPath": "rules-library/technique/old-pattern.md", ...}
 ]}
 
 // 解冻后（自动移除）
@@ -102,7 +102,7 @@ update_index --remove "old-pattern"
 如果目标位置已有同名文件：
 
 ```markdown
-⚠️ 冲突：rules/technique/old-pattern.md 已存在
+⚠️ 冲突：rules-library/technique/old-pattern.md 已存在
 
 选项：
 1. 覆盖现有文件

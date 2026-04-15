@@ -255,7 +255,7 @@ helper 约束：
 {
   "path": "notes/lessons/example.md",
   "action": "promoted_to_rule | promoted_to_skill | indexed_in_memory | keep | merge",
-  "target_path": "rules/pattern/example.md",
+  "target_path": "rules-library/pattern/example.md",
   "reason": "why this decision was made"
 }
 ```

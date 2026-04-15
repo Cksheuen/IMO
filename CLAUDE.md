@@ -31,7 +31,7 @@
   - 未证明有效，不标记完成
   - 结论必须附带文件路径、命令或日志证据
 - `Learn`
-  - 纠正、调研、设计结论先判断应写 `rules/`、`skills/`、`notes/` 还是 `tasks/`
+  - 纠正、调研、设计结论先判断应写 `rules/`（always-loaded）、`rules-library/`（按需注入）、`skills/`、`notes/` 还是 `tasks/`
 
 ## 高优先级边界
 
@@ -44,6 +44,7 @@
 ## 必查规则入口
 
 - 上下文注入：`rules/core/context-injection.md`
+- 规则目录分流：`rules-library/core/rules-directory-convention.md`
 - 项目架构优先：`rules-library/core/project-architecture-first.md`
 - 任务工作流：`rules-library/core/task-centric-workflow.md`
 - task / notes 边界：`rules-library/core/task-notes-boundary.md`

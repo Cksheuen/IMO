@@ -139,11 +139,11 @@ python3 ~/.claude/hooks/architecture-fitness.py --path "$PROJECT_PATH" --domain 
 
 | 规则/技能 | 配合方式 |
 |-----------|----------|
-| `rules/core/architecture-evolution.md` | 本 skill 是该规范的可执行检测入口 |
-| `rules/core/project-architecture-first.md` | 进入新项目时可先运行本 skill 获取基线 |
-| `rules/domain/frontend/ui-logic-boundary.md` | frontend 领域的阈值来源 |
-| `rules/domain/backend/architecture-stages.md` | backend 领域的阈值来源 |
-| `rules/domain/shared/architecture-stages.md` | general 领域的阈值来源 |
+| `rules-library/core/architecture-evolution.md` | 本 skill 是该规范的可执行检测入口 |
+| `rules-library/core/project-architecture-first.md` | 进入新项目时可先运行本 skill 获取基线 |
+| `rules-library/domain/frontend/ui-logic-boundary.md` | frontend 领域的阈值来源 |
+| `rules-library/domain/backend/architecture-stages.md` | backend 领域的阈值来源 |
+| `rules-library/domain/shared/architecture-stages.md` | general 领域的阈值来源 |
 | `skills/shit` | shit 关注治理资产结构精简；本 skill 关注项目代码架构 |
 
 ## 注意事项

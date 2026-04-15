@@ -34,7 +34,7 @@
 
 以下内容默认视为全局治理资产：
 
-- `~/.claude/rules/`
+- `~/.claude/rules/`（always-loaded）与 `~/.claude/rules-library/`（按需注入）
 - `~/.claude/skills/`
 - `~/.claude/hooks/`
 - `~/.claude/shared-knowledge/AGENTS.md` 的来源内容
@@ -101,6 +101,6 @@
 
 | 规则 | 关系 |
 |------|------|
-| `rules/core/task-centric-workflow.md` | task 仍只记录当前任务事实，不承担全局治理真源 |
-| `rules/core/task-notes-boundary.md` | 本规范进一步明确了治理资产不应沉在项目 task 中长期充当真源 |
+| `rules-library/core/task-centric-workflow.md` | task 仍只记录当前任务事实，不承担全局治理真源 |
+| `rules-library/core/task-notes-boundary.md` | 本规范进一步明确了治理资产不应沉在项目 task 中长期充当真源 |
 | `skills/codex-cc-sync-check` | 本规范定义“何时应提升到全局”，该 skill 负责“提升后如何对齐到 Codex” |

@@ -7,7 +7,7 @@
       "injection"
     ],
     "keywords": [],
-    "size_bytes": 965,
+    "size_bytes": 1182,
     "always_loaded": true
   },
   {
@@ -45,7 +45,7 @@
     "keywords": [
       "md"
     ],
-    "size_bytes": 3718,
+    "size_bytes": 3801,
     "always_loaded": true
   },
   {
@@ -243,6 +243,22 @@
       "重构"
     ],
     "size_bytes": 5566,
+    "always_loaded": false
+  },
+  {
+    "path": "rules-library/core/rules-directory-convention.md",
+    "title": "规则目录分流规范",
+    "strong_keywords": [
+      "规则目录分流规范",
+      "流规范",
+      "分流规范",
+      "录分流规范",
+      "rules",
+      "directory",
+      "convention"
+    ],
+    "keywords": [],
+    "size_bytes": 4006,
     "always_loaded": false
   },
   {

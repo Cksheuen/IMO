@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "last_sync": "2026-04-15T08:53:38.926405+00:00",
-  "rules_hash": "849c7df8e21d73e45413fd7e3f3af7fb6512c4a474e37cff214538c97b9dbd54",
+  "last_sync": "2026-04-15T10:17:51.086223+00:00",
+  "rules_hash": "e352c9103cff961731a24f061240a2eb8d586bc5107b2cc8dfb5ee8fd1613663",
   "synced_rules": [
     "/Users/bytedance/.claude/CLAUDE.md",
     "/Users/bytedance/.claude/rules/core/context-injection.md",
@@ -11,6 +11,7 @@
     "/Users/bytedance/.claude/rules-library/core/architecture-evolution.md",
     "/Users/bytedance/.claude/rules-library/core/proactive-delegation.md",
     "/Users/bytedance/.claude/rules-library/core/project-architecture-first.md",
+    "/Users/bytedance/.claude/rules-library/core/rules-directory-convention.md",
     "/Users/bytedance/.claude/rules-library/core/task-centric-workflow.md",
     "/Users/bytedance/.claude/rules-library/core/task-notes-boundary.md",
     "/Users/bytedance/.claude/rules-library/pattern/abandoned-solution-cleanup.md",

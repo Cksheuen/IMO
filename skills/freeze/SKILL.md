@@ -53,7 +53,7 @@ fi
 | 序号 | 文件 | 类型 | 原因 | 自动建议 |
 |------|------|------|------|----------|
 | 1 | skills/experimental/SKILL.md | skill | 实验性 | ✅ 冻结 |
-| 2 | rules/technique/old-pattern.md | technique | 30天未改 | ⚠️ 待确认 |
+| 2 | rules-library/technique/old-pattern.md | technique | 30天未改 | ⚠️ 待确认 |
 
 **自动执行建议冻结项，待确认项需用户批准**
 ```
@@ -74,13 +74,14 @@ update_index "$auto_freeze_list"
 
 ```
 ~/.claude/
-├── rules/                    # 活跃规则
+├── rules/                    # always-loaded 规则（元级约束）
+├── rules-library/            # 按需注入规则
 ├── skills/                   # 活跃技能
 ├── memory/                   # 结构化记忆
 ├── .cold-storage/            # 冷存储（冻结区）
-│   ├── rules/                # 冻结的规则
+│   ├── rules/                # 冻结的规则（含 rules/ 和 rules-library/ 来源）
 │   ├── skills/               # 冻结的技能
-│   └── index.json            # 索引
+│   └── index.json            # 索引（originalPath 记录原始位置，用于解冻恢复）
 └── .gitignore                # 排除 .cold-storage/
 ```
 
@@ -100,8 +101,8 @@ update_index "$auto_freeze_list"
   "lastCheck": "2026-03-26T10:00:00Z",
   "entries": [
     {
-      "originalPath": "rules/technique/old-pattern.md",
-      "frozenPath": ".cold-storage/rules/old-pattern.md",
+      "originalPath": "rules-library/technique/old-pattern.md",
+      "frozenPath": ".cold-storage/rules-library/old-pattern.md",
       "frozenAt": "2026-03-26T10:00:00Z",
       "reason": "auto:30天未修改",
       "keywords": ["pattern", "optimization"],

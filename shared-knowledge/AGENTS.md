@@ -26,6 +26,7 @@ Follow them when implementing tasks.
 ## 必查规则入口
 
 - 上下文注入：`rules/core/context-injection.md`
+- 规则目录分流：`rules-library/core/rules-directory-convention.md`
 - 项目架构优先：`rules-library/core/project-architecture-first.md`
 - 任务工作流：`rules-library/core/task-centric-workflow.md`
 - task / notes 边界：`rules-library/core/task-notes-boundary.md`
@@ -52,7 +53,10 @@ Follow them when implementing tasks.
 ## 实践要点
 
 1. **CLAUDE.md 保持精简**：只放核心原则（< 100 行）
-2. **规范分层存储**：`rules/pattern/`, `rules/technique/`, `rules/tool/`, `rules/knowledge/`
+2. **规范两层存储**：
+   - `rules/`：always-loaded，每次会话自动加载（仅放元级约束，当前 4 个文件）
+   - `rules-library/`：按需注入，由 `hooks/rules-inject.py` 根据 prompt 关键词匹配加载
+   - 子分类：`core/`、`pattern/`、`technique/`、`tool/`、`domain/`
 3. **按需引用**：在 CLAUDE.md 中引用相关规则文件
 
 ## Claude Code 原生支持
@@ -61,7 +65,7 @@ Follow them when implementing tasks.
 # CLAUDE.md 中引用其他文件
 
 ## 架构规范
-See [architecture.md](rules/pattern/architecture.md)
+See [architecture.md](rules-library/pattern/architecture.md)
 
 ## 当前任务
 See [task-context.md](<project>/.claude/tasks/current/context.md)
@@ -107,7 +111,7 @@ See [task-context.md](<project>/.claude/tasks/current/context.md)
 
 以下内容默认视为全局治理资产：
 
-- `~/.claude/rules/`
+- `~/.claude/rules/`（always-loaded）与 `~/.claude/rules-library/`（按需注入）
 - `~/.claude/skills/`
 - `~/.claude/hooks/`
 - `~/.claude/shared-knowledge/AGENTS.md` 的来源内容
@@ -174,8 +178,8 @@ See [task-context.md](<project>/.claude/tasks/current/context.md)
 
 | 规则 | 关系 |
 |------|------|
-| `rules/core/task-centric-workflow.md` | task 仍只记录当前任务事实，不承担全局治理真源 |
-| `rules/core/task-notes-boundary.md` | 本规范进一步明确了治理资产不应沉在项目 task 中长期充当真源 |
+| `rules-library/core/task-centric-workflow.md` | task 仍只记录当前任务事实，不承担全局治理真源 |
+| `rules-library/core/task-notes-boundary.md` | 本规范进一步明确了治理资产不应沉在项目 task 中长期充当真源 |
 | `skills/codex-cc-sync-check` | 本规范定义“何时应提升到全局”，该 skill 负责“提升后如何对齐到 Codex” |
 
 ### LLM 友好格式规范
@@ -245,20 +249,6 @@ Agent 当前对“中文”约束主要落在 `skills/`、`rules/`、`notes/`、
 
 ## 触发条件
 
-当出现以下任一情况时，必须应用本规范：
-
-- 向用户发送进度更新
-- 向用户提问、确认、说明 blocker
-- 输出最终结论、review 结果、测试结果
-- 解释命令、日志、报错、配置项含义
-- 生成任何直接面向用户阅读的操作建议
-
-## 执行规范
-
-## 反模式
-
-| 反模式 | 正确做法 |
-|--------|----------|
 
 *(truncated due to size limit)*
 
