@@ -146,7 +146,8 @@
     "skill-creator@claude-plugins-official": true,
     "chrome-devtools-mcp@chrome-devtools-plugins": true,
     "codex@openai-codex": true,
-    "warp@claude-code-warp": true
+    "warp@claude-code-warp": true,
+    "ttcodex@ttcodex-local": true
   },
   "extraKnownMarketplaces": {
     "chrome-devtools-plugins": {
@@ -171,6 +172,12 @@
       "source": {
         "source": "github",
         "repo": "warpdotdev/claude-code-warp"
+      }
+    },
+    "ttcodex-local": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/bytedance/.claude/plugins/marketplaces/ttcodex-local"
       }
     }
   },
