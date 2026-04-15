@@ -37,7 +37,7 @@
 - `~/.claude/rules/`
 - `~/.claude/skills/`
 - `~/.claude/hooks/`
-- `~/.claude/AGENTS.md` 的来源内容
+- `~/.claude/shared-knowledge/AGENTS.md` 的来源内容
 - `~/.codex/AGENTS*.md` 的对齐关系
 - `~/.codex/skills/` 与 `~/.codex/commands/` 的同步可见性规则
 

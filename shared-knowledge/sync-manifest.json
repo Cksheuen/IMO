@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "last_sync": "2026-04-15T08:36:13.333582+00:00",
-  "rules_hash": "cd5166c6e8ca57b5989a70511222ed169a774008c33afad961b4352a3a0299a8",
+  "last_sync": "2026-04-15T08:53:38.926405+00:00",
+  "rules_hash": "849c7df8e21d73e45413fd7e3f3af7fb6512c4a474e37cff214538c97b9dbd54",
   "synced_rules": [
     "/Users/bytedance/.claude/CLAUDE.md",
     "/Users/bytedance/.claude/rules/core/context-injection.md",

@@ -9,7 +9,7 @@ Use this skill to verify that Codex is consuming the same global configuration a
 
 ## What this skill checks
 
-- Shared rules via `~/.claude/AGENTS.md`
+- Shared rules via `~/.claude/shared-knowledge/AGENTS.md`
 - Codex global instruction entrypoints:
   - `~/.codex/AGENTS.override.md`
   - `~/.codex/AGENTS.md`
@@ -37,7 +37,7 @@ bash ~/.claude/skills/codex-cc-sync-check/scripts/check_and_align.sh
 
 - Prefer symlinks over copies so Claude and Codex share one source of truth.
 - If a project-local skill/rule/hook was modified but is actually reusable across projects, promote it to `~/.claude/` first and then align Codex to that global source.
-- For rules, rely on `~/.claude/hooks/codex-sync/sync-to-codex.sh` when available, because it already compiles and refreshes `~/.claude/AGENTS.md`.
+- For rules, rely on `~/.claude/hooks/codex-sync/sync-to-codex.sh` when available, because it already compiles and refreshes `~/.claude/shared-knowledge/AGENTS.md`.
 - For skills, expose each custom Claude skill to Codex by creating a symlink in `~/.codex/skills/`.
 - For direct skill invocation compatibility, create a matching symlink in `~/.codex/commands/<skill-name>.md` pointing at the skill's `SKILL.md`.
 - Never overwrite Codex system skills under `~/.codex/skills/.system`.

@@ -1,7 +1,7 @@
 #!/bin/bash
 # CC → Codex 规则同步脚本
-# 从 CC 的 rules/skills/lessons 提炼生成共享的 ~/.claude/AGENTS.md，
-# 并让 ~/.codex/AGENTS.override.md 与 ~/.codex/AGENTS.md 通过符号链接指向它。
+# 从 CC 的 rules/skills/lessons 提炼生成共享的 ~/.claude/shared-knowledge/AGENTS.md，
+# 并让 ~/.codex/AGENTS.md 通过符号链接指向它。
 #
 # 调用方式：
 #   bash ~/.claude/hooks/codex-sync/sync-to-codex.sh
@@ -13,8 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 CODEX_DIR="$HOME/.codex"
 MANIFEST="$CLAUDE_DIR/shared-knowledge/sync-manifest.json"
-PROJECT_OUTPUT="$CLAUDE_DIR/AGENTS.md"
-CODEX_OVERRIDE_LINK="$CODEX_DIR/AGENTS.override.md"
+PROJECT_OUTPUT="$CLAUDE_DIR/shared-knowledge/AGENTS.md"
 CODEX_LEGACY_LINK="$CODEX_DIR/AGENTS.md"
 COMPILER="$SCRIPT_DIR/compile-rules.py"
 LOG="$CLAUDE_DIR/shared-knowledge/sync.log"
@@ -127,7 +126,6 @@ except: print('')
 
 if [ "$FORCE" = false ] && [ -n "$OLD_HASH" ] && [ "$OLD_HASH" = "$NEW_HASH" ]; then
   if target_matches_hash "$PROJECT_OUTPUT" "$NEW_HASH" \
-    && symlink_points_to "$CODEX_OVERRIDE_LINK" "$PROJECT_OUTPUT" \
     && symlink_points_to "$CODEX_LEGACY_LINK" "$PROJECT_OUTPUT"; then
     log "SKIP: rules unchanged and all targets intact (hash=$OLD_HASH, symlinks ok)"
     exit 0
@@ -135,13 +133,11 @@ if [ "$FORCE" = false ] && [ -n "$OLD_HASH" ] && [ "$OLD_HASH" = "$NEW_HASH" ]; 
 
   [ -f "$PROJECT_OUTPUT" ] || log "TARGET_MISSING: $PROJECT_OUTPUT does not exist, re-syncing"
   target_matches_hash "$PROJECT_OUTPUT" "$NEW_HASH" || log "TARGET_DRIFT: $PROJECT_OUTPUT differs from manifest, re-syncing"
-  symlink_points_to "$CODEX_OVERRIDE_LINK" "$PROJECT_OUTPUT" || log "LINK_DRIFT: $CODEX_OVERRIDE_LINK is missing or points elsewhere, re-syncing"
   symlink_points_to "$CODEX_LEGACY_LINK" "$PROJECT_OUTPUT" || log "LINK_DRIFT: $CODEX_LEGACY_LINK is missing or points elsewhere, re-syncing"
 fi
 
 # Write the compiled output once, then expose it to Codex via symlinks.
 sync_target "$PROJECT_OUTPUT" "claude-project"
-ensure_symlink "$PROJECT_OUTPUT" "$CODEX_OVERRIDE_LINK" "codex-global-override"
 ensure_symlink "$PROJECT_OUTPUT" "$CODEX_LEGACY_LINK" "codex-global"
 
 exit 0
