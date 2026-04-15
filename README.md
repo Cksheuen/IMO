@@ -148,7 +148,7 @@ python3 "$HOME/.claude/hooks/promote-notes-run.py" apply
 
 - `UserPromptSubmit`：注入 `skill-loader`、项目架构上下文和 recall 入口
 - `PreToolUse`：经过 `scale-gate`、`pre-write-gate`、`pre-edit-gate`、`pre-agent-gate`
-- `Stop`：执行 recall capture、verification gate、lesson capture、context monitor
+- `Stop`：执行 recall capture、context monitor
 
 真实挂载入口见 [`settings.json`](./settings.json) 和 [`hooks/README.md`](./hooks/README.md)。
 
@@ -178,7 +178,7 @@ python3 "$HOME/.claude/hooks/promote-notes-run.py" apply
 - `project-architecture-inject.py`
 - `scale-gate.sh`
 - `task-bootstrap.sh`
-- `verification-gate.sh`
+- `verification-gate.sh`（手动验证门禁工具，不作为自动 Stop hook 触发）
 - `audit-runtime-links.py`
 - `runtime-profile-audit.py`
 

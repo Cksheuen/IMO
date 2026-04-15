@@ -31,10 +31,10 @@ paths:
 ### 核心机制
 
 1. `feature-list.json` 承担结构化状态跟踪
-2. `verification-gate.sh` 在 `Stop` 时做门控
-3. reviewer 失败时必须输出 `delta_context`
-4. implementer 根据 `delta_context` 进入 fixer loop
-5. `max_attempts` 防止无限修复
+2. reviewer 失败时必须输出 `delta_context`
+3. implementer 根据 `delta_context` 进入 fixer loop
+4. `max_attempts` 防止无限修复
+5. 验证由 orchestrate / reviewer 流程主动触发，不再依赖 Stop hook 自动门控
 
 ### 正常流程
 
@@ -42,7 +42,6 @@ paths:
 实现完成
   -> reviewer 验证
   -> 更新 feature-list
-  -> Stop hook 进入 verification-gate
   -> 全部通过则允许结束
 ```
 
@@ -51,11 +50,12 @@ paths:
 ```text
 reviewer 判定失败
   -> 输出 delta_context
-  -> verification-gate 阻止退出
   -> 主 agent 派发 implementer 修复
   -> passes 重置为 null
   -> reviewer 再次验证
 ```
+
+> **注意**：`verification-gate.sh` 已从自动 Stop hook 中移除（2026-04-15），不再在每次 Stop 时自动阻止退出。验证循环由 orchestrate 的 Step 7 或手动 `/task-audit` 触发。
 
 ## 关键约束
 
@@ -107,14 +107,14 @@ reviewer 判定失败
 | 主 agent 自己下场修代码 | 改为派发 implementer |
 | implementer 重读全仓 | 按 `files_to_read` 收窄上下文 |
 | 无上限重试 | 用 `max_attempts` 保护 |
-| 跳过验证直接退出 | 让 verification gate 阻止退出 |
+| 跳过验证直接退出 | 在 orchestrate 流程中主动运行 reviewer |
 
 ## 文件位置
 
 | 文件 | 路径 | 作用 |
 |------|------|------|
 | Feature List | 当前项目 `tasks/current/feature-list.json` | 状态跟踪 |
-| Verification Gate | `~/.claude/hooks/verification-gate.sh` | Stop 门控 |
+| Verification Gate | `~/.claude/hooks/verification-gate.sh` | 手动验证工具（已从自动 Stop hook 移除） |
 | Reviewer Agent | `~/.claude/agents/reviewer.md` | 验证与回写 |
 | Orchestrate Skill | `~/.claude/skills/orchestrate/SKILL.md` | 分解与调度 |
 

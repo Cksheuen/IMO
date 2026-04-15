@@ -276,7 +276,7 @@ pipeline.className = 'pipeline';
 document.body.appendChild(pipeline);
 
 const lc = DATA.lesson_capture || {};
-const captureActive = lc.hooks_exist && lc.settings_stop_hook && lc.settings_statusline_integrated;
+const captureActive = lc.hooks_exist && lc.settings_statusline_integrated;
 const captureCount = captureActive ? (lc.signal_state ? lc.signal_state.signal_count : 0) : 0;
 
 const cs = DATA.consolidation || {};
@@ -404,8 +404,6 @@ bottom.appendChild(captureCard);
 
 const captureChecks = [
   { label: 'Signal Detector', ok: lc.signal_detector_exists },
-  { label: 'Lesson Gate (Stop)', ok: lc.lesson_gate_exists },
-  { label: 'Stop Hook Config', ok: lc.settings_stop_hook },
   { label: 'StatusLine Integration', ok: lc.settings_statusline_integrated },
 ];
 captureChecks.forEach(c => {
@@ -414,6 +412,17 @@ captureChecks.forEach(c => {
   const color = c.ok ? 'var(--green)' : 'var(--red)';
   const icon = c.ok ? '\u2713' : '\u2717';
   row.innerHTML = `<span class="issue-dot" style="background:${color}"></span><span class="issue-text" style="color:${color}">${icon} ${esc(c.label)}</span>`;
+  captureCard.appendChild(row);
+});
+
+const captureInfo = [
+  { label: 'Lesson Gate Script', value: lc.lesson_gate_exists ? 'present (manual tool)' : 'missing' },
+  { label: 'Stop Hook Config', value: lc.settings_stop_hook_optional ? 'optional wiring present' : 'not wired (expected)' },
+];
+captureInfo.forEach(info => {
+  const row = document.createElement('div');
+  row.className = 'issue-row';
+  row.innerHTML = `<span class="issue-text" style="color:var(--text-sec);font-size:10px">${esc(info.label)}: ${esc(info.value)}</span>`;
   captureCard.appendChild(row);
 });
 

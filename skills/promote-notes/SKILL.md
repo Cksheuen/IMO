@@ -36,22 +36,9 @@ description: notes 晋升技能。当 `notes/` 中的 lesson、research、design
 
 | 触发方式 | 执行位置 | 原因 |
 |---------|---------|------|
-| **自动触发（Stop / SubagentStop hook，且开关开启）** | **后台独立进程** | 不打断主 agent 流程 |
 | 用户显式调用 `/promote-notes` | 当前 agent | 用户主动请求 |
 
-### 自动触发的后台执行
-
-当 `lesson-gate.sh` 检测到未处理的纠正信号时：
-
-1. 使用 `nohup claude --print -p “...” &` 启动后台进程
-2. 进程独立运行，不阻塞主 agent
-3. 日志输出到 `~/.claude/logs/lesson-capture/background-*.log`
-4. 主 agent 正常结束（`exit 0`），用户流程不被打断
-
-**关键约束**：
-- 后台进程不向主 agent 输出任何内容
-- 用户不会看到 `[LESSON CAPTURE REQUIRED]` 等提示
-- Lesson capture 在后台静默完成
+> **变更说明**（2026-04-15）：`lesson-gate.sh` 已从全局 `settings.json` 的自动 Stop hook 中移除。自动后台触发路径不再存在于共享 runtime 中。晋升的唯一入口是用户手动 `/promote-notes`。
 
 **当前收敛后的推荐理解**：
 

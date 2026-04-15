@@ -40,18 +40,32 @@ SKIP_HEADINGS = {
 
 
 def parse_frontmatter(text):
-    """Extract YAML-ish frontmatter and body from markdown."""
-    if not text.startswith("---"):
+    """Extract YAML frontmatter and body from markdown."""
+    if not text.startswith('---'):
         return {}, text
-    end = text.find("---", 3)
+    end = text.find('---', 3)
     if end == -1:
         return {}, text
     fm_text = text[3:end].strip()
     body = text[end + 3:].strip()
+
+    # Try proper YAML parsing first
+    try:
+        import yaml
+        fm = yaml.safe_load(fm_text)
+        if not isinstance(fm, dict):
+            fm = {}
+        return fm, body
+    except ImportError:
+        pass
+    except Exception:
+        pass
+
+    # Fallback: simple key:value parsing
     fm = {}
-    for line in fm_text.split("\n"):
-        if ":" in line:
-            key, _, val = line.partition(":")
+    for line in fm_text.split('\n'):
+        if ':' in line and not line.strip().startswith('-'):
+            key, _, val = line.partition(':')
             fm[key.strip()] = val.strip()
     return fm, body
 

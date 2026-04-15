@@ -243,6 +243,7 @@ def implementer(state: VerificationGateState) -> dict:
                 updated_f.update({
                     "passes": False,
                     "notes": "Fix attempt failed",
+                    "attempt_count": f["attempt_count"] + 1,
                 })
             updated_features.append(updated_f)
         else:

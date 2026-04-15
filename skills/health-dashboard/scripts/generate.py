@@ -101,11 +101,6 @@ def generate_issues(data: dict) -> list[dict]:
                 "severity": "critical",
                 "message": "教训捕获系统未安装：hooks/lesson-capture/ 脚本缺失"
             })
-        elif not lc.get("settings_stop_hook"):
-            issues.append({
-                "severity": "warning",
-                "message": "教训捕获 Stop hook 未在 settings.json 中注册"
-            })
         elif not lc.get("settings_statusline_integrated"):
             issues.append({
                 "severity": "warning",
@@ -114,7 +109,7 @@ def generate_issues(data: dict) -> list[dict]:
         else:
             issues.append({
                 "severity": "info",
-                "message": "教训捕获系统已激活：信号检测 + Stop hook 强制"
+                "message": "教训捕获系统已激活：信号检测可用，Stop hook 接入为可选"
             })
 
     # Info

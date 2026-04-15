@@ -248,7 +248,7 @@ def scan_lesson_capture() -> dict:
         "hooks_exist": False,
         "signal_detector_exists": False,
         "lesson_gate_exists": False,
-        "settings_stop_hook": False,
+        "settings_stop_hook_optional": False,
         "settings_statusline_integrated": False,
         "signal_state": None,
         "signal_types_detected": [],
@@ -259,7 +259,7 @@ def scan_lesson_capture() -> dict:
     gate = HOOKS_DIR / "lesson-capture" / "lesson-gate.sh"
     result["signal_detector_exists"] = detector.is_file()
     result["lesson_gate_exists"] = gate.is_file()
-    result["hooks_exist"] = result["signal_detector_exists"] and result["lesson_gate_exists"]
+    result["hooks_exist"] = result["signal_detector_exists"]
 
     # Check settings.json for hook registration
     settings_content = read_file_safe(SETTINGS_FILE)
@@ -268,11 +268,12 @@ def scan_lesson_capture() -> dict:
             settings = json.loads(settings_content)
             hooks = settings.get("hooks", {})
 
-            # Check Stop hook
+            # Check whether lesson-gate is optionally wired into Stop hooks.
             stop_hooks = hooks.get("Stop", [])
             for h in stop_hooks:
-                if "lesson-gate" in h.get("command", ""):
-                    result["settings_stop_hook"] = True
+                for stop_hook in h.get("hooks", []):
+                    if "lesson-gate" in stop_hook.get("command", ""):
+                        result["settings_stop_hook_optional"] = True
 
             # Check statusline integration
             sl = settings.get("statusLine", {})

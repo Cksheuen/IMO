@@ -135,7 +135,8 @@
 
 - 根目录 `settings.json` 在 `PreToolUse` 挂载 `hooks/pre-write-gate.sh`、`hooks/pre-edit-gate.sh`、`hooks/pre-agent-gate.sh`
 - 根目录 `settings.json` 在 `UserPromptSubmit` 挂载 `hooks/skill-loader/skill-inject.sh`、`hooks/recall-entrypoint.py`
-- 根目录 `settings.json` 在 `Stop` 挂载 `hooks/recall-capture.py`、`hooks/verification-gate.sh`、`hooks/lesson-capture/lesson-gate.sh`、`hooks/context-monitor.sh`
+- 根目录 `settings.json` 在 `Stop` 挂载 `hooks/recall-capture.py`、`hooks/context-monitor.sh`
+- `hooks/verification-gate.sh` 和 `hooks/lesson-capture/lesson-gate.sh` 已从自动 Stop hook 中移除，改为手动工具（可通过 `/task-audit` 或直接调用脚本使用）
 - 项目级 `.claude/settings.json` 在 `Stop` / `SubagentStop` 挂载 `.claude/hooks/promotion-scan.py`
 - 项目级 `.claude/settings.json` 在 `Stop` / `SubagentStop` 挂载 `.claude/hooks/promotion-gate.py`
 - 项目级 `.claude/settings.json` 在 `SessionStart` 挂载 `.claude/hooks/promotion-queue-status.py`
