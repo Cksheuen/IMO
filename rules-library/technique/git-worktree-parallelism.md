@@ -8,6 +8,15 @@ paths:
 
 > 来源：[Trellis](https://github.com/mindfold-ai/Trellis) | 吸收时间：2026-03-25
 
+## 触发条件
+
+当出现以下任一情况时，应用此规范：
+
+- 需要使用 git worktree 进行隔离开发
+- 多个 Agent 需要并行执行写文件任务
+- 任务涉及多分支同时工作
+- 关键词：worktree、并行执行、parallel agent、隔离开发、多 agent 同时工作
+
 ## 核心原则
 
 **任务隔离，并行执行**

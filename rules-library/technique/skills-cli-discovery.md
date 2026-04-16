@@ -153,7 +153,7 @@ npx skills init my-xyz-skill
 
 ## 相关规范
 
-- [[skill-creator]] - 创建新 skill（创建前必须先搜索现有 skill）
+- [skill-creator](../../skills/skill-creator/SKILL.md) - 创建新 skill（创建前必须先搜索现有 skill）
 - [[browser-auth-reuse]] - 浏览器认证复用
 
 ## 参考

@@ -1,0 +1,60 @@
+{
+  "skill_name": "cc-to-framework-migration",
+  "iteration": 1,
+  "timestamp": "2026-04-07T04:14:00Z",
+  "configurations": [
+    {
+      "name": "with_skill",
+      "description": "Using cc-to-framework-migration skill"
+    },
+    {
+      "name": "without_skill",
+      "description": "Baseline without skill"
+    }
+  ],
+  "evals": [
+    {
+      "eval_id": 0,
+      "eval_name": "full-scan-migration",
+      "prompt": "扫描我的 CC 配置，告诉我哪些适合迁移到 LangChain 框架",
+      "results": {
+        "with_skill": {
+          "pass_rate": 1.0,
+          "passed": 4,
+          "total": 4,
+          "duration_seconds": 151.8,
+          "total_tokens": 0
+        },
+        "without_skill": {
+          "pass_rate": 1.0,
+          "passed": 4,
+          "total": 4,
+          "duration_seconds": 164.2,
+          "total_tokens": 0
+        },
+        "delta": {
+          "pass_rate": 0.0,
+          "duration_seconds": -12.4,
+          "faster": true
+        }
+      }
+    }
+  ],
+  "summary": {
+    "with_skill": {
+      "mean_pass_rate": 1.0,
+      "mean_duration_seconds": 151.8,
+      "total_tokens": 0
+    },
+    "without_skill": {
+      "mean_pass_rate": 1.0,
+      "mean_duration_seconds": 164.2,
+      "total_tokens": 0
+    },
+    "delta": {
+      "pass_rate": 0.0,
+      "duration_seconds": -12.4,
+      "skill_faster": true
+    }
+  }
+}

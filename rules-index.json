@@ -7,7 +7,7 @@
       "injection"
     ],
     "keywords": [],
-    "size_bytes": 1182,
+    "size_bytes": 1199,
     "always_loaded": true
   },
   {
@@ -258,20 +258,42 @@
       "convention"
     ],
     "keywords": [],
-    "size_bytes": 4006,
+    "size_bytes": 4076,
     "always_loaded": false
   },
   {
     "path": "rules-library/core/task-centric-workflow.md",
     "title": "Task-Centric Workflow",
     "strong_keywords": [
+      "应用此规范",
+      "需要创建",
+      "需要创建或管理",
+      "或管理",
+      "建或管理",
+      "创建或管理",
+      "讨论任务工作流",
+      "工作流",
+      "务工作流",
+      "任务工作流",
+      "目录结构",
+      "关键词",
+      "任务管理",
+      "task",
+      "tasks",
+      "status",
+      "context",
       "task-centric",
       "workflow",
-      "task",
       "centric"
     ],
-    "keywords": [],
-    "size_bytes": 3537,
+    "keywords": [
+      "目录",
+      "编写",
+      "涉及",
+      "prd",
+      "md"
+    ],
+    "size_bytes": 3811,
     "always_loaded": false
   },
   {
@@ -358,7 +380,7 @@
       "api",
       "后端"
     ],
-    "size_bytes": 12780,
+    "size_bytes": 12788,
     "always_loaded": false
   },
   {
@@ -524,7 +546,7 @@
     "keywords": [
       "通用"
     ],
-    "size_bytes": 9584,
+    "size_bytes": 9592,
     "always_loaded": false
   },
   {
@@ -1029,6 +1051,39 @@
     "always_loaded": false
   },
   {
+    "path": "rules-library/pattern/vendor-skill-management.md",
+    "title": "第三方 Skill 管理规范",
+    "strong_keywords": [
+      "更新第三方",
+      "安装或更新第三方",
+      "第三方",
+      "新第三方",
+      "修改来源为第三方",
+      "修改来源为第三方的",
+      "三方的",
+      "第三方的",
+      "为第三方的",
+      "晋升链路",
+      "到本地",
+      "skill",
+      "promote",
+      "freeze",
+      "thaw",
+      "skills",
+      "marketplace",
+      "管理规范",
+      "vendor",
+      "management"
+    ],
+    "keywords": [
+      "安装",
+      "扫描",
+      "目录"
+    ],
+    "size_bytes": 3010,
+    "always_loaded": false
+  },
+  {
     "path": "rules-library/technique/browser-auth-reuse.md",
     "title": "浏览器登录态复用技术",
     "strong_keywords": [
@@ -1071,15 +1126,34 @@
     "path": "rules-library/technique/git-worktree-parallelism.md",
     "title": "Git Worktree Parallelism",
     "strong_keywords": [
+      "应用此规范",
+      "需要使用",
+      "进行隔离开发",
+      "需要并行执行写文件任务",
+      "件任务",
+      "文件任务",
+      "写文件任务",
+      "任务涉",
+      "多分支同时工作",
+      "任务涉及多分支同时工作",
+      "时工作",
+      "同时工作",
+      "支同时工作",
+      "关键词",
+      "并行执行",
+      "隔离开发",
       "worktree",
+      "agent",
+      "parallel",
       "parallelism",
       "technique"
     ],
     "keywords": [
+      "多个",
       "git",
       "技术"
     ],
-    "size_bytes": 863,
+    "size_bytes": 1161,
     "always_loaded": false
   },
   {
@@ -1204,7 +1278,7 @@
       "cli",
       "技术"
     ],
-    "size_bytes": 4849,
+    "size_bytes": 4884,
     "always_loaded": false
   },
   {

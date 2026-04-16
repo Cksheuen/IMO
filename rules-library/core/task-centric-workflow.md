@@ -2,6 +2,15 @@
 
 > 来源：[Trellis](https://github.com/mindfold-ai/Trellis) | 吸收时间：2026-03-25
 
+## 触发条件
+
+当出现以下任一情况时，应用此规范：
+
+- 需要创建或管理 task 目录
+- 讨论任务工作流、PRD 编写
+- 涉及 `tasks/` 目录结构
+- 关键词：task 目录、任务管理、tasks/、任务工作流、prd、status.md、context.md
+
 ## 核心原则
 
 **任务驱动，上下文隔离**

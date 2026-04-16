@@ -245,10 +245,6 @@ Agent 当前对“中文”约束主要落在 `skills/`、`rules/`、`notes/`、
 
 **只要是在和用户说话，默认使用中文。**
 
-代码、命令、路径、报错原文、协议字段名可以保留英文，但包裹它们的解释、判断、结论和行动说明应使用中文。
-
-## 触发条件
-
 
 *(truncated due to size limit)*
 
@@ -269,6 +265,7 @@ Agent 当前对“中文”约束主要落在 `skills/`、`rules/`、`notes/`、
 - **Promotion Loop 后台执行约束** — 当 Stop hook 检测到 correction signals 或 promotion candidates 时。 → `rules-library/pattern/promotion-loop-background-execution.md`
 - **需求确认规范** — 需求存在多种合理理解 → `rules-library/pattern/requirements-confirmation.md`
 - **Agent 自验证机制** — 所有 feature 通过验证 → `rules-library/pattern/self-verification-mechanism.md`
+- **第三方 Skill 管理规范** — 安装或更新第三方 skill → `rules-library/pattern/vendor-skill-management.md`
 ## 领域规则（索引）
 
 > 触发条件匹配时，用 cat 读取对应路径获取完整规则

@@ -12,7 +12,7 @@ paths:
 
 # 后端架构阶段定义
 
-> 来源：基于 `rules/core/architecture-evolution.md` 三阶段协议，结合后端领域特有的分层边界与膨胀模式 | 吸收时间：2026-04-14
+> 来源：基于 `rules-library/core/architecture-evolution.md` 三阶段协议，结合后端领域特有的分层边界与膨胀模式 | 吸收时间：2026-04-14
 
 ## 核心问题
 
