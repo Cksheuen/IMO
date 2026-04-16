@@ -1,7 +1,7 @@
 ---
 title: Codex review EISDIR 错误：symlink 指向目录导致文件遍历崩溃
 status: promoted
-promoted_to: rules/tool/codex-review-symlink-eisdir.md
+promoted_to: rules-library/tool/codex-review-symlink-eisdir.md
 last_verified: 2026-04-02
 ---
 

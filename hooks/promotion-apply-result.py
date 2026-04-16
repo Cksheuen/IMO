@@ -25,6 +25,7 @@ BASE = Path.home() / ".claude"
 LESSONS_DIR = BASE / "notes" / "lessons"
 NOTES_DIR = BASE / "notes"
 RULES_DIR = BASE / "rules"
+RULES_LIBRARY_DIR = BASE / "rules-library"
 SKILLS_DIR = BASE / "skills"
 VENDOR_DIR = SKILLS_DIR / "vendor"
 MEMORY_DIR = BASE / "memory"
@@ -33,7 +34,7 @@ LOG_DIR = BASE / "logs" / "promotion"
 QUEUE_FILE = BASE / "promotion-queue.json"
 QUEUE_LOCK_FILE = BASE / "promotion-queue.lock"
 ALLOWED_TARGET_ROOTS = tuple(
-    path.resolve() for path in (RULES_DIR, SKILLS_DIR, NOTES_DIR, MEMORY_DIR, DECLARATIVE_MEMORY_DIR)
+    path.resolve() for path in (RULES_DIR, RULES_LIBRARY_DIR, SKILLS_DIR, NOTES_DIR, MEMORY_DIR, DECLARATIVE_MEMORY_DIR)
 )
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -49,15 +50,14 @@ def log(msg: str):
 
 
 def resolve_lesson_path(lesson_path_str: str) -> Path:
-    """限制 lesson 路径只能落在 notes/lessons 下。"""
+    """限制 note 路径只能落在 notes/ 下。"""
     candidate = Path(lesson_path_str)
     if candidate.is_absolute():
-        raise ValueError(f"Lesson path must be relative to {BASE}: {lesson_path_str}")
-
+        raise ValueError(f"Note path must be relative to {BASE}: {lesson_path_str}")
     resolved = (BASE / candidate).resolve()
-    lessons_root = LESSONS_DIR.resolve()
-    if resolved != lessons_root and not resolved.is_relative_to(lessons_root):
-        raise ValueError(f"Lesson path escapes lessons directory: {lesson_path_str}")
+    notes_root = NOTES_DIR.resolve()
+    if resolved != notes_root and not resolved.is_relative_to(notes_root):
+        raise ValueError(f"Note path escapes notes directory: {lesson_path_str}")
     return resolved
 
 
@@ -475,7 +475,7 @@ description: {description or f"Promoted from {note_ref}"}
 
 # {title}
 
-> 来源：`notes/lessons/{lesson_path.name}` | 晋升时间：{datetime.now().strftime("%Y-%m-%d")}
+> 来源：`{note_ref}` | 晋升时间：{datetime.now().strftime("%Y-%m-%d")}
 
 ## 适用场景
 
@@ -503,7 +503,7 @@ description: {description or f"Promoted from {note_ref}"}
 
 ## 来源
 
-- 原 note：`notes/lessons/{lesson_path.name}`
+- 原 note：`{note_ref}`
 - note 路径：`{note_ref}`
 {format_markdown_bullets(source_case_items, "Source Cases 见原 note。")}
 """
@@ -554,7 +554,7 @@ def upsert_declarative_memory(
     today = datetime.now().strftime("%Y-%m-%d")
     normalized_record = dict(record)
     normalized_record.setdefault("id", f"{subject}.{slugify_name(key)}")
-    normalized_record.setdefault("source", {"type": "file", "ref": f"notes/lessons/{lesson_path.name}"})
+    normalized_record.setdefault("source", {"type": "file", "ref": relative_to_base(lesson_path)})
     normalized_record["updatedAt"] = today
     normalized_record.setdefault("lastVerifiedAt", today)
 
@@ -679,6 +679,7 @@ def create_rule(lesson_path: Path, target_dir: Path, lesson: dict, dry_run: bool
 
     # 构建 rule 内容
     today = datetime.now().strftime("%Y-%m-%d")
+    note_ref = relative_to_base(lesson_path)
     rule_content = f"""---
 name: {clean_stem}
 description: {fm.get('title', clean_stem)}
@@ -686,7 +687,7 @@ description: {fm.get('title', clean_stem)}
 
 # {fm.get('title', clean_stem.replace('-', ' ').title())}
 
-> 来源：`notes/lessons/{lesson_path.name}` | 晋升时间：{today}
+> 来源：`{note_ref}` | 晋升时间：{today}
 
 ## 触发条件
 
@@ -706,7 +707,7 @@ description: {fm.get('title', clean_stem)}
 
 ## 参考
 
-- Source Cases 见原 lesson：`notes/lessons/{lesson_path.name}`
+- Source Cases 见原 lesson：`{relative_to_base(lesson_path)}`
 """
 
     if not dry_run:
@@ -924,7 +925,7 @@ def apply_promotion(result: dict, dry_run: bool) -> dict:
             action_type = "keep"
 
         if action_type in {"create", "create_rule"}:
-            target_root = RULES_DIR
+            target_root = RULES_LIBRARY_DIR
             if target_path_str:
                 try:
                     target_root = resolve_allowed_target_path(target_path_str)
@@ -936,7 +937,8 @@ def apply_promotion(result: dict, dry_run: bool) -> dict:
                     commit_queue_item(action_id, False, dry_run)
                     continue
 
-            if target_root == RULES_DIR or target_root.is_relative_to(RULES_DIR):
+            if (target_root == RULES_LIBRARY_DIR or target_root.is_relative_to(RULES_LIBRARY_DIR)
+                    or target_root == RULES_DIR or target_root.is_relative_to(RULES_DIR)):
                 rule_file = create_rule(lesson_path, target_root, lesson, dry_run)
             else:
                 log(f"Create action currently only supports rules targets: {target_root}")

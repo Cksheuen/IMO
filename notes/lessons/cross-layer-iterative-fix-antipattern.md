@@ -1,7 +1,7 @@
 # Lesson: 跨层功能反复修补反模式
 
 - Status: promoted
-- Promoted To: rules/pattern/cross-layer-preflight.md
+- Promoted To: rules-library/pattern/cross-layer-preflight.md
 - Promoted At: 2026-03-30
 - First Seen: 2026-03-22
 - Last Verified: 2026-03-30

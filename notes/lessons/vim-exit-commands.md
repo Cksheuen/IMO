@@ -2,9 +2,7 @@
 name: vim-exit-commands
 description: vim 退出命令的区别与选择
 type: lesson
-status: promoted
-promoted_to: rules/knowledge/vim-exit-commands.md
-promoted_at: 2026-04-03
+status: active
 ---
 
 # vim 退出命令

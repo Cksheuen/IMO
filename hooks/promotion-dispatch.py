@@ -29,6 +29,11 @@ RULES_DIR = BASE / "rules"
 SKILLS_DIR = BASE / "skills"
 VENDOR_DIR = SKILLS_DIR / "vendor"
 LOG_DIR = BASE / "logs" / "promotion"
+RESEARCH_DIR = BASE / "notes" / "research"
+DESIGN_DIR = BASE / "notes" / "design"
+SCAN_DIRS = [LESSONS_DIR, RESEARCH_DIR, DESIGN_DIR]
+SCAN_EXCLUDE_DIRS = {"migrated", "cc-to-framework-migration-workspace"}
+TERMINAL_STATUSES = {"promoted", "superseded", "historical-background"}
 QUEUE_LOCK_FILE = BASE / "promotion-queue.lock"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -199,6 +204,20 @@ def load_consolidation_todo() -> dict:
     return {"pending_promotions": [], "stale_reviews": []}
 
 
+def read_note_status(filepath: Path) -> str:
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            for i, line in enumerate(f):
+                if i >= 15:
+                    break
+                stripped = line.strip().lower()
+                if stripped.startswith("- status:") or stripped.startswith("status:"):
+                    return line.split(":", 1)[1].strip().lower()
+    except OSError:
+        pass
+    return ""
+
+
 def extract_keywords(text: str) -> set:
     """从文本中提取关键词"""
     import re
@@ -315,6 +334,9 @@ def scan_candidates() -> list:
         lesson_path = LESSONS_DIR / filename
         if not lesson_path.exists():
             continue
+        note_st = read_note_status(lesson_path)
+        if note_st in TERMINAL_STATUSES:
+            continue
 
         similar = find_similar_rules(lesson_path)
         candidates.append({
@@ -326,26 +348,44 @@ def scan_candidates() -> list:
             "action": "promote",
         })
 
-    # 2. 扫描 candidate-rule 状态的 lesson
-    if LESSONS_DIR.exists():
-        for lesson_file in LESSONS_DIR.iterdir():
+    # 2. 扫描 notes 下的候选与活跃 note
+    for scan_dir in SCAN_DIRS:
+        if not scan_dir.exists():
+            continue
+        for lesson_file in scan_dir.iterdir():
             if lesson_file.suffix != ".md":
                 continue
+            if any(exc in lesson_file.parts for exc in SCAN_EXCLUDE_DIRS):
+                continue
+            note_st = read_note_status(lesson_file)
+            if note_st in TERMINAL_STATUSES:
+                continue
             content = lesson_file.read_text(encoding="utf-8", errors="ignore")
+            file_id = lesson_file.stem
+            existing_ids = [c["id"] for c in candidates]
+            if file_id in existing_ids:
+                continue
+            rel_path = str(lesson_file.relative_to(BASE))
             if "status: candidate-rule" in content.lower() or "Status: candidate-rule" in content:
-                # 检查是否已在候选列表中
-                existing_ids = [c["id"] for c in candidates]
-                file_id = lesson_file.stem
-                if file_id not in existing_ids:
-                    similar = find_similar_rules(lesson_file)
-                    candidates.append({
-                        "id": file_id,
-                        "source": "status-scan",
-                        "path": f"notes/lessons/{lesson_file.name}",
-                        "reason": "Status: candidate-rule",
-                        "similar_rules": similar,
-                        "action": "promote",
-                    })
+                similar = find_similar_rules(lesson_file)
+                candidates.append({
+                    "id": file_id,
+                    "source": "status-scan",
+                    "path": rel_path,
+                    "reason": "Status: candidate-rule",
+                    "similar_rules": similar,
+                    "action": "promote",
+                })
+            elif scan_dir != LESSONS_DIR:
+                similar = find_similar_rules(lesson_file)
+                candidates.append({
+                    "id": file_id,
+                    "source": "status-scan",
+                    "path": rel_path,
+                    "reason": "active-note-without-promotion",
+                    "similar_rules": similar,
+                    "action": "promote",
+                })
 
     return candidates
 
@@ -545,9 +585,27 @@ def cmd_list():
     print(f"\nCompleted: {len(completed)}")
 
 
+def cmd_clean():
+    cleaned = []
+    with locked_queue() as queue:
+        remaining = []
+        for candidate in queue["candidates"]:
+            note_path = BASE / candidate.get("path", "")
+            if note_path.exists():
+                st = read_note_status(note_path)
+                if st in TERMINAL_STATUSES:
+                    cleaned.append(candidate.get("id", "unknown"))
+                    continue
+            remaining.append(candidate)
+        queue["candidates"] = remaining
+    if cleaned:
+        log(f"Cleaned {len(cleaned)} ghost candidates: {', '.join(cleaned)}")
+    print(f"Cleaned: {len(cleaned)} ghost candidates removed")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Promotion Dispatch")
-    parser.add_argument("command", choices=["scan", "claim", "release", "fail", "apply", "list"])
+    parser.add_argument("command", choices=["scan", "claim", "release", "fail", "apply", "list", "clean"])
     parser.add_argument("candidate_id", nargs="?", help="Candidate ID for release")
     parser.add_argument("--error", help="Failure reason for fail command")
     parser.add_argument("--result-file", help="Result file for apply command")
@@ -572,6 +630,8 @@ def main():
         cmd_apply(args.result_file)
     elif args.command == "list":
         cmd_list()
+    elif args.command == "clean":
+        cmd_clean()
 
 
 if __name__ == "__main__":
