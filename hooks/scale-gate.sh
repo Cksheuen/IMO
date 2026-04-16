@@ -140,6 +140,7 @@ fi
 
 # Block and remind
 mkdir -p "$STATE_DIR"
+touch "$MARKER"
 deny "$(python3 - "$MARKER" "$TASK_DIR" <<'PYEOF'
 import sys
 

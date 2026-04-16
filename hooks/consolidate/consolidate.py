@@ -499,10 +499,17 @@ def load_state() -> dict:
     return {"last_run": 0, "session_count": 0, "runs": 0}
 
 
+def _atomic_write_json(path: Path, data: dict):
+    """Write JSON atomically via tmp file + os.replace."""
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    os.replace(str(tmp), str(path))
+
+
 def save_state(state: dict):
     state["last_run"] = int(time.time())
     state["runs"] = state.get("runs", 0) + 1
-    STATE_FILE.write_text(json.dumps(state, indent=2))
+    _atomic_write_json(STATE_FILE, state)
 
 
 def should_run(state: dict, force: bool = False) -> bool:
@@ -517,7 +524,7 @@ def should_run(state: dict, force: bool = False) -> bool:
 def increment_session(state: dict):
     """Called by SessionEnd hook to bump session counter."""
     state["session_count"] = state.get("session_count", 0) + 1
-    STATE_FILE.write_text(json.dumps(state, indent=2))
+    _atomic_write_json(STATE_FILE, state)
 
 
 # ── Main ──

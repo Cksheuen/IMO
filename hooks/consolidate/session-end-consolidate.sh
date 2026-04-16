@@ -52,7 +52,7 @@ metrics_finalize() {
 trap metrics_finalize EXIT
 
 # Increment session counter
-python3 "$CONSOLIDATE" --increment-session 2>/dev/null
+python3 "$CONSOLIDATE" --increment-session 2>/dev/null || true
 
 if [ -f "$STATE_FILE" ]; then
   session_count=$(python3 - "$STATE_FILE" <<'PY'
