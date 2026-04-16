@@ -99,4 +99,17 @@ if [ -f "$CODEX_FEEDBACK" ]; then
     >> "$CODEX_SYNC_LOG" 2>&1 &
 fi
 
+# === Asset Registry Sync ===
+# Sync skill/rule registry when asset files changed during this session.
+# Runs in background, failures are silently ignored.
+SYNC_SCRIPT="$HOME/.claude/hooks/metrics/sync-asset-registry.py"
+if [ -f "$SYNC_SCRIPT" ]; then
+  # Only run if skills/ or rules-library/ or rules/ have uncommitted changes
+  if git -C "$HOME/.claude" diff --name-only HEAD 2>/dev/null | grep -qE '^(skills/|rules-library/|rules/)'; then
+    nohup python3 "$SYNC_SCRIPT" >> "$LOG" 2>&1 &
+  elif git -C "$HOME/.claude" diff --name-only 2>/dev/null | grep -qE '^(skills/|rules-library/|rules/)'; then
+    nohup python3 "$SYNC_SCRIPT" >> "$LOG" 2>&1 &
+  fi
+fi
+
 exit 0

@@ -110,8 +110,9 @@ def match_entries(prompt: str, entries: list[dict[str, Any]]) -> list[tuple[int,
     return ranked
 
 
-def select_contents(ranked: list[tuple[int, dict[str, Any]]]) -> list[str]:
+def select_contents(ranked: list[tuple[int, dict[str, Any]]]) -> tuple[list[str], list[str]]:
     selected: list[str] = []
+    selected_paths: list[str] = []
     total_size = 0
     for _, entry in ranked:
         if len(selected) >= MAX_RULES:
@@ -128,8 +129,9 @@ def select_contents(ranked: list[tuple[int, dict[str, Any]]]) -> list[str]:
         if total_size + content_size > MAX_TOTAL_SIZE:
             continue
         selected.append(content)
+        selected_paths.append(rel_path)
         total_size += content_size
-    return selected
+    return selected, selected_paths
 
 
 def main() -> int:
@@ -150,12 +152,13 @@ def main() -> int:
             return 0
 
         ranked = match_entries(prompt, load_index())
-        selected = select_contents(ranked)
+        selected, selected_paths = select_contents(ranked)
         if not selected:
             return 0
 
         header = f"## On-Demand Rules Injected ({len(selected)} rules matched)"
         meta["rules_injected"] = len(selected)
+        meta["injected_rules"] = selected_paths
         response = {"additionalContext": header + "\n\n" + "\n\n---\n\n".join(selected)}
         return 0
     except Exception:
