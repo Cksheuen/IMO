@@ -6,7 +6,7 @@ description: >
   在 Phase 4 精修阶段注入独特的色彩、形状和纹理。
   不适用于效率优先的场景（监控仪表盘、管理后台等）。
 type: dlc
-parent_skill: design
+parent_skill: pencil-design
 ---
 
 # Generative Art DLC

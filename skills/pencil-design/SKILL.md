@@ -1,7 +1,7 @@
 ---
-name: design
+name: pencil-design
 description: >
-  AI 驱动的 UI 设计技能，引导用户从模糊想法到精美的 .pen 文件设计。
+  Pencil MCP 特化的 AI 驱动 UI 设计技能，引导用户从模糊想法到精美的 .pen 文件设计。
   使用 Pencil MCP 工具，覆盖完整工作流：需求收敛（结构化提问明确用户真实需求）、
   设计系统对齐（风格指南、token）、自动化生成（batch_design）、视觉验证（截图）、
   迭代精修。当用户想要设计 UI、创建界面、构建页面、做原型、布局时使用此技能——
