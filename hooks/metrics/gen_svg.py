@@ -13,6 +13,7 @@ CLAUDE_HOME = Path(os.environ.get("CLAUDE_HOME", str(Path.home() / ".claude")))
 METRICS_ROOT = CLAUDE_HOME / "metrics"
 WEEKLY_DIR = METRICS_ROOT / "weekly"
 DASHBOARD_DIR = METRICS_ROOT / "dashboard"
+I18N_DIR = METRICS_ROOT / "i18n"
 
 # ── Layout constants ──
 W = 860
@@ -37,10 +38,28 @@ COLORS = {
     "bar_bg": "#1D1D1D",
 }
 
+EN_FALLBACK = {
+    "svg.title": "METRICS WEEKLY",
+    "svg.data_days": "data: {0}/7 days",
+    "svg.card.sessions": "SESSIONS",
+    "svg.card.events": "EVENTS",
+    "svg.card.success_rate": "SUCCESS RATE",
+    "svg.card.avg_duration": "AVG DURATION",
+    "svg.section.daily_trend": "DAILY TREND",
+    "svg.section.top_hooks": "TOP HOOKS",
+    "svg.legend.sessions": "sessions",
+    "svg.legend.events": "events/{0}",
+    "svg.issue.failures": "{0} failures",
+    "svg.issue.blocked": "{0}% blocked",
+    "svg.label.total": "{0} total",
+}
+I18N = EN_FALLBACK.copy()
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--date", dest="target_date", help="Target date YYYY-MM-DD")
+    parser.add_argument("--lang", choices=["zh", "en"], default="zh", help="Language for SVG labels")
     return parser.parse_args()
 
 
@@ -55,6 +74,20 @@ def resolve_date(raw: str | None) -> str:
 
 def load(target_date: str) -> dict[str, Any]:
     return json.loads((WEEKLY_DIR / f"{target_date}.json").read_text("utf-8"))
+
+
+def load_i18n(lang: str) -> dict[str, str]:
+    path = I18N_DIR / f"{lang}.json"
+    try:
+        data = json.loads(path.read_text("utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return EN_FALLBACK.copy()
+    return {**EN_FALLBACK, **data}
+
+
+def t(key: str, *args: Any) -> str:
+    template = I18N.get(key, EN_FALLBACK.get(key, key))
+    return template.format(*args)
 
 
 def esc(s: str) -> str:
@@ -131,16 +164,16 @@ def render_svg(data: dict[str, Any]) -> str:
 
     # ── Header ──
     parts.append(f"""\
-<text x="24" y="34" class="t t-title anim" style="animation-delay:0.05s">METRICS WEEKLY</text>
+<text x="24" y="34" class="t t-title anim" style="animation-delay:0.05s">{esc(t("svg.title"))}</text>
 <text x="{W - 24}" y="26" class="t t-sub" text-anchor="end">{esc(period.get("start", ""))}&#160;~&#160;{esc(period.get("end", ""))}</text>
-<text x="{W - 24}" y="44" class="t t-sub" text-anchor="end">data: {data_days}/7 days</text>""")
+<text x="{W - 24}" y="44" class="t t-sub" text-anchor="end">{esc(t("svg.data_days", data_days))}</text>""")
 
     # ── Summary cards ──
     card_items = [
-        ("SESSIONS", str(summary.get("sessions", 0)), COLORS["text"]),
-        ("EVENTS", str(summary.get("total_events", 0)), COLORS["text"]),
-        ("SUCCESS RATE", fmt_pct(rate), rate_color),
-        ("AVG DURATION", f"{avg_ms} ms" if avg_ms is not None else "n/a", COLORS["text"]),
+        (t("svg.card.sessions"), str(summary.get("sessions", 0)), COLORS["text"]),
+        (t("svg.card.events"), str(summary.get("total_events", 0)), COLORS["text"]),
+        (t("svg.card.success_rate"), fmt_pct(rate), rate_color),
+        (t("svg.card.avg_duration"), f"{avg_ms} ms" if avg_ms is not None else "n/a", COLORS["text"]),
     ]
     card_w = (W - 24 * 2 - CARD_GAP * 3) / 4
     for i, (label, value, color) in enumerate(card_items):
@@ -158,7 +191,7 @@ def render_svg(data: dict[str, Any]) -> str:
             parts.append(f'<rect fill="{color}" rx="4" ry="4" x="{cx + 14}" y="{bar_y}" width="{fill_w}" height="6" style="animation: growRight 1s ease both;"/>')
 
     # ── Daily trend ──
-    parts.append(f'<text x="24" y="{trend_y + 14}" class="t t-section">DAILY TREND</text>')
+    parts.append(f'<text x="24" y="{trend_y + 14}" class="t t-section">{esc(t("svg.section.daily_trend"))}</text>')
     if daily_trend:
         max_sessions = max((d.get("sessions", 0) for d in daily_trend), default=1) or 1
         max_events = max((d.get("total_events", 0) for d in daily_trend), default=1) or 1
@@ -196,13 +229,13 @@ def render_svg(data: dict[str, Any]) -> str:
         legend_x = W - 24
         ly = trend_y + 14
         parts.append(f'<rect fill="{COLORS["blue"]}" rx="2" ry="2" x="{legend_x - 180}" y="{ly - 8}" width="10" height="10"/>')
-        parts.append(f'<text x="{legend_x - 166}" y="{ly}" class="t t-sub">sessions</text>')
+        parts.append(f'<text x="{legend_x - 166}" y="{ly}" class="t t-sub">{esc(t("svg.legend.sessions"))}</text>')
         parts.append(f'<rect fill="{COLORS["gold"]}" rx="2" ry="2" x="{legend_x - 100}" y="{ly - 8}" width="10" height="10"/>')
-        parts.append(f'<text x="{legend_x - 86}" y="{ly}" class="t t-sub">events/{event_scale}</text>')
+        parts.append(f'<text x="{legend_x - 86}" y="{ly}" class="t t-sub">{esc(t("svg.legend.events", event_scale))}</text>')
 
     # ── Hook usage bars ──
-    parts.append(f'<text x="24" y="{hooks_y + 14}" class="t t-section">TOP HOOKS</text>')
-    parts.append(f'<text x="{W - 24}" y="{hooks_y + 14}" class="t t-sub" text-anchor="end">{len(by_hook)} total</text>')
+    parts.append(f'<text x="24" y="{hooks_y + 14}" class="t t-section">{esc(t("svg.section.top_hooks"))}</text>')
+    parts.append(f'<text x="{W - 24}" y="{hooks_y + 14}" class="t t-sub" text-anchor="end">{esc(t("svg.label.total", len(by_hook)))}</text>')
 
     for idx, (hook_id, stats) in enumerate(top_hooks):
         ry = hooks_y + hooks_header_h + idx * ROW_H
@@ -238,10 +271,10 @@ def render_svg(data: dict[str, Any]) -> str:
         iy = total_h - 14
         issues_parts = []
         for h, s in error_hooks:
-            issues_parts.append(f"{h}: {s['error_count']} failures")
+            issues_parts.append(f"{h}: {t('svg.issue.failures', s['error_count'])}")
         for h, s in high_block:
             br = s["blocked_count"] / max(1, s["run_count"])
-            issues_parts.append(f"{h}: {br * 100:.0f}% blocked")
+            issues_parts.append(f"{h}: {t('svg.issue.blocked', f'{br * 100:.0f}')}")
         issues_text = " | ".join(issues_parts[:3])
         parts.append(f'<text x="{W / 2}" y="{iy}" class="t t-sub" text-anchor="middle" fill="{COLORS["yellow"]}">{esc(issues_text)}</text>')
 
@@ -251,6 +284,8 @@ def render_svg(data: dict[str, Any]) -> str:
 
 def main() -> int:
     args = parse_args()
+    global I18N
+    I18N = load_i18n(args.lang)
     target_date = resolve_date(args.target_date)
     data = load(target_date)
     svg = render_svg(data)

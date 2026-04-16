@@ -1,0 +1,263 @@
+{
+  "period": {
+    "start": "2026-04-10",
+    "end": "2026-04-16"
+  },
+  "data_days": 2,
+  "summary": {
+    "sessions": 16,
+    "total_events": 597,
+    "hook_runs": 383,
+    "gate_decisions": 201,
+    "session_boundaries": 13,
+    "overall_success_rate": 0.99,
+    "overall_avg_duration_ms": 2
+  },
+  "by_hook": {
+    "context-monitor": {
+      "run_count": 63,
+      "success_count": 63,
+      "avg_duration_ms": 0,
+      "active_days": 2,
+      "avg_daily_runs": 31.5,
+      "description_zh": "在会话停止时，监控上下文使用情况和健康状态",
+      "description_en": "Monitors context usage and health status when a session stops"
+    },
+    "pre-agent-gate": {
+      "run_count": 28,
+      "allowed_count": 15,
+      "blocked_count": 13,
+      "avg_duration_ms": 0,
+      "block_reasons": [
+        {
+          "reason": "涉及写文件的子代理必须使用 worktree 隔离",
+          "count": 13
+        }
+      ],
+      "active_days": 2,
+      "avg_daily_runs": 14.0,
+      "description_zh": "在启动子代理前，检查是否需要 worktree 隔离等安全约束",
+      "description_en": "Checks safety constraints such as worktree isolation before launching a sub-agent"
+    },
+    "pre-edit-gate": {
+      "run_count": 67,
+      "allowed_count": 67,
+      "avg_duration_ms": 0,
+      "active_days": 2,
+      "avg_daily_runs": 33.5,
+      "description_zh": "在编辑现有文件前，检查路径和内容安全性",
+      "description_en": "Checks path and content safety before editing existing files"
+    },
+    "pre-write-gate": {
+      "run_count": 19,
+      "allowed_count": 19,
+      "avg_duration_ms": 0,
+      "active_days": 2,
+      "avg_daily_runs": 9.5,
+      "description_zh": "在写入新文件前，检查路径和内容安全性",
+      "description_en": "Checks path and content safety before writing new files"
+    },
+    "project-architecture-inject": {
+      "run_count": 64,
+      "success_count": 64,
+      "avg_duration_ms": 5,
+      "active_days": 2,
+      "avg_daily_runs": 32.0,
+      "description_zh": "在用户提交 prompt 时，注入当前项目的架构上下文信息",
+      "description_en": "Injects the current project's architecture context when a user submits a prompt"
+    },
+    "recall-capture": {
+      "run_count": 62,
+      "success_count": 62,
+      "avg_duration_ms": 13,
+      "active_days": 2,
+      "avg_daily_runs": 31.0,
+      "description_zh": "在会话停止时，捕获并存储重要上下文到记忆系统",
+      "description_en": "Captures and stores important context into the memory system when a session stops"
+    },
+    "recall-entrypoint": {
+      "run_count": 64,
+      "success_count": 64,
+      "avg_duration_ms": 1,
+      "active_days": 2,
+      "avg_daily_runs": 32.0,
+      "description_zh": "在用户提交 prompt 时，从记忆系统检索相关历史上下文",
+      "description_en": "Retrieves relevant historical context from the memory system when a user submits a prompt"
+    },
+    "rules-inject": {
+      "run_count": 64,
+      "success_count": 64,
+      "avg_duration_ms": 3,
+      "active_days": 2,
+      "avg_daily_runs": 32.0,
+      "description_zh": "在用户提交 prompt 时，根据关键词匹配注入按需加载的规则文件",
+      "description_en": "Injects on-demand rule files matched by keywords when a user submits a prompt"
+    },
+    "scale-gate": {
+      "run_count": 87,
+      "allowed_count": 1,
+      "blocked_count": 86,
+      "avg_duration_ms": 0,
+      "block_reasons": [
+        {
+          "reason": "Scale assessment required before editing files",
+          "count": 86
+        }
+      ],
+      "active_days": 2,
+      "avg_daily_runs": 43.5,
+      "description_zh": "在编辑或写入文件前，强制要求先进行规模评估，防止未经规划的大范围改动",
+      "description_en": "Enforces a scale assessment before file edits or writes to prevent unplanned large-scope changes"
+    },
+    "session-end-consolidate": {
+      "run_count": 13,
+      "success_count": 9,
+      "error_count": 4,
+      "avg_duration_ms": 0,
+      "active_days": 2,
+      "avg_daily_runs": 6.5,
+      "description_zh": "在会话结束时，合并整理会话产出的临时数据",
+      "description_en": "Consolidates and organizes temporary session output when a session ends"
+    },
+    "skill-inject": {
+      "run_count": 66,
+      "success_count": 66,
+      "avg_duration_ms": 0,
+      "active_days": 2,
+      "avg_daily_runs": 33.0,
+      "description_zh": "在用户提交 prompt 时匹配关键词，推荐相关的 skill，轻量路由不注入 SKILL.md 正文",
+      "description_en": "Matches keywords in user prompts to recommend relevant skills without injecting full SKILL.md content"
+    }
+  },
+  "by_hook_event": {
+    "PreToolUse": 201,
+    "SessionEnd": 13,
+    "Stop": 125,
+    "UserPromptSubmit": 258
+  },
+  "by_rule": {
+    "rules-library/core/task-notes-boundary.md": {
+      "inject_count": 5,
+      "active_days": 1,
+      "title": "Task / Notes Boundary"
+    },
+    "rules-library/domain/frontend/ui-logic-decoupled-testing.md": {
+      "inject_count": 1,
+      "active_days": 1,
+      "title": "UI / 逻辑解耦后的测试编写规范"
+    },
+    "rules-library/pattern/closed-learning-loop.md": {
+      "inject_count": 4,
+      "active_days": 1,
+      "title": "Closed Learning Loop Pattern"
+    },
+    "rules-library/technique/rate-limit-management/claude-code-rate-limit-management.md": {
+      "inject_count": 2,
+      "active_days": 1,
+      "title": "Claude Code Rate Limit 自动管理"
+    },
+    "rules-library/technique/skills-cli-discovery.md": {
+      "inject_count": 2,
+      "active_days": 1,
+      "title": "Skills CLI 发现与安装规范"
+    },
+    "rules-library/tool/agent-file-operations.md": {
+      "inject_count": 1,
+      "active_days": 1,
+      "title": "Agent 文件操作效率规范"
+    },
+    "rules-library/tool/codex-review-symlink-eisdir.md": {
+      "inject_count": 2,
+      "active_days": 1,
+      "title": "Codex Review EISDIR 规避"
+    },
+    "rules-library/tool/runtime-dependency-resolution.md": {
+      "inject_count": 1,
+      "active_days": 1,
+      "title": "Runtime 依赖自动解决规范"
+    }
+  },
+  "by_skill": {
+    "brainstorm": {
+      "match_count": 1,
+      "active_days": 1,
+      "description_zh": "调研与需求发现技能。在实现前进行深度调研，通过 Research-first、Diverge→Converge 方法确保充分理解问题空间。当用户描述开发任务、需要技术选型、需求不明确、存在多种实现路径时触发此技能。也可通过 /brainstorm 命令调用。",
+      "description_en": "Research and requirement discovery skill. Runs deep pre-implementation research with a Research-first, Diverge-to-Converge approach so the problem space is understood before choosing a solution."
+    },
+    "design": {
+      "match_count": 1,
+      "active_days": 1,
+      "description_zh": "AI 驱动的 UI 设计技能，引导用户从模糊想法到精美的 .pen 文件设计。 使用 Pencil MCP 工具，覆盖完整工作流：需求收敛（结构化提问明确用户真实需求）、 设计系统对齐（风格指南、token）、自动化生成（batch_design）、视觉验证（截图）、 迭代精修。当用户想要设计 UI、创建界面、构建页面、做原型、布局时使用此技能—— 即使用户只是说\"我需要一个仪表盘\"或\"帮我设计登录页\"。也适用于\"帮我做 UI\"、 \"创建 web 应用设计\"、\"让它好看点\"，或任何提及设计页面/屏幕/布局的请求。 如果用户描述了一个应用想法但没有明确要求设计，也考虑此技能是否能帮助他们可视化。",
+      "description_en": "AI-driven UI design skill. Guides users from vague ideas to polished .pen designs through a full Pencil MCP workflow: requirement convergence, design-system alignment, automated generation, visual verification, and iterative refinement."
+    },
+    "orchestrate": {
+      "match_count": 1,
+      "active_days": 1,
+      "description_zh": "多代理编排技能。自动将大型任务拆分为子任务，分配给实现者、研究者、审查者等专用 agent，并结合 worktree 隔离协调并行执行。当任务涉及 3 个以上文件、2 个以上领域，或用户提到“并行”“parallel”“orchestrate”“拆分执行”时触发。",
+      "description_en": ""
+    },
+    "pdf": {
+      "match_count": 1,
+      "active_days": 1,
+      "description_zh": "只要用户需要处理 PDF 文件，就使用此技能。包括读取或提取 PDF 中的文本与表格、合并或拆分 PDF、旋转页面、添加水印、创建新 PDF、填写 PDF 表单、加密或解密 PDF、提取图片，以及对扫描版 PDF 做 OCR 以实现可搜索。只要用户提到 .pdf 文件或要求产出 PDF，即可触发。",
+      "description_en": "Use this skill whenever the user wants to do anything with PDF files. This includes reading or extracting text/tables from PDFs, combining or merging multiple PDFs into one, splitting PDFs apart, rotating pages, adding watermarks, creating new PDFs, filling PDF forms, encrypting/decrypting PDFs, extracting images, and OCR on scanned PDFs to make them searchable. If the user mentions a .pdf file or asks to produce one, use this skill."
+    },
+    "pptx": {
+      "match_count": 1,
+      "active_days": 1,
+      "description_zh": "只要任务涉及 .pptx 文件，无论是输入、输出还是两者兼有，都使用此技能。包括创建幻灯片、路演稿或演示文稿；读取、解析或提取任意 .pptx 文件中的文本；编辑、修改或更新现有演示；合并或拆分幻灯片文件；以及处理模板、版式、演讲备注或评论。只要用户提到“deck”“slides”“presentation”或某个 .pptx 文件名，就应触发。",
+      "description_en": "Use this skill any time a .pptx file is involved in any way — as input, output, or both. This includes: creating slide decks, pitch decks, or presentations; reading, parsing, or extracting text from any .pptx file (even if the extracted content will be used elsewhere, like in an email or summary); editing, modifying, or updating existing presentations; combining or splitting slide files; working with templates, layouts, speaker notes, or comments. Trigger whenever the user mentions \"deck,\" \"slides,\" \"presentation,\" or references a .pptx filename, regardless of what they plan to do with the content afterward. If a .pptx file needs to be opened, created, or touched, use this skill."
+    }
+  },
+  "daily_trend": [
+    {
+      "date": "2026-04-10",
+      "sessions": 0,
+      "total_events": 0,
+      "hook_runs": 0,
+      "gate_decisions": 0
+    },
+    {
+      "date": "2026-04-11",
+      "sessions": 0,
+      "total_events": 0,
+      "hook_runs": 0,
+      "gate_decisions": 0
+    },
+    {
+      "date": "2026-04-12",
+      "sessions": 0,
+      "total_events": 0,
+      "hook_runs": 0,
+      "gate_decisions": 0
+    },
+    {
+      "date": "2026-04-13",
+      "sessions": 0,
+      "total_events": 0,
+      "hook_runs": 0,
+      "gate_decisions": 0
+    },
+    {
+      "date": "2026-04-14",
+      "sessions": 0,
+      "total_events": 0,
+      "hook_runs": 0,
+      "gate_decisions": 0
+    },
+    {
+      "date": "2026-04-15",
+      "sessions": 13,
+      "total_events": 480,
+      "hook_runs": 308,
+      "gate_decisions": 160
+    },
+    {
+      "date": "2026-04-16",
+      "sessions": 3,
+      "total_events": 117,
+      "hook_runs": 75,
+      "gate_decisions": 41
+    }
+  ]
+}

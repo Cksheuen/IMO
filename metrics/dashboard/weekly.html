@@ -4,9 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Metrics Weekly</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0A0A0A;
@@ -31,7 +28,7 @@
       margin: 0;
       background: radial-gradient(circle at top right, rgba(201, 169, 98, 0.12), transparent 28%), var(--bg);
       color: var(--text);
-      font-family: "IBM Plex Mono", monospace;
+      font-family: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
       min-height: 100vh;
     }
 
@@ -59,7 +56,7 @@
     }
 
     .title {
-      font-family: "Space Grotesk", sans-serif;
+      font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
       font-size: clamp(28px, 5vw, 42px);
       font-weight: 700;
       letter-spacing: 0.08em;
@@ -80,7 +77,7 @@
     }
 
     .week-selector {
-      font-family: "IBM Plex Mono", monospace;
+      font-family: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
       font-size: 13px;
       background: var(--panel-2);
       color: var(--text);
@@ -129,7 +126,7 @@
     }
 
     .card-value {
-      font-family: "Space Grotesk", sans-serif;
+      font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
       font-size: clamp(26px, 4vw, 40px);
       font-weight: 700;
       line-height: 1;
@@ -164,7 +161,7 @@
 
     .section-title {
       margin: 0;
-      font-family: "Space Grotesk", sans-serif;
+      font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
       font-size: 20px;
       letter-spacing: 0.04em;
     }
@@ -219,13 +216,6 @@
       white-space: nowrap;
     }
 
-    .columns {
-      display: grid;
-      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-      gap: 16px;
-    }
-
-    .table,
     .event-list,
     .issues-list {
       display: flex;
@@ -233,49 +223,10 @@
       gap: 10px;
     }
 
-    .table-header,
-    .hook-row {
-      display: grid;
-      grid-template-columns: minmax(150px, 1.3fr) minmax(160px, 1.2fr) 72px 90px 86px;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .table-header {
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .hook-row {
-      min-height: 48px;
-      padding: 6px 0;
-      border-bottom: 1px solid rgba(51, 51, 51, 0.45);
-    }
-
-    .hook-name {
-      min-width: 0;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-    }
-
     .mono {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-    }
-
-    .tag {
-      border: 1px solid currentColor;
-      border-radius: 999px;
-      padding: 2px 8px;
-      font-size: 10px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
     }
 
     .value-block {
@@ -295,6 +246,275 @@
     .cell-right {
       text-align: right;
       font-size: 12px;
+    }
+
+    .tab-group {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 4px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+    }
+
+    .tab-btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 7px 12px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+    }
+
+    .tab-btn.active {
+      background: rgba(201, 169, 98, 0.18);
+      color: var(--text);
+    }
+
+    .hook-card {
+      background: var(--panel-2);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .hook-card-header {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      padding: 16px 18px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(180px, 1fr) auto auto 26px;
+      align-items: center;
+      gap: 14px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .hook-title-block {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .hook-title {
+      min-width: 0;
+      font-size: 14px;
+    }
+
+    .category-tag {
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .hook-stat-block {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hook-bar-track {
+      position: relative;
+      height: 10px;
+      flex: 1;
+      min-width: 90px;
+      background: #1D1D1D;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .hook-bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, rgba(201, 169, 98, 0.85), rgba(59, 130, 246, 0.92));
+    }
+
+    .hook-count-value {
+      min-width: 48px;
+      text-align: right;
+      font-size: 12px;
+    }
+
+    .hook-kpis {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .hook-kpi {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .hook-kpi-strong {
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .expand-arrow {
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1;
+      transition: transform 0.24s ease, color 0.24s ease;
+    }
+
+    .hook-card.is-open .expand-arrow {
+      color: var(--text);
+      transform: rotate(180deg);
+    }
+
+    .hook-card-detail {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.28s ease, opacity 0.28s ease, padding 0.28s ease;
+      padding: 0 18px;
+    }
+
+    .hook-card.is-open .hook-card-detail {
+      max-height: 560px;
+      opacity: 1;
+      padding: 0 18px 18px;
+    }
+
+    .detail-content {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.9fr);
+      gap: 18px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .detail-metric {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 12px;
+      min-height: 74px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .detail-label {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .detail-value {
+      font-size: 18px;
+      line-height: 1.1;
+    }
+
+    .detail-viz {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .viz-title {
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .stacked-bar {
+      height: 14px;
+      width: 100%;
+      display: flex;
+      overflow: hidden;
+      background: #1D1D1D;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+    }
+
+    .stacked-bar-segment {
+      height: 100%;
+      min-width: 0;
+    }
+
+    .stacked-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .legend-row,
+    .reason-row {
+      display: grid;
+      grid-template-columns: 12px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .legend-dot,
+    .reason-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .reason-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .reason-label {
+      min-width: 0;
+      color: var(--muted);
+    }
+
+    .analytics-empty {
+      padding: 16px 0 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .hook-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     .event-row {
@@ -332,19 +552,14 @@
 
     .empty-state {
       color: var(--green);
-      font-family: "Space Grotesk", sans-serif;
+      font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
       font-size: 22px;
       padding: 12px 0 4px;
     }
 
     @media (max-width: 1100px) {
-      .summary-grid,
-      .columns {
+      .summary-grid {
         grid-template-columns: 1fr 1fr;
-      }
-
-      .columns > .section {
-        margin-bottom: 0;
       }
     }
 
@@ -363,8 +578,7 @@
         text-align: left;
       }
 
-      .summary-grid,
-      .columns {
+      .summary-grid {
         grid-template-columns: 1fr;
       }
 
@@ -372,24 +586,80 @@
         gap: 8px;
       }
 
-      .table-header {
-        display: none;
+      .tab-group {
+        width: 100%;
       }
 
-      .hook-row {
-        grid-template-columns: 1fr;
-        gap: 6px;
-        padding: 12px 0;
+      .hook-controls {
+        width: 100%;
+        justify-content: flex-start;
       }
 
-      .hook-row > div {
-        text-align: left;
-      }
-
+      .hook-card-header,
+      .detail-content,
+      .detail-grid,
       .event-row,
       .issue-row {
         grid-template-columns: 1fr;
       }
+
+      .hook-card-header {
+        gap: 12px;
+      }
+
+      .hook-kpis {
+        justify-content: flex-start;
+      }
+
+      .hook-count-value,
+      .bar-value,
+      .cell-right {
+        text-align: left;
+      }
+
+      .hook-card.is-open .hook-card-detail {
+        max-height: 980px;
+      }
+    }
+
+    .lang-toggle {
+      display: inline-flex;
+      gap: 4px;
+      padding: 2px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .lang-btn {
+      border: 0;
+      border-radius: 6px;
+      padding: 4px 10px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .lang-btn.active {
+      background: rgba(201, 169, 98, 0.18);
+      color: var(--text);
+    }
+
+    .hook-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+      width: 100%;
+    }
+
+    .skill-desc, .rule-title {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.3;
+      margin-top: 2px;
     }
   </style>
 </head>
@@ -397,11 +667,15 @@
   <main class="page">
     <section class="section header">
       <div>
-        <p class="subtitle">Operational telemetry</p>
-        <h1 class="title">METRICS WEEKLY</h1>
+        <p id="page-subtitle" class="subtitle">Operational telemetry</p>
+        <h1 id="page-title" class="title">METRICS WEEKLY</h1>
       </div>
       <div style="display:flex; align-items:flex-end; gap:16px;">
         <select id="week-selector" class="week-selector" style="display:none;"></select>
+        <div class="lang-toggle">
+          <button class="lang-btn" data-lang="zh">中文</button>
+          <button class="lang-btn active" data-lang="en">EN</button>
+        </div>
         <div id="header-meta" class="meta"></div>
       </div>
     </section>
@@ -412,43 +686,61 @@
 
     <section class="section">
       <div class="section-head">
-        <h2 class="section-title">Daily Trend</h2>
+        <h2 id="section-daily-trend" class="section-title">Daily Trend</h2>
         <div id="trend-meta" class="small"></div>
       </div>
       <div id="trend-chart" class="trend-chart"></div>
     </section>
 
-    <section class="columns">
-      <section class="section">
-        <div class="section-head">
-          <h2 class="section-title">Hook Usage Table</h2>
-          <div id="hook-count" class="small"></div>
-        </div>
-        <div class="table">
-          <div class="table-header">
-            <div>Hook</div>
-            <div>Run Count</div>
-            <div class="cell-right">Days</div>
-            <div class="cell-right">Daily Avg</div>
-            <div class="cell-right">Avg ms</div>
+    <section class="section">
+      <div class="section-head">
+        <h2 id="section-hook-analytics" class="section-title">Hook Analytics</h2>
+        <div class="hook-controls" style="display:flex; gap:12px; align-items:center;">
+          <div class="tab-group" id="hook-tabs">
+            <button class="tab-btn active" data-tab="all">All</button>
+            <button class="tab-btn" data-tab="gate">Gate</button>
+            <button class="tab-btn" data-tab="inject">Inject</button>
+            <button class="tab-btn" data-tab="monitor">Monitor</button>
+            <button class="tab-btn" data-tab="other">Other</button>
           </div>
-          <div id="hook-table"></div>
+          <select id="hook-sort" class="week-selector">
+            <option value="run_count">by Run Count</option>
+            <option value="error_rate">by Error Rate</option>
+            <option value="avg_duration">by Avg Duration</option>
+          </select>
         </div>
-      </section>
+      </div>
+      <div id="hook-analytics"></div>
+    </section>
 
-      <section class="section">
-        <div class="section-head">
-          <h2 class="section-title">Event Distribution</h2>
-          <div id="event-total" class="small"></div>
-        </div>
-        <div id="event-distribution" class="event-list"></div>
-      </section>
+    <section class='section'>
+      <div class='section-head'>
+        <h2 id='section-rules-usage' class='section-title'>Rules Usage</h2>
+        <div id='rules-count' class='small'></div>
+      </div>
+      <div id='rules-usage'></div>
+    </section>
+
+    <section class='section'>
+      <div class='section-head'>
+        <h2 id='section-skills-usage' class='section-title'>Skills Usage</h2>
+        <div id='skills-count' class='small'></div>
+      </div>
+      <div id='skills-usage'></div>
     </section>
 
     <section class="section">
       <div class="section-head">
-        <h2 class="section-title">Issues Panel</h2>
-        <div class="small">Failures, gate pressure, low activity</div>
+        <h2 id="section-event-distribution" class="section-title">Event Distribution</h2>
+        <div id="event-total" class="small"></div>
+      </div>
+      <div id="event-distribution" class="event-list"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 id="section-issues-panel" class="section-title">Issues Panel</h2>
+        <div id="issues-subtitle" class="small">Failures, gate pressure, low activity</div>
       </div>
       <div id="issues-panel"></div>
     </section>
@@ -456,6 +748,7 @@
 
   <script>
     const DATA = /*__DATA__*/{"period":{"start":"0000-00-00","end":"0000-00-00"},"data_days":0,"summary":{"sessions":0,"total_events":0,"hook_runs":0,"gate_decisions":0,"session_boundaries":0,"overall_success_rate":null,"overall_avg_duration_ms":null},"by_hook":{},"by_hook_event":{},"daily_trend":[]}/*__DATA__*/;
+    const I18N = /*__I18N__*/{"zh":{"dashboard.page_title":"Metrics Weekly","dashboard.hero_title":"METRICS WEEKLY","dashboard.hero_subtitle":"运营遥测","dashboard.section.daily_trend":"每日趋势","dashboard.section.hook_analytics":"Hook 分析","dashboard.section.rules_usage":"规则使用","dashboard.section.skills_usage":"技能使用","dashboard.section.event_distribution":"事件分布","dashboard.section.issues_panel":"问题面板","dashboard.section.issues_subtitle":"失败、门控压力、低活跃","dashboard.tab.all":"全部","dashboard.tab.gate":"门控","dashboard.tab.inject":"注入","dashboard.tab.monitor":"监控","dashboard.tab.other":"其他","dashboard.sort.run_count":"按运行次数","dashboard.sort.error_rate":"按错误率","dashboard.sort.avg_duration":"按平均耗时","dashboard.card.sessions":"总会话数","dashboard.card.sessions_detail":"本周总量","dashboard.card.events":"总事件量","dashboard.card.events_detail":"所有追踪事件汇总","dashboard.card.success_rate":"Hook 成功率","dashboard.card.avg_duration":"平均耗时","dashboard.card.avg_duration_detail":"平均 Hook 耗时","dashboard.valid_data":"有效数据: {0} / 7 天","dashboard.metric.run_count":"运行次数","dashboard.metric.success_count":"成功次数","dashboard.metric.error_count":"错误次数","dashboard.metric.blocked_count":"阻断次数","dashboard.metric.allowed_count":"放行次数","dashboard.metric.avg_duration_ms":"平均耗时","dashboard.metric.active_days":"活跃天数","dashboard.metric.avg_daily_runs":"日均运行","dashboard.viz.gate_decision_mix":"门控决策分布","dashboard.viz.outcome_mix":"结果分布","dashboard.viz.block_reasons":"阻断原因","dashboard.viz.allowed":"放行","dashboard.viz.blocked":"阻断","dashboard.viz.success":"成功","dashboard.viz.error":"错误","dashboard.status.blocked":"阻断 {0}%","dashboard.status.error":"错误 {0}","dashboard.status.success":"成功 {0}%","dashboard.empty.no_hooks":"当前筛选下没有可展示的 Hook。","dashboard.empty.no_block_reasons":"暂无阻断原因记录","dashboard.issue.failures":"失败 {0} 次 · 失败率 {1}","dashboard.issue.high_block_rate":"阻断率 {0} · 主要原因：{1}","dashboard.issue.low_activity":"低活跃，仅 {0} 天活跃","dashboard.empty.no_issues":"无异常","dashboard.empty.no_data":"暂无数据，追踪将从下一次会话开始","dashboard.label.rules_tracked":"已追踪 {0} 条规则","dashboard.label.skills_tracked":"已追踪 {0} 个技能","dashboard.load_failed":"加载失败: {0}","dashboard.label.days":"天数","dashboard.label.per_day":"/ 天","dashboard.label.na":"无","dashboard.label.unknown":"未知","dashboard.label.days_short":"天","dashboard.label.events_total":"{0} 个事件","dashboard.trend.scale":"蓝色 = 会话，金色 = 事件 / {0}","dashboard.tooltip.sessions":"会话: {0}","dashboard.tooltip.total_events":"总事件: {0}"},"en":{"dashboard.page_title":"Metrics Weekly","dashboard.hero_title":"METRICS WEEKLY","dashboard.hero_subtitle":"Operational telemetry","dashboard.section.daily_trend":"Daily Trend","dashboard.section.hook_analytics":"Hook Analytics","dashboard.section.rules_usage":"Rules Usage","dashboard.section.skills_usage":"Skills Usage","dashboard.section.event_distribution":"Event Distribution","dashboard.section.issues_panel":"Issues Panel","dashboard.section.issues_subtitle":"Failures, gate pressure, low activity","dashboard.tab.all":"All","dashboard.tab.gate":"Gate","dashboard.tab.inject":"Inject","dashboard.tab.monitor":"Monitor","dashboard.tab.other":"Other","dashboard.sort.run_count":"by Run Count","dashboard.sort.error_rate":"by Error Rate","dashboard.sort.avg_duration":"by Avg Duration","dashboard.card.sessions":"Total Sessions","dashboard.card.sessions_detail":"Weekly total","dashboard.card.events":"Total Events","dashboard.card.events_detail":"Across all tracked events","dashboard.card.success_rate":"Hook Success Rate","dashboard.card.avg_duration":"Avg Duration","dashboard.card.avg_duration_detail":"Average hook duration","dashboard.valid_data":"Valid data: {0} / 7 days","dashboard.metric.run_count":"Run Count","dashboard.metric.success_count":"Success Count","dashboard.metric.error_count":"Error Count","dashboard.metric.blocked_count":"Blocked Count","dashboard.metric.allowed_count":"Allowed Count","dashboard.metric.avg_duration_ms":"Avg Duration","dashboard.metric.active_days":"Active Days","dashboard.metric.avg_daily_runs":"Avg Daily Runs","dashboard.viz.gate_decision_mix":"Gate Decision Mix","dashboard.viz.outcome_mix":"Outcome Mix","dashboard.viz.block_reasons":"Block Reasons","dashboard.viz.allowed":"Allowed","dashboard.viz.blocked":"Blocked","dashboard.viz.success":"Success","dashboard.viz.error":"Error","dashboard.status.blocked":"blocked {0}%","dashboard.status.error":"error {0}","dashboard.status.success":"success {0}%","dashboard.empty.no_hooks":"No hooks available for this filter.","dashboard.empty.no_block_reasons":"No block reasons recorded","dashboard.issue.failures":"failures {0} · rate {1}","dashboard.issue.high_block_rate":"block rate {0} · top reason: {1}","dashboard.issue.low_activity":"low activity, active for only {0} days","dashboard.empty.no_issues":"No issues","dashboard.empty.no_data":"No data — tracking starts next session","dashboard.label.rules_tracked":"{0} rules tracked","dashboard.label.skills_tracked":"{0} skills tracked","dashboard.load_failed":"Load failed: {0}","dashboard.label.days":"days","dashboard.label.per_day":"/ day","dashboard.label.na":"n/a","dashboard.label.unknown":"unknown","dashboard.label.days_short":"d","dashboard.label.events_total":"{0} events","dashboard.trend.scale":"blue = sessions, gold = events / {0}","dashboard.tooltip.sessions":"sessions: {0}","dashboard.tooltip.total_events":"total_events: {0}"}}/*__I18N__*/;
 
     const COLORS = {
       gold: "#C9A962",
@@ -466,17 +759,39 @@
       gray: "#5A5A5A"
     };
 
+    const HOOK_CATEGORY_COLORS = {
+      gate: "#ef4444",
+      inject: "#3b82f6",
+      monitor: "#22c55e",
+      other: "#5A5A5A"
+    };
+
+    const STATE = { tab: "all", sort: "run_count", expanded: new Set() };
+    let currentLang = localStorage.getItem("metrics-lang") || "zh";
+    let currentData = DATA;
+
+    if (!I18N[currentLang]) {
+      currentLang = "zh";
+    }
+
+    function t(key, ...args) {
+      const dict = I18N[currentLang] || I18N["zh"] || {};
+      let text = dict[key] || key;
+      args.forEach((arg, i) => { text = text.replace(`{${i}}`, arg); });
+      return text;
+    }
+
     function n(value, fallback = 0) {
       return typeof value === "number" && Number.isFinite(value) ? value : fallback;
     }
 
     function formatNumber(value) {
-      return new Intl.NumberFormat("en-US").format(n(value));
+      return new Intl.NumberFormat(currentLang === "zh" ? "zh-CN" : "en-US").format(n(value));
     }
 
     function formatPercent(value) {
       if (typeof value !== "number" || !Number.isFinite(value)) {
-        return "n/a";
+        return t("dashboard.label.na");
       }
       return `${(value * 100).toFixed(1)}%`;
     }
@@ -512,8 +827,92 @@
       return card;
     }
 
+    function classifyHook(name) {
+      const normalized = String(name || "").toLowerCase();
+      if (normalized.includes("gate")) return "gate";
+      if (normalized.includes("inject")) return "inject";
+      if (normalized.includes("monitor")) return "monitor";
+      return "other";
+    }
+
+    function formatMetricValue(key, value) {
+      if (value == null) {
+        return null;
+      }
+      if (key === "avg_duration_ms") {
+        return `${formatNumber(value)} ms`;
+      }
+      if (key === "avg_daily_runs") {
+        return n(value).toFixed(1);
+      }
+      return formatNumber(value);
+    }
+
+    function metricCard(label, value) {
+      return `
+        <div class="detail-metric">
+          <div class="detail-label">${label}</div>
+          <div class="detail-value">${value}</div>
+        </div>
+      `;
+    }
+
+    function renderLegendRow(color, label, value) {
+      return `
+        <div class="legend-row">
+          <div class="legend-dot" style="background:${color};"></div>
+          <div>${label}</div>
+          <div>${value}</div>
+        </div>
+      `;
+    }
+
+    function renderReasonRows(reasons) {
+      if (!Array.isArray(reasons) || !reasons.length) {
+        return `<div class="reason-row"><div class="reason-dot" style="background:${COLORS.gray};"></div><div class="reason-label">${t("dashboard.empty.no_block_reasons")}</div><div>--</div></div>`;
+      }
+
+      return reasons.map((item) => `
+        <div class="reason-row">
+          <div class="reason-dot" style="background:${COLORS.red};"></div>
+          <div class="reason-label mono">${item.reason || t("dashboard.label.unknown")}</div>
+          <div>${formatNumber(item.count)}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderStackedBar(segments) {
+      const total = segments.reduce((sum, segment) => sum + n(segment.value), 0);
+      return `
+        <div class="stacked-bar">
+          ${segments.map((segment) => {
+            const width = total > 0 ? Math.max(0, (n(segment.value) / total) * 100) : 0;
+            return `<div class="stacked-bar-segment" style="width:${width}%; background:${segment.color};"></div>`;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function sortHooks(entries, sortKey) {
+      const sorted = [...entries];
+      sorted.sort((a, b) => {
+        const aStats = a[1] || {};
+        const bStats = b[1] || {};
+        if (sortKey === "error_rate") {
+          const aRate = n(aStats.run_count) > 0 ? n(aStats.error_count) / n(aStats.run_count) : 0;
+          const bRate = n(bStats.run_count) > 0 ? n(bStats.error_count) / n(bStats.run_count) : 0;
+          return bRate - aRate || n(bStats.run_count) - n(aStats.run_count);
+        }
+        if (sortKey === "avg_duration") {
+          return n(bStats.avg_duration_ms) - n(aStats.avg_duration_ms) || n(bStats.run_count) - n(aStats.run_count);
+        }
+        return n(bStats.run_count) - n(aStats.run_count);
+      });
+      return sorted;
+    }
+
     // IDs of all dynamic containers that need clearing on re-render
-    const DYNAMIC_IDS = ["header-meta", "summary-cards", "trend-chart", "trend-meta", "hook-table", "hook-count", "event-distribution", "event-total", "issues-panel"];
+    const DYNAMIC_IDS = ["header-meta", "summary-cards", "trend-chart", "trend-meta", "hook-analytics", "rules-usage", "rules-count", "skills-usage", "skills-count", "event-distribution", "event-total", "issues-panel"];
 
     function clearAll() {
       DYNAMIC_IDS.forEach(id => {
@@ -522,12 +921,52 @@
       });
     }
 
+    function renderStaticText() {
+      document.documentElement.lang = currentLang === "zh" ? "zh-CN" : "en";
+      document.title = t("dashboard.page_title");
+
+      const textMap = {
+        "page-subtitle": t("dashboard.hero_subtitle"),
+        "page-title": t("dashboard.hero_title"),
+        "section-daily-trend": t("dashboard.section.daily_trend"),
+        "section-hook-analytics": t("dashboard.section.hook_analytics"),
+        "section-rules-usage": t("dashboard.section.rules_usage"),
+        "section-skills-usage": t("dashboard.section.skills_usage"),
+        "section-event-distribution": t("dashboard.section.event_distribution"),
+        "section-issues-panel": t("dashboard.section.issues_panel"),
+        "issues-subtitle": t("dashboard.section.issues_subtitle")
+      };
+
+      Object.entries(textMap).forEach(([id, text]) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.textContent = text;
+        }
+      });
+
+      document.querySelectorAll(".lang-btn").forEach((button) => {
+        button.classList.toggle("active", button.dataset.lang === currentLang);
+      });
+
+      document.querySelectorAll("#hook-tabs .tab-btn").forEach((button) => {
+        const key = button.dataset.tab;
+        button.textContent = t(`dashboard.tab.${key}`);
+      });
+
+      const sortSelect = document.getElementById("hook-sort");
+      if (sortSelect) {
+        Array.from(sortSelect.options).forEach((option) => {
+          option.textContent = t(`dashboard.sort.${option.value}`);
+        });
+      }
+    }
+
     function renderHeader(data) {
       const period = data.period || {};
       const meta = document.getElementById("header-meta");
       meta.innerHTML = `
         <div>${period.start || "--"} ~ ${period.end || "--"}</div>
-        <div>有效数据: ${formatNumber(data.data_days)} / 7 天</div>
+        <div>${t("dashboard.valid_data", formatNumber(data.data_days))}</div>
       `;
     }
 
@@ -538,20 +977,20 @@
       const rateColor = successColor(rate);
       const rateWidth = typeof rate === "number" ? Math.max(0, Math.min(100, rate * 100)) : 0;
 
-      cards.appendChild(createCard("总会话数", formatNumber(summary.sessions), `<div class="small">Weekly total</div>`));
-      cards.appendChild(createCard("总事件量", formatNumber(summary.total_events), `<div class="small">Across all tracked events</div>`));
+      cards.appendChild(createCard(t("dashboard.card.sessions"), formatNumber(summary.sessions), `<div class="small">${t("dashboard.card.sessions_detail")}</div>`));
+      cards.appendChild(createCard(t("dashboard.card.events"), formatNumber(summary.total_events), `<div class="small">${t("dashboard.card.events_detail")}</div>`));
       cards.appendChild(
         createCard(
-          "Hook 成功率",
+          t("dashboard.card.success_rate"),
           formatPercent(rate),
           `<div class="progress-track"><div class="progress-fill" style="width:${rateWidth}%; background:${rateColor};"></div></div>`
         )
       );
       cards.appendChild(
         createCard(
-          "平均耗时",
-          summary.overall_avg_duration_ms == null ? "n/a" : `${formatNumber(summary.overall_avg_duration_ms)} ms`,
-          `<div class="small">Average hook duration</div>`
+          t("dashboard.card.avg_duration"),
+          summary.overall_avg_duration_ms == null ? t("dashboard.label.na") : `${formatNumber(summary.overall_avg_duration_ms)} ms`,
+          `<div class="small">${t("dashboard.card.avg_duration_detail")}</div>`
         )
       );
     }
@@ -564,7 +1003,7 @@
       const eventScale = maxEvents > 0 ? Math.max(1, Math.ceil(maxEvents / Math.max(1, maxSessions || 8))) : 1;
       const normalizedMax = Math.max(1, ...trend.map((item) => Math.max(n(item.sessions), n(item.total_events) / eventScale)));
 
-      document.getElementById("trend-meta").textContent = `blue = sessions, gold = events / ${eventScale}`;
+      document.getElementById("trend-meta").textContent = t("dashboard.trend.scale", eventScale);
 
       trend.forEach((item) => {
         const day = document.createElement("div");
@@ -586,8 +1025,8 @@
           const eventHeight = `${Math.max(6, ((totalEvents / eventScale) / normalizedMax) * 100)}%`;
           day.innerHTML = `
             <div class="trend-bars">
-              <div class="trend-bar" style="height:${sessionHeight}; background:${COLORS.blue};" title="sessions: ${sessions}"></div>
-              <div class="trend-bar" style="height:${eventHeight}; background:${COLORS.gold};" title="total_events: ${totalEvents}"></div>
+              <div class="trend-bar" style="height:${sessionHeight}; background:${COLORS.blue};" title="${t("dashboard.tooltip.sessions", sessions)}"></div>
+              <div class="trend-bar" style="height:${eventHeight}; background:${COLORS.gold};" title="${t("dashboard.tooltip.total_events", totalEvents)}"></div>
             </div>
             <div class="trend-date">${formatDate(item.date)}</div>
           `;
@@ -597,41 +1036,199 @@
       });
     }
 
-    function renderHookTable(data) {
+    function renderHookAnalytics(data, state) {
+      const root = document.getElementById("hook-analytics");
+      const tabButtons = document.querySelectorAll("#hook-tabs .tab-btn");
+      const sortSelect = document.getElementById("hook-sort");
       const byHook = data.by_hook || {};
-      const table = document.getElementById("hook-table");
-      const hooks = Object.entries(byHook).sort((a, b) => n(b[1].run_count) - n(a[1].run_count));
+
+      tabButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.tab === state.tab);
+      });
+
+      if (sortSelect) {
+        sortSelect.value = state.sort;
+      }
+
+      const filtered = Object.entries(byHook).filter(([hook]) => {
+        const category = classifyHook(hook);
+        return state.tab === "all" || category === state.tab;
+      });
+      const hooks = sortHooks(filtered, state.sort);
       const maxRun = Math.max(1, ...hooks.map(([, stats]) => n(stats.run_count)));
 
-      document.getElementById("hook-count").textContent = `${hooks.length} hooks`;
+      if (!hooks.length) {
+        root.innerHTML = `<div class="analytics-empty">${t("dashboard.empty.no_hooks")}</div>`;
+        return;
+      }
 
-      hooks.forEach(([hook, stats]) => {
-        const row = document.createElement("div");
-        row.className = "hook-row";
-
-        const blocked = n(stats.blocked_count);
+      root.innerHTML = hooks.map(([hook, stats]) => {
+        const category = classifyHook(hook);
+        const categoryColor = HOOK_CATEGORY_COLORS[category];
         const runCount = n(stats.run_count);
-        const blockedRate = runCount > 0 ? blocked / runCount : 0;
+        const errorCount = n(stats.error_count);
+        const blockedCount = n(stats.blocked_count);
+        const successCount = stats.success_count == null ? Math.max(0, runCount - errorCount - blockedCount) : n(stats.success_count);
+        const allowedCount = stats.allowed_count == null ? Math.max(0, runCount - blockedCount) : n(stats.allowed_count);
+        const activeDays = n(stats.active_days);
+        const avgDuration = stats.avg_duration_ms == null ? t("dashboard.label.na") : `${formatNumber(stats.avg_duration_ms)} ms`;
         const barWidth = `${Math.max(3, (runCount / maxRun) * 100)}%`;
-        const barColor = blockedRate > 0.9 ? COLORS.red : COLORS.blue;
-        const blockedTag = blocked
-          ? `<span class="tag" style="color:${COLORS.red};">blocked ${(blockedRate * 100).toFixed(0)}%</span>`
+        const successRate = runCount > 0 ? successCount / runCount : 0;
+        const blockedRate = runCount > 0 ? blockedCount / runCount : 0;
+        const isOpen = state.expanded.has(hook);
+        const hookDesc = currentLang === "zh"
+          ? (stats.description_zh || stats.description_en || "")
+          : (stats.description_en || stats.description_zh || "");
+
+        const statusHtml = blockedCount > 0
+          ? `<span class="hook-kpi-strong" style="color:${COLORS.red};">${t("dashboard.status.blocked", (blockedRate * 100).toFixed(0))}</span>`
+          : errorCount > 0
+            ? `<span class="hook-kpi-strong" style="color:${COLORS.red};">${t("dashboard.status.error", formatNumber(errorCount))}</span>`
+            : `<span class="hook-kpi-strong" style="color:${COLORS.green};">${t("dashboard.status.success", (successRate * 100).toFixed(0))}</span>`;
+
+        const metricEntries = [
+          ["run_count", t("dashboard.metric.run_count")],
+          ["success_count", t("dashboard.metric.success_count")],
+          ["error_count", t("dashboard.metric.error_count")],
+          ["blocked_count", t("dashboard.metric.blocked_count")],
+          ["allowed_count", t("dashboard.metric.allowed_count")],
+          ["avg_duration_ms", t("dashboard.metric.avg_duration_ms")],
+          ["active_days", t("dashboard.metric.active_days")],
+          ["avg_daily_runs", t("dashboard.metric.avg_daily_runs")]
+        ].filter(([key]) => {
+          if (key === "allowed_count") {
+            return stats.allowed_count !== undefined || category === "gate";
+          }
+          return stats[key] !== undefined;
+        }).map(([key, label]) => metricCard(label, formatMetricValue(key, key === "allowed_count" ? allowedCount : stats[key])));
+
+        const vizSegments = category === "gate"
+          ? [
+              { color: COLORS.green, label: t("dashboard.viz.allowed"), value: allowedCount },
+              { color: COLORS.red, label: t("dashboard.viz.blocked"), value: blockedCount }
+            ]
+          : [
+              { color: COLORS.green, label: t("dashboard.viz.success"), value: successCount },
+              { color: COLORS.red, label: t("dashboard.viz.error"), value: errorCount }
+            ];
+
+        const vizTitle = category === "gate" ? t("dashboard.viz.gate_decision_mix") : t("dashboard.viz.outcome_mix");
+        const reasonBlock = category === "gate"
+          ? `
+              <div class="viz-title">${t("dashboard.viz.block_reasons")}</div>
+              <div class="reason-list">${renderReasonRows(stats.block_reasons)}</div>
+            `
           : "";
 
+        return `
+          <article class="hook-card${isOpen ? " is-open" : ""}">
+            <button class="hook-card-header" type="button" data-hook="${hook}">
+              <div class="hook-title-block">
+                <span class="hook-title mono">${hook}</span>
+                <span class="category-tag" style="color:${categoryColor};">${t(`dashboard.tab.${category}`)}</span>
+                ${hookDesc ? `<div class="hook-desc">${hookDesc}</div>` : ""}
+              </div>
+              <div class="hook-stat-block">
+                <div class="hook-bar-track"><div class="hook-bar-fill" style="width:${barWidth};"></div></div>
+                <div class="hook-count-value">${formatNumber(runCount)}</div>
+              </div>
+              <div class="hook-kpis">
+                ${statusHtml}
+                <span class="hook-kpi">${t("dashboard.label.days")} ${formatNumber(activeDays)}</span>
+                <span class="hook-kpi">${avgDuration}</span>
+              </div>
+              <div class="hook-kpi">${n(stats.avg_daily_runs).toFixed(1)} ${t("dashboard.label.per_day")}</div>
+              <div class="expand-arrow">▾</div>
+            </button>
+            <div class="hook-card-detail">
+              <div class="detail-content">
+                <div class="detail-grid">${metricEntries.join("")}</div>
+                <div class="detail-viz">
+                  <div class="viz-title">${vizTitle}</div>
+                  ${renderStackedBar(vizSegments)}
+                  <div class="stacked-legend">
+                    ${vizSegments.map((segment) => {
+                      const total = vizSegments.reduce((sum, item) => sum + n(item.value), 0);
+                      const percent = total > 0 ? `${((n(segment.value) / total) * 100).toFixed(1)}%` : "0.0%";
+                      return renderLegendRow(segment.color, segment.label, `${formatNumber(segment.value)} · ${percent}`);
+                    }).join("")}
+                  </div>
+                  ${reasonBlock}
+                </div>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderRulesUsage(data) {
+      const root = document.getElementById("rules-usage");
+      const count = document.getElementById("rules-count");
+      const byRule = data.by_rule && typeof data.by_rule === "object" ? data.by_rule : {};
+      const entries = Object.entries(byRule).sort((a, b) => n(b[1] && b[1].inject_count) - n(a[1] && a[1].inject_count));
+
+      if (!entries.length) {
+        root.innerHTML = `<div class="analytics-empty">${t("dashboard.empty.no_data")}</div>`;
+        return;
+      }
+
+      count.textContent = t("dashboard.label.rules_tracked", formatNumber(entries.length));
+      const maxInjectCount = Math.max(1, ...entries.map(([, stats]) => n(stats && stats.inject_count)));
+
+      entries.forEach(([rulePath, stats]) => {
+        const injectCount = n(stats && stats.inject_count);
+        const activeDays = n(stats && stats.active_days, null);
+        const ruleTitle = stats.title || "";
+        const row = document.createElement("div");
+        row.className = "event-row";
         row.innerHTML = `
-          <div class="hook-name">
-            <span class="mono">${hook}</span>
-            ${blockedTag}
+          <div>
+            <div class="mono">${rulePath.startsWith("rules-library/") ? rulePath.slice("rules-library/".length) : rulePath}</div>
+            ${ruleTitle ? `<div class="rule-title">${ruleTitle}</div>` : ""}
           </div>
           <div class="value-block">
-            <div class="bar-track"><div class="bar-fill" style="width:${barWidth}; background:${barColor};"></div></div>
-            <div class="bar-value">${formatNumber(runCount)}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${(injectCount / maxInjectCount) * 100}%; background:${COLORS.blue};"></div></div>
           </div>
-          <div class="cell-right">${formatNumber(stats.active_days)}</div>
-          <div class="cell-right">${n(stats.avg_daily_runs).toFixed(1)}</div>
-          <div class="cell-right">${formatNumber(stats.avg_duration_ms)}</div>
+          <div class="cell-right">${formatNumber(injectCount)}${activeDays == null ? "" : ` · ${formatNumber(activeDays)}${t("dashboard.label.days_short")}`}</div>
         `;
-        table.appendChild(row);
+        root.appendChild(row);
+      });
+    }
+
+    function renderSkillsUsage(data) {
+      const root = document.getElementById("skills-usage");
+      const count = document.getElementById("skills-count");
+      const bySkill = data.by_skill && typeof data.by_skill === "object" ? data.by_skill : {};
+      const entries = Object.entries(bySkill).sort((a, b) => n(b[1] && b[1].match_count) - n(a[1] && a[1].match_count));
+
+      if (!entries.length) {
+        root.innerHTML = `<div class="analytics-empty">${t("dashboard.empty.no_data")}</div>`;
+        return;
+      }
+
+      count.textContent = t("dashboard.label.skills_tracked", formatNumber(entries.length));
+      const maxMatchCount = Math.max(1, ...entries.map(([, stats]) => n(stats && stats.match_count)));
+
+      entries.forEach(([skillName, stats]) => {
+        const matchCount = n(stats && stats.match_count);
+        const activeDays = n(stats && stats.active_days, null);
+        const skillDesc = currentLang === "zh"
+          ? (stats.description_zh || stats.description_en || "")
+          : (stats.description_en || stats.description_zh || "");
+        const row = document.createElement("div");
+        row.className = "event-row";
+        row.innerHTML = `
+          <div>
+            <div class="mono">${skillName}</div>
+            ${skillDesc ? `<div class="skill-desc">${skillDesc}</div>` : ""}
+          </div>
+          <div class="value-block">
+            <div class="bar-track"><div class="bar-fill" style="width:${(matchCount / maxMatchCount) * 100}%; background:${COLORS.gold};"></div></div>
+          </div>
+          <div class="cell-right">${formatNumber(matchCount)}${activeDays == null ? "" : ` · ${formatNumber(activeDays)}${t("dashboard.label.days_short")}`}</div>
+        `;
+        root.appendChild(row);
       });
     }
 
@@ -639,7 +1236,7 @@
       const root = document.getElementById("event-distribution");
       const entries = Object.entries(data.by_hook_event || {}).sort((a, b) => n(b[1]) - n(a[1]));
       const total = entries.reduce((sum, [, count]) => sum + n(count), 0);
-      document.getElementById("event-total").textContent = `${formatNumber(total)} events`;
+      document.getElementById("event-total").textContent = t("dashboard.label.events_total", formatNumber(total));
 
       entries.forEach(([name, count]) => {
         const percentage = total > 0 ? (n(count) / total) * 100 : 0;
@@ -681,14 +1278,14 @@
         const activeDays = n(stats.active_days);
         const failureRate = errorCount > 0 ? errorCount / runCount : 0;
         const blockedRate = blockedCount > 0 ? blockedCount / runCount : 0;
-        const topReason = Array.isArray(stats.block_reasons) && stats.block_reasons[0] ? stats.block_reasons[0].reason : "unknown";
+        const topReason = Array.isArray(stats.block_reasons) && stats.block_reasons[0] ? stats.block_reasons[0].reason : t("dashboard.label.unknown");
 
         if (errorCount > 0) {
           issues.push(
             issueItem(
               COLORS.red,
               hook,
-              `失败 ${formatNumber(errorCount)} 次 · failure_rate ${formatPercent(failureRate)}`
+              t("dashboard.issue.failures", formatNumber(errorCount), formatPercent(failureRate))
             )
           );
         }
@@ -698,7 +1295,7 @@
             issueItem(
               COLORS.yellow,
               hook,
-              `阻断率 ${formatPercent(blockedRate)} · top reason: ${topReason}`
+              t("dashboard.issue.high_block_rate", formatPercent(blockedRate), topReason)
             )
           );
         }
@@ -708,7 +1305,7 @@
             issueItem(
               COLORS.gray,
               hook,
-              `低活跃，仅 ${formatNumber(activeDays)} 天活跃`
+              t("dashboard.issue.low_activity", formatNumber(activeDays))
             )
           );
         }
@@ -717,7 +1314,7 @@
       if (!issues.length) {
         const empty = document.createElement("div");
         empty.className = "empty-state";
-        empty.textContent = "无异常";
+        empty.textContent = t("dashboard.empty.no_issues");
         root.appendChild(empty);
         return;
       }
@@ -727,13 +1324,71 @@
     }
 
     function render(data) {
+      currentData = data;
       clearAll();
+      renderStaticText();
       renderHeader(data);
       renderSummary(data);
       renderTrend(data);
-      renderHookTable(data);
+      renderHookAnalytics(data, STATE);
+      renderRulesUsage(data);
+      renderSkillsUsage(data);
       renderEventDistribution(data);
       renderIssues(data);
+    }
+
+    function bindHookAnalyticsEvents() {
+      document.addEventListener("click", (event) => {
+        const langButton = event.target.closest(".lang-btn");
+        if (langButton) {
+          currentLang = langButton.dataset.lang || "zh";
+          if (!I18N[currentLang]) {
+            currentLang = "zh";
+          }
+          localStorage.setItem("metrics-lang", currentLang);
+          document.querySelectorAll(".lang-btn").forEach((button) => {
+            button.classList.toggle("active", button.dataset.lang === currentLang);
+          });
+          renderStaticText();
+          if (currentData) {
+            render(currentData);
+          }
+          return;
+        }
+
+        const tabButton = event.target.closest("#hook-tabs .tab-btn");
+        if (tabButton) {
+          const nextTab = tabButton.dataset.tab || "all";
+          if (STATE.tab !== nextTab) {
+            STATE.tab = nextTab;
+            renderHookAnalytics(currentData, STATE);
+          }
+          return;
+        }
+
+        const cardHeader = event.target.closest(".hook-card-header");
+        if (cardHeader) {
+          const hookName = cardHeader.dataset.hook;
+          if (!hookName) {
+            return;
+          }
+          if (STATE.expanded.has(hookName)) {
+            STATE.expanded.delete(hookName);
+          } else {
+            STATE.expanded.add(hookName);
+          }
+          renderHookAnalytics(currentData, STATE);
+        }
+      });
+
+      document.addEventListener("change", (event) => {
+        const sortSelect = event.target.closest("#hook-sort");
+        if (!sortSelect) {
+          return;
+        }
+        STATE.sort = sortSelect.value || "run_count";
+        renderHookAnalytics(currentData, STATE);
+      });
     }
 
     // ── Mode detection & week switching ──
@@ -785,10 +1440,14 @@
           render(weekData);
         } catch (err) {
           clearAll();
-          document.getElementById("header-meta").textContent = `加载失败: ${err.message}`;
+          renderStaticText();
+          document.getElementById("header-meta").textContent = t("dashboard.load_failed", err.message);
         }
       });
     }
+
+    renderStaticText();
+    bindHookAnalyticsEvents();
 
     // Boot
     if (isLocalFile) {

@@ -1,6 +1,7 @@
 ---
 name: brainstorm
 description: 调研与需求发现技能。在实现前进行深度调研，通过 Research-first、Diverge→Converge 方法确保充分理解问题空间。当用户描述开发任务、需要技术选型、需求不明确、存在多种实现路径时触发此技能。也可通过 /brainstorm 命令调用。
+description_en: "Research and requirement discovery skill. Runs deep pre-implementation research with a Research-first, Diverge-to-Converge approach so the problem space is understood before choosing a solution."
 ---
 
 # Brainstorm - 调研与需求发现

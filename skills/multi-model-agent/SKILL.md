@@ -1,6 +1,7 @@
 ---
 name: multi-model-agent
 description: 多模型协作编排技能。配置 LiteLLM 代理实现 Claude + Codex 混合模型协作，根据任务类型自动路由到最优模型。触发条件：用户要求"混合模型"/"多模型协作"/"配置 LiteLLM"/"Codex + Claude"。
+description_en: "Multi-model orchestration skill. Configures a LiteLLM proxy for Claude + Codex collaboration and routes tasks to the most suitable model automatically."
 ---
 
 # Multi-Model Agent - 多模型协作编排

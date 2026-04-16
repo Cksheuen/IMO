@@ -1,6 +1,7 @@
 ---
 name: functional-test-chain
 description: 为可测试的项目生成功能测试原子操作、可复用子链和长链主链，并输出可继续落地为自动化脚本的测试步骤骨架。适用于用户要求“整理测试表”“设计测试链”“按操作和期望结果编排长链测试”“为 UI / 逻辑解耦后的项目生成自动化功能测试计划”。
+description_en: "Functional test chain skill for testable projects. Generates atomic test actions, reusable subchains, and long-form test flows, then outputs a step skeleton that can be turned into automated scripts."
 ---
 
 # Functional Test Chain

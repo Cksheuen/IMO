@@ -1,6 +1,7 @@
 ---
 name: thaw
 description: 解冻元技能。将冻结的内容从冷存储（.cold-storage/）恢复到热存储，使其重新激活。触发条件：(1) 用户说"解冻"/"thaw"/"恢复"/"从冷存储恢复"；(2) 用户搜索的内容在热存储中未找到；(3) 用户提到冷存储中存在的关键词。
+description_en: "Thaw meta-skill. Restores frozen content from .cold-storage back into hot storage so it becomes active and available again."
 ---
 
 # Thaw - 解冻元技能

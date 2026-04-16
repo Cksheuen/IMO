@@ -1,6 +1,7 @@
 ---
 name: promotion-mode
 description: Manage Promotion Loop mode. Use when the user wants to turn automatic background promotion on or off, or check whether Promotion Loop is currently in auto or manual mode.
+description_zh: "用于管理 Promotion Loop 的运行模式。当用户想开启或关闭后台自动晋升，或检查 Promotion Loop 当前处于自动模式还是手动模式时使用。"
 ---
 
 # Promotion Mode

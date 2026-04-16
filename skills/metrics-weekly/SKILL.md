@@ -1,6 +1,7 @@
 ---
 name: metrics-weekly
 description: Generate a weekly metrics report covering the last 7 days of hook/skill/rule usage. Supports two modes — data-only (just refresh data + open dashboard) and full analysis (with AI effectiveness evaluation and optimization recommendations). Use when the user asks for `/metrics-weekly`, wants a weekly usage summary, asks about hook effectiveness over the past week, or needs configuration optimization suggestions.
+description_zh: "生成覆盖最近 7 天 hook、skill、rule 使用情况的周报。支持两种模式：仅数据模式（只刷新数据并打开看板）和完整分析模式（附带 AI 效果评估与优化建议）。当用户请求 `/metrics-weekly`、想看周度使用摘要、询问过去一周 hook 的效果，或需要配置优化建议时使用。"
 ---
 
 # Metrics Weekly

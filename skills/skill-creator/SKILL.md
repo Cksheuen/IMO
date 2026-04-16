@@ -1,6 +1,7 @@
 ---
 name: skill-creator
 description: Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy.
+description_zh: "用于创建新 skill、修改和优化现有 skill，并评估 skill 表现。当用户想从零创建 skill、编辑或优化现有 skill、运行评测验证效果、做带方差分析的性能基准，或优化 skill 的 description 以提高触发准确性时使用。"
 ---
 
 # Skill Creator

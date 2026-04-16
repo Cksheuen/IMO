@@ -1,6 +1,7 @@
 ---
 name: promote-notes
 description: notes 晋升技能。当 `notes/` 中的 lesson、research、design 已满足稳定条件时，执行被动晋升评估，决定是否提炼为 `rules/`、`skills/` 或 `memory/`。当用户要求”提炼 notes””把经验升格成规则/技能””检查哪些 note 可以晋升”时触发；也可在运行中由 Promotion Loop 自动调用。
+description_en: "Notes promotion skill. Evaluates lessons, research, and design notes in `notes/` for passive promotion and decides whether they should be distilled into rules, skills, or memory."
 ---
 
 # Promote Notes - 被动晋升技能

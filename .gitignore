@@ -72,12 +72,15 @@ shared-knowledge/sync.log
 !metrics/dashboard/
 !metrics/dashboard/weekly.html
 !metrics/dashboard/preview.svg
+!metrics/i18n/
+!metrics/i18n/*.json
+!metrics/asset-catalog.yaml
+!metrics/asset-descriptions.json
 # 显式排除运行时产物
 metrics/events/
 metrics/daily/
 metrics/reports/
 metrics/dashboard/weekly-rendered.html
-metrics/asset-catalog.yaml
 
 # ===== 显式忽略（已被 * 覆盖，此处为文档说明）=====
 

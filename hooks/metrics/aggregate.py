@@ -17,6 +17,7 @@ METRICS_ROOT = CLAUDE_HOME / "metrics"
 EVENTS_DIR = METRICS_ROOT / "events"
 DAILY_DIR = METRICS_ROOT / "daily"
 WEEKLY_DIR = METRICS_ROOT / "weekly"
+ASSET_DESCRIPTIONS_PATH = METRICS_ROOT / "asset-descriptions.json"
 
 
 def parse_args() -> argparse.Namespace:
@@ -69,13 +70,43 @@ def load_events_range(start_date: str, end_date: str) -> list[dict[str, Any]]:
     return all_events
 
 
+def load_asset_descriptions() -> dict[str, dict[str, dict[str, Any]]]:
+    if not ASSET_DESCRIPTIONS_PATH.exists():
+        return {"hooks": {}, "skills": {}, "rules": {}}
+
+    try:
+        payload = json.loads(ASSET_DESCRIPTIONS_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"hooks": {}, "skills": {}, "rules": {}}
+
+    if not isinstance(payload, dict):
+        return {"hooks": {}, "skills": {}, "rules": {}}
+
+    result: dict[str, dict[str, dict[str, Any]]] = {"hooks": {}, "skills": {}, "rules": {}}
+    for group in result:
+        entries = payload.get(group)
+        if isinstance(entries, dict):
+            result[group] = {
+                str(key): value
+                for key, value in entries.items()
+                if isinstance(key, str) and isinstance(value, dict)
+            }
+    return result
+
+
 def round_metric(value: float) -> float:
     return round(value, 3)
 
 
-def build_daily_summary(target_date: str, events: list[dict[str, Any]]) -> dict[str, Any]:
+def build_daily_summary(
+    target_date: str,
+    events: list[dict[str, Any]],
+    asset_descriptions: dict[str, dict[str, dict[str, Any]]],
+) -> dict[str, Any]:
     sessions = {str(event.get("session_id", "")).strip() for event in events if str(event.get("session_id", "")).strip()}
     by_hook_event = Counter()
+    by_rule = Counter()
+    by_skill = Counter()
     by_hook: dict[str, dict[str, Any]] = {}
     success_total = 0
     success_denominator = 0
@@ -127,6 +158,15 @@ def build_daily_summary(target_date: str, events: list[dict[str, Any]]) -> dict[
             stats["_durations"].append(value)
             duration_values.append(value)
 
+        if hook_id == "rules-inject" and isinstance(meta, dict):
+            for rule_path in meta.get("injected_rules", []):
+                if isinstance(rule_path, str) and rule_path:
+                    by_rule[rule_path] += 1
+        if hook_id == "skill-inject" and isinstance(meta, dict):
+            for skill_name in meta.get("matched_skills", []):
+                if isinstance(skill_name, str) and skill_name:
+                    by_skill[skill_name] += 1
+
     for hook_id, stats in by_hook.items():
         durations = stats.pop("_durations")
         if durations:
@@ -145,6 +185,9 @@ def build_daily_summary(target_date: str, events: list[dict[str, Any]]) -> dict[
             stats.pop("success_count")
         if not stats["error_count"]:
             stats.pop("error_count")
+        hook_meta = asset_descriptions["hooks"].get(hook_id, {})
+        stats["description_zh"] = str(hook_meta.get("description_zh") or "")
+        stats["description_en"] = str(hook_meta.get("description_en") or "")
 
     hook_runs = sum(1 for event in events if event.get("event") == "hook_run")
     gate_decisions = sum(1 for event in events if event.get("event") == "gate_decision")
@@ -163,11 +206,31 @@ def build_daily_summary(target_date: str, events: list[dict[str, Any]]) -> dict[
         },
         "by_hook": dict(sorted(by_hook.items())),
         "by_hook_event": dict(sorted(by_hook_event.items())),
+        "by_rule": {
+            path: {
+                "inject_count": count,
+                "title": str(asset_descriptions["rules"].get(path, {}).get("title") or ""),
+            }
+            for path, count in sorted(by_rule.items())
+        },
+        "by_skill": {
+            name: {
+                "match_count": count,
+                "description_zh": str(asset_descriptions["skills"].get(name, {}).get("description_zh") or ""),
+                "description_en": str(asset_descriptions["skills"].get(name, {}).get("description_en") or ""),
+            }
+            for name, count in sorted(by_skill.items())
+        },
     }
     return summary
 
 
-def build_weekly_summary(end_date: str, events: list[dict[str, Any]], dates_with_data: list[str]) -> dict[str, Any]:
+def build_weekly_summary(
+    end_date: str,
+    events: list[dict[str, Any]],
+    dates_with_data: list[str],
+    asset_descriptions: dict[str, dict[str, dict[str, Any]]],
+) -> dict[str, Any]:
     """Build a weekly aggregate from multi-day events, including per-day breakdown and trend."""
     end_d = datetime.strptime(end_date, "%Y-%m-%d").date()
     start_d = end_d - timedelta(days=6)
@@ -175,6 +238,8 @@ def build_weekly_summary(end_date: str, events: list[dict[str, Any]], dates_with
 
     sessions = {str(e.get("session_id", "")).strip() for e in events if str(e.get("session_id", "")).strip()}
     by_hook_event = Counter()
+    by_rule: dict[str, dict[str, Any]] = {}
+    by_skill: dict[str, dict[str, Any]] = {}
     by_hook: dict[str, dict[str, Any]] = {}
     success_total = 0
     success_denominator = 0
@@ -246,6 +311,21 @@ def build_weekly_summary(end_date: str, events: list[dict[str, Any]], dates_with
             stats["_durations"].append(value)
             duration_values.append(value)
 
+        if hook_id == "rules-inject" and isinstance(meta, dict):
+            for rule_path in meta.get("injected_rules", []):
+                if isinstance(rule_path, str) and rule_path:
+                    entry = by_rule.setdefault(rule_path, {"inject_count": 0, "_active_days": set()})
+                    entry["inject_count"] += 1
+                    if event_date:
+                        entry["_active_days"].add(event_date)
+        if hook_id == "skill-inject" and isinstance(meta, dict):
+            for skill_name in meta.get("matched_skills", []):
+                if isinstance(skill_name, str) and skill_name:
+                    entry = by_skill.setdefault(skill_name, {"match_count": 0, "_active_days": set()})
+                    entry["match_count"] += 1
+                    if event_date:
+                        entry["_active_days"].add(event_date)
+
     for hook_id, stats in by_hook.items():
         durations = stats.pop("_durations")
         if durations:
@@ -267,6 +347,20 @@ def build_weekly_summary(end_date: str, events: list[dict[str, Any]], dates_with
             stats.pop("success_count")
         if not stats["error_count"]:
             stats.pop("error_count")
+        hook_meta = asset_descriptions["hooks"].get(hook_id, {})
+        stats["description_zh"] = str(hook_meta.get("description_zh") or "")
+        stats["description_en"] = str(hook_meta.get("description_en") or "")
+
+    for path, entry in by_rule.items():
+        active = entry.pop("_active_days")
+        entry["active_days"] = len(active)
+        entry["title"] = str(asset_descriptions["rules"].get(path, {}).get("title") or "")
+    for name, entry in by_skill.items():
+        active = entry.pop("_active_days")
+        entry["active_days"] = len(active)
+        skill_meta = asset_descriptions["skills"].get(name, {})
+        entry["description_zh"] = str(skill_meta.get("description_zh") or "")
+        entry["description_en"] = str(skill_meta.get("description_en") or "")
 
     hook_runs = sum(1 for e in events if e.get("event") == "hook_run")
     gate_decisions = sum(1 for e in events if e.get("event") == "gate_decision")
@@ -298,6 +392,8 @@ def build_weekly_summary(end_date: str, events: list[dict[str, Any]], dates_with
         },
         "by_hook": dict(sorted(by_hook.items())),
         "by_hook_event": dict(sorted(by_hook_event.items())),
+        "by_rule": dict(sorted(by_rule.items())),
+        "by_skill": dict(sorted(by_skill.items())),
         "daily_trend": daily_trend,
     }
 
@@ -320,9 +416,10 @@ def write_weekly_summary(summary: dict[str, Any]) -> Path:
 def main() -> int:
     args = parse_args()
     target_date = resolve_date(args.target_date)
+    asset_descriptions = load_asset_descriptions()
 
     if args.daily:
-        summary = build_daily_summary(target_date, load_events(target_date))
+        summary = build_daily_summary(target_date, load_events(target_date), asset_descriptions)
         output = write_daily_summary(summary)
     else:
         end_d = datetime.strptime(target_date, "%Y-%m-%d").date()
@@ -333,7 +430,7 @@ def main() -> int:
             for i in range(7)
             if (EVENTS_DIR / f"{(start_d + timedelta(days=i)).isoformat()}.jsonl").exists()
         ]
-        summary = build_weekly_summary(target_date, events, dates_with_data)
+        summary = build_weekly_summary(target_date, events, dates_with_data, asset_descriptions)
         output = write_weekly_summary(summary)
 
     print(output)

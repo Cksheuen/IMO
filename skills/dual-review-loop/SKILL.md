@@ -1,6 +1,7 @@
 ---
 name: dual-review-loop
 description: CC + Codex 双重审查循环。用户触发 /dual-review-loop 后，在 Claude Code 实现与 Codex review 之间建立自动迭代循环，直到代码通过审查或达到最大轮次。当用户说"双重审查"、"codex 循环审查"、"review loop"、"让 codex 帮我审一下然后修"时触发。此 skill 仅限用户主动调用，禁止 agent 自动触发。
+description_en: "CC + Codex dual review loop. When the user triggers /dual-review-loop, it creates an iterative cycle between Claude Code implementation and Codex review until the code passes review or the maximum number of rounds is reached."
 ---
 
 # Dual Review Loop - CC + Codex 双重审查循环

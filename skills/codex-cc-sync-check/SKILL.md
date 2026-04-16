@@ -1,6 +1,7 @@
 ---
 name: codex-cc-sync-check
 description: Check whether Codex is currently aligned with Claude Code global configuration, especially shared AGENTS/rules and custom skills under ~/.claude. Use this whenever the user mentions Codex/Claude config sync, AGENTS.md, shared rules, shared skills, global skill visibility, or wants Codex to automatically follow the same Claude configuration from any directory. If alignment is broken, inspect it and repair it by restoring the expected symlink layout.
+description_zh: "检查 Codex 是否与 Claude Code 的全局配置保持对齐，重点覆盖 ~/.claude 下共享的 AGENTS、rules 和自定义 skills；当用户提到 Codex/Claude 配置同步、AGENTS.md、共享规则、共享技能、全局可见性，或希望 Codex 在任意目录自动沿用同一套 Claude 配置时使用。若发现失配，则检查并通过恢复预期的符号链接布局进行修复。"
 ---
 
 # Codex CC Sync Check

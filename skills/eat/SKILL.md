@@ -1,6 +1,7 @@
 ---
 name: eat
 description: 知识吸收元技能。深度分析输入内容（X/Twitter帖子、GitHub项目、技术文章、代码片段），提取可复用模式与原理，写入持久存储（rules/或创建新skill），实现能力增量。当用户提供URL、代码片段、技术文章或要求"学习"、"吸收"、"消化"知识时触发此技能。
+description_en: "Knowledge ingestion meta-skill. Deeply analyzes inputs such as X/Twitter posts, GitHub projects, technical articles, and code snippets, extracts reusable patterns and principles, and writes them into persistent assets like rules or new skills."
 ---
 
 # Eat - 知识吸收元技能

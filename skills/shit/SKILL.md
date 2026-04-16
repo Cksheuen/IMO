@@ -1,6 +1,7 @@
 ---
 name: shit
 description: 结构精简元技能。分析并优化 rules/skills/CLAUDE.md 的结构，发现冗余、重复、过长内容，提出精简建议。与 eat（吸收）相对，排泄"消化不良"的结构问题。当用户说"精简结构"、"清理冗余"、"优化上下文"、"整理 rules"时触发此技能。
+description_en: "Structure simplification meta-skill. Analyzes and streamlines the structure of rules, skills, and CLAUDE.md, identifies redundancy or overlong sections, and proposes cleanup recommendations."
 ---
 
 # Shit - 结构精简元技能

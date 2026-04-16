@@ -1,6 +1,7 @@
 ---
 name: freshness
 description: 参考时效性检查技能。扫描 skills/rules 文档中的参考链接（GitHub仓库、文章URL），检查其时效性（仓库是否archived/不活跃、文章是否过时），生成更新报告并同步更新原文档。当用户提到"检查时效性"、"验证参考"、"参考过时"、"更新参考"时触发此技能。也可在吸收新知识后定期运行，确保知识库持续新鲜。
+description_en: "Reference freshness checking skill. Scans links in skill and rule documents, checks whether repositories or articles are outdated, and generates an update report while syncing the source documents."
 ---
 
 # Freshness - 参考时效性检查技能

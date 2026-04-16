@@ -8,6 +8,7 @@ description: >
   即使用户只是说"我需要一个仪表盘"或"帮我设计登录页"。也适用于"帮我做 UI"、
   "创建 web 应用设计"、"让它好看点"，或任何提及设计页面/屏幕/布局的请求。
   如果用户描述了一个应用想法但没有明确要求设计，也考虑此技能是否能帮助他们可视化。
+description_en: "AI-driven UI design skill. Guides users from vague ideas to polished .pen designs through a full Pencil MCP workflow: requirement convergence, design-system alignment, automated generation, visual verification, and iterative refinement."
 ---
 
 # Design — AI 自动化 UI 设计

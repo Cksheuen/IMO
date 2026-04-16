@@ -1,0 +1,320 @@
+{
+  "hooks": {
+    "skill-inject": {
+      "description_zh": "在用户提交 prompt 时匹配关键词，推荐相关的 skill，轻量路由不注入 SKILL.md 正文",
+      "description_en": "Matches keywords in user prompts to recommend relevant skills without injecting full SKILL.md content"
+    },
+    "project-architecture-inject": {
+      "description_zh": "在用户提交 prompt 时，注入当前项目的架构上下文信息",
+      "description_en": "Injects the current project's architecture context when a user submits a prompt"
+    },
+    "recall-entrypoint": {
+      "description_zh": "在用户提交 prompt 时，从记忆系统检索相关历史上下文",
+      "description_en": "Retrieves relevant historical context from the memory system when a user submits a prompt"
+    },
+    "rules-inject": {
+      "description_zh": "在用户提交 prompt 时，根据关键词匹配注入按需加载的规则文件",
+      "description_en": "Injects on-demand rule files matched by keywords when a user submits a prompt"
+    },
+    "scale-gate": {
+      "description_zh": "在编辑或写入文件前，强制要求先进行规模评估，防止未经规划的大范围改动",
+      "description_en": "Enforces a scale assessment before file edits or writes to prevent unplanned large-scope changes"
+    },
+    "pre-write-gate": {
+      "description_zh": "在写入新文件前，检查路径和内容安全性",
+      "description_en": "Checks path and content safety before writing new files"
+    },
+    "pre-edit-gate": {
+      "description_zh": "在编辑现有文件前，检查路径和内容安全性",
+      "description_en": "Checks path and content safety before editing existing files"
+    },
+    "pre-agent-gate": {
+      "description_zh": "在启动子代理前，检查是否需要 worktree 隔离等安全约束",
+      "description_en": "Checks safety constraints such as worktree isolation before launching a sub-agent"
+    },
+    "recall-capture": {
+      "description_zh": "在会话停止时，捕获并存储重要上下文到记忆系统",
+      "description_en": "Captures and stores important context into the memory system when a session stops"
+    },
+    "context-monitor": {
+      "description_zh": "在会话停止时，监控上下文使用情况和健康状态",
+      "description_en": "Monitors context usage and health status when a session stops"
+    },
+    "session-end-consolidate": {
+      "description_zh": "在会话结束时，合并整理会话产出的临时数据",
+      "description_en": "Consolidates and organizes temporary session output when a session ends"
+    },
+    "on-rate-limit-stop": {
+      "description_zh": "在请求因速率限制失败时，执行缓解和重试策略",
+      "description_en": "Executes mitigation and retry strategies when a request fails due to rate limiting"
+    }
+  },
+  "skills": {
+    "architecture-health": {
+      "description_zh": "架构健康度仪表盘。分析项目的架构适应度指标，评估当前所处阶段，输出超标指标和升级建议。当用户说\"检查架构健康度\"、\"架构评估\"、\"architecture health\"、\"该不该重构\"、\"项目架构怎么样\"时触发。",
+      "description_en": "Architecture health dashboard. Analyzes project architecture fitness metrics, assesses the current stage, and highlights overloaded indicators with upgrade recommendations."
+    },
+    "brainstorm": {
+      "description_zh": "调研与需求发现技能。在实现前进行深度调研，通过 Research-first、Diverge→Converge 方法确保充分理解问题空间。当用户描述开发任务、需要技术选型、需求不明确、存在多种实现路径时触发此技能。也可通过 /brainstorm 命令调用。",
+      "description_en": "Research and requirement discovery skill. Runs deep pre-implementation research with a Research-first, Diverge-to-Converge approach so the problem space is understood before choosing a solution."
+    },
+    "cc-to-framework-migration": {
+      "description_zh": "Claude Code 配置到 LangChain/LangGraph 框架迁移技能。扫描 ~/.claude/ 下的 skills/rules/agents，识别适合迁移到 LangChain 框架的部分，生成迁移建议报告和代码框架。触发条件：用户说\"迁移到框架\"、\"转成 LangChain\"、\"框架化\"、\"LangGraph 迁移\"、\"CC 配置迁移\"或想要将现有的 CC 配置转为可独立部署的框架代码。",
+      "description_en": "Claude Code to LangChain/LangGraph migration skill. Scans skills, rules, and agents under ~/.claude, identifies parts suitable for a LangChain-based framework, and produces a migration report plus starter framework code."
+    },
+    "codex-cc-sync-check": {
+      "description_zh": "检查 Codex 是否与 Claude Code 的全局配置保持对齐，重点覆盖 ~/.claude 下共享的 AGENTS、rules 和自定义 skills；当用户提到 Codex/Claude 配置同步、AGENTS.md、共享规则、共享技能、全局可见性，或希望 Codex 在任意目录自动沿用同一套 Claude 配置时使用。若发现失配，则检查并通过恢复预期的符号链接布局进行修复。",
+      "description_en": "Check whether Codex is currently aligned with Claude Code global configuration, especially shared AGENTS/rules and custom skills under ~/.claude. Use this whenever the user mentions Codex/Claude config sync, AGENTS.md, shared rules, shared skills, global skill visibility, or wants Codex to automatically follow the same Claude configuration from any directory. If alignment is broken, inspect it and repair it by restoring the expected symlink layout."
+    },
+    "design": {
+      "description_zh": "AI 驱动的 UI 设计技能，引导用户从模糊想法到精美的 .pen 文件设计。 使用 Pencil MCP 工具，覆盖完整工作流：需求收敛（结构化提问明确用户真实需求）、 设计系统对齐（风格指南、token）、自动化生成（batch_design）、视觉验证（截图）、 迭代精修。当用户想要设计 UI、创建界面、构建页面、做原型、布局时使用此技能—— 即使用户只是说\"我需要一个仪表盘\"或\"帮我设计登录页\"。也适用于\"帮我做 UI\"、 \"创建 web 应用设计\"、\"让它好看点\"，或任何提及设计页面/屏幕/布局的请求。 如果用户描述了一个应用想法但没有明确要求设计，也考虑此技能是否能帮助他们可视化。",
+      "description_en": "AI-driven UI design skill. Guides users from vague ideas to polished .pen designs through a full Pencil MCP workflow: requirement convergence, design-system alignment, automated generation, visual verification, and iterative refinement."
+    },
+    "docx": {
+      "description_zh": "当用户需要创建、读取、编辑或处理 Word 文档（.docx）时使用此技能。触发场景包括提到“Word doc”“word document”“.docx”，或要求生成带目录、标题、页码、信头等格式的专业文档；也适用于提取或重组 .docx 内容、在文档中插入或替换图片、执行查找替换、处理修订或评论，或将内容整理成成品 Word 文档。不适用于 PDF、表格、Google Docs 或与文档生成无关的一般编码任务。",
+      "description_en": "Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). Triggers include: any mention of 'Word doc', 'word document', '.docx', or requests to produce professional documents with formatting like tables of contents, headings, page numbers, or letterheads. Also use when extracting or reorganizing content from .docx files, inserting or replacing images in documents, performing find-and-replace in Word files, working with tracked changes or comments, or converting content into a polished Word document. If the user asks for a 'report', 'memo', 'letter', 'template', or similar deliverable as a Word or .docx file, use this skill. Do NOT use for PDFs, spreadsheets, Google Docs, or general coding tasks unrelated to document generation."
+    },
+    "dual-review-loop": {
+      "description_zh": "CC + Codex 双重审查循环。用户触发 /dual-review-loop 后，在 Claude Code 实现与 Codex review 之间建立自动迭代循环，直到代码通过审查或达到最大轮次。当用户说\"双重审查\"、\"codex 循环审查\"、\"review loop\"、\"让 codex 帮我审一下然后修\"时触发。此 skill 仅限用户主动调用，禁止 agent 自动触发。",
+      "description_en": "CC + Codex dual review loop. When the user triggers /dual-review-loop, it creates an iterative cycle between Claude Code implementation and Codex review until the code passes review or the maximum number of rounds is reached."
+    },
+    "eat": {
+      "description_zh": "知识吸收元技能。深度分析输入内容（X/Twitter帖子、GitHub项目、技术文章、代码片段），提取可复用模式与原理，写入持久存储（rules/或创建新skill），实现能力增量。当用户提供URL、代码片段、技术文章或要求\"学习\"、\"吸收\"、\"消化\"知识时触发此技能。",
+      "description_en": "Knowledge ingestion meta-skill. Deeply analyzes inputs such as X/Twitter posts, GitHub projects, technical articles, and code snippets, extracts reusable patterns and principles, and writes them into persistent assets like rules or new skills."
+    },
+    "freeze": {
+      "description_zh": "冻结元技能。将长期不使用的 skills、rules 从热存储移至冷存储（.cold-storage/），节约上下文空间。触发条件：(1) 用户说\"冻结\"/\"freeze\"/\"移到冷存储\"；(2) skills 数量超过 20 个；(3) rules 总行数超过 500 行；(4) 用户说\"上下文太长\"/\"精简上下文\"。",
+      "description_en": "Freeze meta-skill. Moves rarely used skills and rules from hot storage into .cold-storage to reduce context load and keep the active workspace lean."
+    },
+    "freshness": {
+      "description_zh": "参考时效性检查技能。扫描 skills/rules 文档中的参考链接（GitHub仓库、文章URL），检查其时效性（仓库是否archived/不活跃、文章是否过时），生成更新报告并同步更新原文档。当用户提到\"检查时效性\"、\"验证参考\"、\"参考过时\"、\"更新参考\"时触发此技能。也可在吸收新知识后定期运行，确保知识库持续新鲜。",
+      "description_en": "Reference freshness checking skill. Scans links in skill and rule documents, checks whether repositories or articles are outdated, and generates an update report while syncing the source documents."
+    },
+    "functional-test-chain": {
+      "description_zh": "为可测试的项目生成功能测试原子操作、可复用子链和长链主链，并输出可继续落地为自动化脚本的测试步骤骨架。适用于用户要求“整理测试表”“设计测试链”“按操作和期望结果编排长链测试”“为 UI / 逻辑解耦后的项目生成自动化功能测试计划”。",
+      "description_en": "Functional test chain skill for testable projects. Generates atomic test actions, reusable subchains, and long-form test flows, then outputs a step skeleton that can be turned into automated scripts."
+    },
+    "locate": {
+      "description_zh": "代码地图技能。记录源代码路径和关键上下文，帮助 Agent 快速定位代码。按变更规模自动选择索引粒度（L1片段/L2模块/L3系统）。当用户说\"记住\"、\"记录位置\"、\"标记这里\"、\"定位\"、\"回忆\"时触发此技能。",
+      "description_en": "Code map skill. Records source paths and key context so the agent can relocate code quickly, choosing indexing granularity automatically from snippet to module to system level."
+    },
+    "metrics-daily": {
+      "description_zh": "将本地 CC/Codex hook 指标聚合为日报摘要并输出文本日报。当用户请求 `/metrics-daily`、想看今天的 hook 运行使用情况、询问今天哪些 hook 运行或被阻塞，或需要生成/更新 `~/.claude/metrics/` 下的本地日报时使用。",
+      "description_en": "Aggregate local CC/Codex hook metrics into a daily summary and print the text daily report. Use when the user asks for `/metrics-daily`, wants today's hook runtime usage report, asks which hooks ran or blocked today, or needs to generate/update the local daily metrics report under `~/.claude/metrics/`."
+    },
+    "metrics-weekly": {
+      "description_zh": "生成覆盖最近 7 天 hook、skill、rule 使用情况的周报。支持两种模式：仅数据模式（只刷新数据并打开看板）和完整分析模式（附带 AI 效果评估与优化建议）。当用户请求 `/metrics-weekly`、想看周度使用摘要、询问过去一周 hook 的效果，或需要配置优化建议时使用。",
+      "description_en": "Generate a weekly metrics report covering the last 7 days of hook/skill/rule usage. Supports two modes — data-only (just refresh data + open dashboard) and full analysis (with AI effectiveness evaluation and optimization recommendations). Use when the user asks for `/metrics-weekly`, wants a weekly usage summary, asks about hook effectiveness over the past week, or needs configuration optimization suggestions."
+    },
+    "multi-model-agent": {
+      "description_zh": "多模型协作编排技能。配置 LiteLLM 代理实现 Claude + Codex 混合模型协作，根据任务类型自动路由到最优模型。触发条件：用户要求\"混合模型\"/\"多模型协作\"/\"配置 LiteLLM\"/\"Codex + Claude\"。",
+      "description_en": "Multi-model orchestration skill. Configures a LiteLLM proxy for Claude + Codex collaboration and routes tasks to the most suitable model automatically."
+    },
+    "orchestrate": {
+      "description_zh": "多代理编排技能。自动将大型任务拆分为子任务，分配给实现者、研究者、审查者等专用 agent，并结合 worktree 隔离协调并行执行。当任务涉及 3 个以上文件、2 个以上领域，或用户提到“并行”“parallel”“orchestrate”“拆分执行”时触发。",
+      "description_en": ""
+    },
+    "pdf": {
+      "description_zh": "只要用户需要处理 PDF 文件，就使用此技能。包括读取或提取 PDF 中的文本与表格、合并或拆分 PDF、旋转页面、添加水印、创建新 PDF、填写 PDF 表单、加密或解密 PDF、提取图片，以及对扫描版 PDF 做 OCR 以实现可搜索。只要用户提到 .pdf 文件或要求产出 PDF，即可触发。",
+      "description_en": "Use this skill whenever the user wants to do anything with PDF files. This includes reading or extracting text/tables from PDFs, combining or merging multiple PDFs into one, splitting PDFs apart, rotating pages, adding watermarks, creating new PDFs, filling PDF forms, encrypting/decrypting PDFs, extracting images, and OCR on scanned PDFs to make them searchable. If the user mentions a .pdf file or asks to produce one, use this skill."
+    },
+    "pkg-dive": {
+      "description_zh": "探索 npm 包源码实现的技能。当用户需要了解依赖包的实现细节、查看包的源码、理解 API 实现原理、排查依赖问题时自动触发。触发场景包括：\"这个包是怎么实现的\"、\"看看 xxx 包的源码\"、\"这个 API 内部是怎么工作的\"、\"帮我理解这个依赖的实现\"。支持探索 node_modules 中任意 npm 包。",
+      "description_en": "npm package source exploration skill. Examines dependency internals, package source code, API implementation details, and dependency-related issues across any npm package in node_modules."
+    },
+    "pptx": {
+      "description_zh": "只要任务涉及 .pptx 文件，无论是输入、输出还是两者兼有，都使用此技能。包括创建幻灯片、路演稿或演示文稿；读取、解析或提取任意 .pptx 文件中的文本；编辑、修改或更新现有演示；合并或拆分幻灯片文件；以及处理模板、版式、演讲备注或评论。只要用户提到“deck”“slides”“presentation”或某个 .pptx 文件名，就应触发。",
+      "description_en": "Use this skill any time a .pptx file is involved in any way — as input, output, or both. This includes: creating slide decks, pitch decks, or presentations; reading, parsing, or extracting text from any .pptx file (even if the extracted content will be used elsewhere, like in an email or summary); editing, modifying, or updating existing presentations; combining or splitting slide files; working with templates, layouts, speaker notes, or comments. Trigger whenever the user mentions \"deck,\" \"slides,\" \"presentation,\" or references a .pptx filename, regardless of what they plan to do with the content afterward. If a .pptx file needs to be opened, created, or touched, use this skill."
+    },
+    "promote-notes": {
+      "description_zh": "notes 晋升技能。当 `notes/` 中的 lesson、research、design 已满足稳定条件时，执行被动晋升评估，决定是否提炼为 `rules/`、`skills/` 或 `memory/`。当用户要求”提炼 notes””把经验升格成规则/技能””检查哪些 note 可以晋升”时触发；也可在运行中由 Promotion Loop 自动调用。",
+      "description_en": "Notes promotion skill. Evaluates lessons, research, and design notes in `notes/` for passive promotion and decides whether they should be distilled into rules, skills, or memory."
+    },
+    "promotion-mode": {
+      "description_zh": "用于管理 Promotion Loop 的运行模式。当用户想开启或关闭后台自动晋升，或检查 Promotion Loop 当前处于自动模式还是手动模式时使用。",
+      "description_en": "Manage Promotion Loop mode. Use when the user wants to turn automatic background promotion on or off, or check whether Promotion Loop is currently in auto or manual mode."
+    },
+    "shit": {
+      "description_zh": "结构精简元技能。分析并优化 rules/skills/CLAUDE.md 的结构，发现冗余、重复、过长内容，提出精简建议。与 eat（吸收）相对，排泄\"消化不良\"的结构问题。当用户说\"精简结构\"、\"清理冗余\"、\"优化上下文\"、\"整理 rules\"时触发此技能。",
+      "description_en": "Structure simplification meta-skill. Analyzes and streamlines the structure of rules, skills, and CLAUDE.md, identifies redundancy or overlong sections, and proposes cleanup recommendations."
+    },
+    "skill-creator": {
+      "description_zh": "用于创建新 skill、修改和优化现有 skill，并评估 skill 表现。当用户想从零创建 skill、编辑或优化现有 skill、运行评测验证效果、做带方差分析的性能基准，或优化 skill 的 description 以提高触发准确性时使用。",
+      "description_en": "Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy."
+    },
+    "team-builder": {
+      "description_zh": "AI 团队组建与管理技能。充当 HR Agent，根据项目实际需求动态招聘（创建）专用 agent，为每个 agent 设定 OKR 指标，定期评估绩效并淘汰末位，按需补招新人。当用户提到\"组建团队\"、\"招人\"、\"招聘 agent\"、\"团队管理\"、\"评估团队\"、\"淘汰\"、\"绩效评估\"、\"团队优化\"时触发此技能。也适用于\"我需要更多 agent\"、\"这个项目需要什么角色\"、\"帮我搭建一个 agent 团队\"、\"review 一下团队表现\"等表述。",
+      "description_en": "AI team-building and management skill. Acts as an HR agent that recruits specialized agents on demand, sets OKR-style goals for each role, reviews performance, removes weak fits, and backfills the team as needed."
+    },
+    "thaw": {
+      "description_zh": "解冻元技能。将冻结的内容从冷存储（.cold-storage/）恢复到热存储，使其重新激活。触发条件：(1) 用户说\"解冻\"/\"thaw\"/\"恢复\"/\"从冷存储恢复\"；(2) 用户搜索的内容在热存储中未找到；(3) 用户提到冷存储中存在的关键词。",
+      "description_en": "Thaw meta-skill. Restores frozen content from .cold-storage back into hot storage so it becomes active and available again."
+    },
+    "voice": {
+      "description_zh": "以用户的个人风格与口吻输出文字内容。显式调用 `/voice` 时触发。适用于撰写文档、周报、总结、方案等任何需要体现个人写作风格的文字输出。当用户说\"用我的口吻\"、\"按我的风格写\"、\"以我的方式表达\"时使用此技能。",
+      "description_en": "Voice adaptation skill. Produces written output in the user's personal tone and style for documents, weekly reports, summaries, proposals, and other writing that should sound like them."
+    },
+    "xmind": {
+      "description_zh": "当用户要求\"解析 xmind\"、\"打开思维导图\"、\"创建 xmind\"、\"新建思维导图\"、\"更新 xmind\"、\"修改思维导图\"、\"xmind 转 markdown\"、\"查看 xmind 内容\"时，应使用此技能。此技能提供 XMind 思维导图文件的解析、创建和更新能力，支持 XMind 8 和 XMind Zen/2020+ 两种格式，并将内容转换为 Markdown 作为会话记忆，方便持续交流。",
+      "description_en": "XMind mind-map processing skill. Parses, creates, and updates .xmind files (XMind 8 and Zen/2020+), converting content to Markdown for session memory."
+    }
+  },
+  "rules": {
+    "rules/core/context-injection.md": {
+      "title": "Context Injection Pattern",
+      "always_loaded": true
+    },
+    "rules/core/global-governance-assets.md": {
+      "title": "全局治理资产优先规范",
+      "always_loaded": true
+    },
+    "rules/core/llm-friendly-format.md": {
+      "title": "LLM 友好格式规范",
+      "always_loaded": true
+    },
+    "rules/core/user-facing-language.md": {
+      "title": "用户交流语言规范",
+      "always_loaded": true
+    },
+    "rules-library/core/architecture-evolution.md": {
+      "title": "架构自演化规范",
+      "always_loaded": false
+    },
+    "rules-library/core/proactive-delegation.md": {
+      "title": "主动委派决策框架",
+      "always_loaded": false
+    },
+    "rules-library/core/project-architecture-first.md": {
+      "title": "项目架构优先规范",
+      "always_loaded": false
+    },
+    "rules-library/core/rules-directory-convention.md": {
+      "title": "规则目录分流规范",
+      "always_loaded": false
+    },
+    "rules-library/core/task-centric-workflow.md": {
+      "title": "Task-Centric Workflow",
+      "always_loaded": false
+    },
+    "rules-library/core/task-notes-boundary.md": {
+      "title": "Task / Notes Boundary",
+      "always_loaded": false
+    },
+    "rules-library/domain/backend/architecture-stages.md": {
+      "title": "后端架构阶段定义",
+      "always_loaded": false
+    },
+    "rules-library/domain/frontend/ui-logic-boundary.md": {
+      "title": "前端 UI / 逻辑边界规范",
+      "always_loaded": false
+    },
+    "rules-library/domain/frontend/ui-logic-decoupled-testing.md": {
+      "title": "UI / 逻辑解耦后的测试编写规范",
+      "always_loaded": false
+    },
+    "rules-library/domain/ml/ml-training-preflight-checks.md": {
+      "title": "ML 训练代码预评估规范",
+      "always_loaded": false
+    },
+    "rules-library/domain/native/rust-egui-testing.md": {
+      "title": "Rust + egui 桌面应用测试方案",
+      "always_loaded": false
+    },
+    "rules-library/domain/shared/architecture-stages.md": {
+      "title": "通用/全栈领域架构阶段定义",
+      "always_loaded": false
+    },
+    "rules-library/domain/shared/testable-architecture.md": {
+      "title": "可测试架构范式",
+      "always_loaded": false
+    },
+    "rules-library/pattern/abandoned-solution-cleanup.md": {
+      "title": "废弃方案清理规范",
+      "always_loaded": false
+    },
+    "rules-library/pattern/auto-created-feature-list-noise.md": {
+      "title": "自动创建的 Feature List 噪音处理",
+      "always_loaded": false
+    },
+    "rules-library/pattern/change-impact-review.md": {
+      "title": "变更影响审查规范",
+      "always_loaded": false
+    },
+    "rules-library/pattern/change-scope-guard.md": {
+      "title": "改动边界守卫规范",
+      "always_loaded": false
+    },
+    "rules-library/pattern/closed-learning-loop.md": {
+      "title": "Closed Learning Loop Pattern",
+      "always_loaded": false
+    },
+    "rules-library/pattern/code-as-interface.md": {
+      "title": "Code-as-Interface Pattern",
+      "always_loaded": false
+    },
+    "rules-library/pattern/cross-layer-preflight.md": {
+      "title": "跨层功能预检规范",
+      "always_loaded": false
+    },
+    "rules-library/pattern/execution-continuity.md": {
+      "title": "连续执行规范",
+      "always_loaded": false
+    },
+    "rules-library/pattern/generator-evaluator-pattern.md": {
+      "title": "Generator-Evaluator 模式规范",
+      "always_loaded": false
+    },
+    "rules-library/pattern/living-spec.md": {
+      "title": "Living Spec Pattern",
+      "always_loaded": false
+    },
+    "rules-library/pattern/promotion-loop-background-execution.md": {
+      "title": "Promotion Loop 后台执行约束",
+      "always_loaded": false
+    },
+    "rules-library/pattern/requirements-confirmation.md": {
+      "title": "需求确认规范",
+      "always_loaded": false
+    },
+    "rules-library/pattern/self-verification-mechanism.md": {
+      "title": "Agent 自验证机制",
+      "always_loaded": false
+    },
+    "rules-library/technique/browser-auth-reuse.md": {
+      "title": "浏览器登录态复用技术",
+      "always_loaded": false
+    },
+    "rules-library/technique/git-worktree-parallelism.md": {
+      "title": "Git Worktree Parallelism",
+      "always_loaded": false
+    },
+    "rules-library/technique/long-running-agent-techniques.md": {
+      "title": "长时运行 Agent 技术规范",
+      "always_loaded": false
+    },
+    "rules-library/technique/rate-limit-management/claude-code-rate-limit-management.md": {
+      "title": "Claude Code Rate Limit 自动管理",
+      "always_loaded": false
+    },
+    "rules-library/technique/skills-cli-discovery.md": {
+      "title": "Skills CLI 发现与安装规范",
+      "always_loaded": false
+    },
+    "rules-library/tool/agent-file-operations.md": {
+      "title": "Agent 文件操作效率规范",
+      "always_loaded": false
+    },
+    "rules-library/tool/codex-review-symlink-eisdir.md": {
+      "title": "Codex Review EISDIR 规避",
+      "always_loaded": false
+    },
+    "rules-library/tool/langchain-runtime-dependencies.md": {
+      "title": "LangChain 迁移 Runtime 依赖规范",
+      "always_loaded": false
+    },
+    "rules-library/tool/runtime-dependency-resolution.md": {
+      "title": "Runtime 依赖自动解决规范",
+      "always_loaded": false
+    }
+  }
+}

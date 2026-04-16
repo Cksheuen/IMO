@@ -1,6 +1,7 @@
 ---
 name: voice
 description: 以用户的个人风格与口吻输出文字内容。显式调用 `/voice` 时触发。适用于撰写文档、周报、总结、方案等任何需要体现个人写作风格的文字输出。当用户说"用我的口吻"、"按我的风格写"、"以我的方式表达"时使用此技能。
+description_en: "Voice adaptation skill. Produces written output in the user's personal tone and style for documents, weekly reports, summaries, proposals, and other writing that should sound like them."
 ---
 
 # Voice - 个人风格与口吻

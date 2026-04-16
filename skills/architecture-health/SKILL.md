@@ -1,6 +1,7 @@
 ---
 name: architecture-health
 description: 架构健康度仪表盘。分析项目的架构适应度指标，评估当前所处阶段，输出超标指标和升级建议。当用户说"检查架构健康度"、"架构评估"、"architecture health"、"该不该重构"、"项目架构怎么样"时触发。
+description_en: "Architecture health dashboard. Analyzes project architecture fitness metrics, assesses the current stage, and highlights overloaded indicators with upgrade recommendations."
 ---
 
 # Architecture Health - 架构健康度仪表盘

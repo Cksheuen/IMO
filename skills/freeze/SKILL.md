@@ -1,6 +1,7 @@
 ---
 name: freeze
 description: 冻结元技能。将长期不使用的 skills、rules 从热存储移至冷存储（.cold-storage/），节约上下文空间。触发条件：(1) 用户说"冻结"/"freeze"/"移到冷存储"；(2) skills 数量超过 20 个；(3) rules 总行数超过 500 行；(4) 用户说"上下文太长"/"精简上下文"。
+description_en: "Freeze meta-skill. Moves rarely used skills and rules from hot storage into .cold-storage to reduce context load and keep the active workspace lean."
 ---
 
 # Freeze - 冻结元技能
