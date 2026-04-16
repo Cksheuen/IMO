@@ -113,7 +113,7 @@ python3 "$HOME/.claude/hooks/promote-notes-run.py" apply
 - [`commands/README.md`](./commands/README.md)
 - [`settings.json`](./settings.json)
 
-### 4. `/design`
+### 4. `/pencil-design`
 
 你本地记录里 design 相关使用频率也不低。这里的 `design` 不是“给点颜色建议”，而是完整的 Pencil MCP 设计链。
 
@@ -124,7 +124,7 @@ python3 "$HOME/.claude/hooks/promote-notes-run.py" apply
 
 典型用法：
 
-- `/design`
+- `/pencil-design`
 - “帮我做一个 dashboard 的 UI 设计”
 
 ### 5. `/orchestrate`

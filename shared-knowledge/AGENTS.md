@@ -65,7 +65,7 @@ Follow them when implementing tasks.
 # CLAUDE.md 中引用其他文件
 
 ## 架构规范
-See [architecture.md](rules-library/pattern/architecture.md)
+See [architecture-evolution.md](rules-library/core/architecture-evolution.md)
 
 ## 当前任务
 See [task-context.md](<project>/.claude/tasks/current/context.md)
