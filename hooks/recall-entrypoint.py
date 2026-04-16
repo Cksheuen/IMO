@@ -17,6 +17,7 @@ import os
 import re
 import sys
 import importlib.util
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -25,6 +26,7 @@ RECALL_STORE = Path(
     os.environ.get("CLAUDE_RECALL_STORE", str(Path.home() / ".claude" / "recall" / "entries.jsonl"))
 )
 CONTEXT_BUNDLE = Path.home() / ".claude" / "hooks" / "context-bundle.py"
+METRICS_EMIT_PATH = Path.home() / ".claude" / "hooks" / "metrics" / "emit.py"
 EXPLICIT_DEFAULT_K = 2
 AUTO_DEFAULT_K = 1
 MAX_K = 4
@@ -67,6 +69,17 @@ def _load_context_bundle():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def load_metrics_emit():
+    if not METRICS_EMIT_PATH.exists():
+        return None
+    spec = importlib.util.spec_from_file_location("metrics_emit", METRICS_EMIT_PATH)
+    if spec is None or spec.loader is None:
+        return None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return getattr(module, "emit_event", None)
 
 
 def parse_stdin_json() -> dict[str, Any]:
@@ -286,58 +299,89 @@ def build_context(entries: list[dict[str, Any]], budget_chars: int) -> str:
 
 
 def main() -> None:
-    payload = parse_stdin_json()
-    prompt = str(payload.get("prompt", "")).strip()
-    if not prompt:
-        emit({})
-        return
-    bundle = _load_context_bundle()
-    if bundle is None:
-        emit({})
-        return
-    build_additional_context_payload = getattr(bundle, "build_additional_context_payload", None)
-    combine_contexts = getattr(bundle, "combine_contexts", None)
-    load_declarative_context = getattr(bundle, "load_declarative_context", None)
-    if not callable(build_additional_context_payload) or not callable(combine_contexts) or not callable(load_declarative_context):
-        emit({})
-        return
+    emit_event = load_metrics_emit()
+    start = time.monotonic()
+    response: dict[str, Any] = {}
+    session_id = ""
+    status = "ok"
+    meta: dict[str, Any] = {"matched_count": 0}
 
-    session_id = str(payload.get("session_id") or payload.get("sessionId") or "").strip()
-    declarative_context = load_declarative_context(session_id)
-    recall_context = ""
-
-    auto_mode = False
-    if has_explicit_recall_query(prompt):
-        query, k, budget = parse_explicit_recall_query_contract(prompt)
-    else:
-        if not should_auto_recall(prompt):
-            emit(build_additional_context_payload(session_id=session_id, recall_context=""))
+    try:
+        payload = parse_stdin_json()
+        prompt = str(payload.get("prompt", "")).strip()
+        session_id = str(payload.get("session_id") or payload.get("sessionId") or "").strip()
+        if not prompt:
             return
-        auto_mode = True
-        query = prompt
-        k = AUTO_DEFAULT_K
-        budget = AUTO_DEFAULT_BUDGET_CHARS
+        bundle = _load_context_bundle()
+        if bundle is None:
+            meta["bundle_loaded"] = False
+            return
+        build_additional_context_payload = getattr(bundle, "build_additional_context_payload", None)
+        combine_contexts = getattr(bundle, "combine_contexts", None)
+        load_declarative_context = getattr(bundle, "load_declarative_context", None)
+        if not callable(build_additional_context_payload) or not callable(combine_contexts) or not callable(load_declarative_context):
+            meta["bundle_loaded"] = False
+            return
 
-    k = clamp(k, 1, MAX_K)
-    budget = clamp(budget, MIN_BUDGET_CHARS, MAX_BUDGET_CHARS)
+        meta["bundle_loaded"] = True
+        declarative_context = load_declarative_context(session_id)
+        recall_context = ""
 
-    results, top_score = pick_entries(load_entries(), query, k)
-    if not results:
-        emit(build_additional_context_payload(session_id=session_id, recall_context=""))
-        return
+        auto_mode = False
+        if has_explicit_recall_query(prompt):
+            query, k, budget = parse_explicit_recall_query_contract(prompt)
+            meta["mode"] = "explicit"
+        else:
+            if not should_auto_recall(prompt):
+                response = build_additional_context_payload(session_id=session_id, recall_context="")
+                meta["mode"] = "none"
+                return
+            auto_mode = True
+            query = prompt
+            k = AUTO_DEFAULT_K
+            budget = AUTO_DEFAULT_BUDGET_CHARS
+            meta["mode"] = "auto"
 
-    # Auto mode uses a stricter hit gate: weak fuzzy matches should not inject any recall.
-    if auto_mode and top_score < AUTO_MIN_SCORE:
-        emit(build_additional_context_payload(session_id=session_id, recall_context=""))
-        return
+        k = clamp(k, 1, MAX_K)
+        budget = clamp(budget, MIN_BUDGET_CHARS, MAX_BUDGET_CHARS)
 
-    recall_context = build_context(results, budget)
-    combined = combine_contexts(declarative_context, recall_context)
-    if not combined:
-        emit({})
-        return
+        results, top_score = pick_entries(load_entries(), query, k)
+        meta["matched_count"] = len(results)
+        meta["top_score"] = top_score
+        if not results:
+            response = build_additional_context_payload(session_id=session_id, recall_context="")
+            return
 
-    emit(build_additional_context_payload(session_id=session_id, recall_context=recall_context))
+        # Auto mode uses a stricter hit gate: weak fuzzy matches should not inject any recall.
+        if auto_mode and top_score < AUTO_MIN_SCORE:
+            response = build_additional_context_payload(session_id=session_id, recall_context="")
+            meta["matched_count"] = 0
+            meta["top_score"] = top_score
+            return
+
+        recall_context = build_context(results, budget)
+        combined = combine_contexts(declarative_context, recall_context)
+        if not combined:
+            return
+
+        meta["context_chars"] = len(recall_context)
+        response = build_additional_context_payload(session_id=session_id, recall_context=recall_context)
+    except Exception:
+        status = "error"
+        response = {}
+    finally:
+        if callable(emit_event):
+            emit_event(
+                hook_id="recall-entrypoint",
+                hook_event="UserPromptSubmit",
+                event="hook_run",
+                status=status,
+                duration_ms=int((time.monotonic() - start) * 1000),
+                session_id=session_id,
+                scope="global",
+                meta=meta,
+            )
+        emit(response)
 
 
 if __name__ == "__main__":

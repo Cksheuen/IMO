@@ -15,6 +15,7 @@ import json
 import re
 import sys
 import shutil
+import unicodedata
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -24,12 +25,17 @@ BASE = Path.home() / ".claude"
 LESSONS_DIR = BASE / "notes" / "lessons"
 NOTES_DIR = BASE / "notes"
 RULES_DIR = BASE / "rules"
+RULES_LIBRARY_DIR = BASE / "rules-library"
 SKILLS_DIR = BASE / "skills"
-MEMORY_DIR = BASE / "projects" / "-Users-bytedance--claude" / "memory"
+VENDOR_DIR = SKILLS_DIR / "vendor"
+MEMORY_DIR = BASE / "memory"
+DECLARATIVE_MEMORY_DIR = MEMORY_DIR / "declarative"
 LOG_DIR = BASE / "logs" / "promotion"
 QUEUE_FILE = BASE / "promotion-queue.json"
 QUEUE_LOCK_FILE = BASE / "promotion-queue.lock"
-ALLOWED_TARGET_ROOTS = tuple(path.resolve() for path in (RULES_DIR, SKILLS_DIR, NOTES_DIR, MEMORY_DIR))
+ALLOWED_TARGET_ROOTS = tuple(
+    path.resolve() for path in (RULES_DIR, RULES_LIBRARY_DIR, SKILLS_DIR, NOTES_DIR, MEMORY_DIR, DECLARATIVE_MEMORY_DIR)
+)
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -44,15 +50,14 @@ def log(msg: str):
 
 
 def resolve_lesson_path(lesson_path_str: str) -> Path:
-    """限制 lesson 路径只能落在 notes/lessons 下。"""
+    """限制 note 路径只能落在 notes/ 下。"""
     candidate = Path(lesson_path_str)
     if candidate.is_absolute():
-        raise ValueError(f"Lesson path must be relative to {BASE}: {lesson_path_str}")
-
+        raise ValueError(f"Note path must be relative to {BASE}: {lesson_path_str}")
     resolved = (BASE / candidate).resolve()
-    lessons_root = LESSONS_DIR.resolve()
-    if resolved != lessons_root and not resolved.is_relative_to(lessons_root):
-        raise ValueError(f"Lesson path escapes lessons directory: {lesson_path_str}")
+    notes_root = NOTES_DIR.resolve()
+    if resolved != notes_root and not resolved.is_relative_to(notes_root):
+        raise ValueError(f"Note path escapes notes directory: {lesson_path_str}")
     return resolved
 
 
@@ -66,25 +71,26 @@ def normalize_result_actions(result: dict) -> List[dict]:
         return []
 
     actions = []
-    summary_map = {
-        "promoted_to_rule": "created",
-        "promoted_to_skill": "created",
-        "indexed_in_memory": "kept",
-        "kept": "kept",
-        "skipped_duplicate": "kept",
-    }
 
     for item in dispatch_result.get("processed", []):
         outcome = item.get("outcome") or item.get("action") or "kept"
-        actions.append({
+        action: dict = {
             "id": Path(item.get("path", "")).stem,
-            "action": "already_applied",
+            "action": outcome,
             "lesson": item.get("path"),
             "target": item.get("target_path") or item.get("targetPath"),
             "reason": item.get("reason", outcome),
-            "summary_kind": summary_map.get(outcome, "kept"),
             "outcome": outcome,
-        })
+        }
+        if "record" in item:
+            action["record"] = item.get("record")
+        if "content" in item:
+            action["content"] = item.get("content")
+        if "description" in item:
+            action["description"] = item.get("description")
+        if "similarity" in item:
+            action["similarity"] = item.get("similarity")
+        actions.append(action)
 
     for item in dispatch_result.get("deferred", []):
         actions.append({
@@ -225,6 +231,417 @@ def read_lesson(lesson_path: Path) -> dict:
     }
 
 
+def relative_to_base(path: Path, base: Path = BASE) -> str:
+    resolved_path = path.resolve()
+    resolved_base = base.resolve()
+    return str(resolved_path.relative_to(resolved_base))
+
+
+def relative_to_notes(path: Path) -> str:
+    return relative_to_base(path, NOTES_DIR)
+
+
+def slugify_name(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value or "")
+    ascii_only = normalized.encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^a-zA-Z0-9]+", "-", ascii_only).strip("-").lower()
+    return slug or "promoted-note"
+
+
+def lesson_title(lesson_path: Path, lesson: dict) -> str:
+    fm = lesson.get("frontmatter", {})
+    title = fm.get("title") or fm.get("name")
+    if title:
+        return str(title)
+    return lesson_path.stem.replace("-", " ").strip().title()
+
+
+def infer_memory_file(kind: str) -> Path:
+    mapping = {
+        "preference": DECLARATIVE_MEMORY_DIR / "user-preferences.json",
+        "constraint": DECLARATIVE_MEMORY_DIR / "workspace-constraints.json",
+        "environment": DECLARATIVE_MEMORY_DIR / "environment.json",
+    }
+    target = mapping.get(kind)
+    if target is None:
+        raise ValueError(f"Unsupported declarative memory kind: {kind}")
+    return target
+
+
+def normalize_heading_key(value: str) -> str:
+    lowered = (value or "").strip().lower()
+    lowered = lowered.replace("_", "").replace("-", "")
+    return re.sub(r"[^\w\u4e00-\u9fff]+", "", lowered)
+
+
+def pick_frontmatter_value(frontmatter: dict, candidates: List[str]) -> str:
+    for key in candidates:
+        for existing_key, value in frontmatter.items():
+            if normalize_heading_key(str(existing_key)) == normalize_heading_key(key):
+                text = str(value).strip()
+                if text:
+                    return text
+    return ""
+
+
+def parse_markdown_sections(body: str) -> Dict[str, str]:
+    """Parse markdown headings into a normalized heading -> section content map."""
+    sections: Dict[str, str] = {}
+    matches = list(re.finditer(r"(?m)^##+\s+(.+?)\s*$", body or ""))
+    if not matches:
+        return sections
+
+    for i, match in enumerate(matches):
+        heading = match.group(1).strip()
+        start = match.end()
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(body)
+        content = (body[start:end] or "").strip()
+        if not content:
+            continue
+        sections[normalize_heading_key(heading)] = content
+    return sections
+
+
+def pick_section_value(sections: Dict[str, str], aliases: List[str]) -> str:
+    for alias in aliases:
+        key = normalize_heading_key(alias)
+        if key in sections and sections[key].strip():
+            return sections[key].strip()
+    return ""
+
+
+def normalize_list_items(text: str, max_items: int = 6) -> List[str]:
+    items: List[str] = []
+    for raw_line in (text or "").splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        line = re.sub(r"^[-*+]\s+", "", line)
+        line = re.sub(r"^\d+[.)]\s+", "", line)
+        line = re.sub(r"^\[[ xX]\]\s+", "", line)
+        line = line.strip()
+        if line:
+            items.append(line)
+        if len(items) >= max_items:
+            break
+    return items
+
+
+def sentence_split_items(text: str, max_items: int = 4) -> List[str]:
+    chunks = re.split(r"[。！？!?;\n]+", text or "")
+    cleaned = []
+    for chunk in chunks:
+        line = chunk.strip()
+        if not line:
+            continue
+        line = re.sub(r"^[-*+]\s+", "", line)
+        line = re.sub(r"^\d+[.)]\s+", "", line)
+        line = re.sub(r"^\[[ xX]\]\s+", "", line)
+        line = line.strip()
+        if line:
+            cleaned.append(line)
+    return cleaned[:max_items]
+
+
+def summarize_text(text: str, max_chars: int = 260) -> str:
+    compact = re.sub(r"\s+", " ", (text or "")).strip()
+    if len(compact) <= max_chars:
+        return compact
+    return compact[: max_chars - 1].rstrip() + "…"
+
+
+def format_markdown_bullets(items: List[str], fallback: str) -> str:
+    if not items:
+        return f"- {fallback}"
+    return "\n".join(f"- {item}" for item in items)
+
+
+def format_markdown_steps(items: List[str], fallback_steps: List[str]) -> str:
+    chosen = items if items else fallback_steps
+    return "\n".join(f"{idx}. {item}" for idx, item in enumerate(chosen, start=1))
+
+
+def create_skill(lesson_path: Path, target_path: Path, lesson: dict, dry_run: bool) -> Optional[Path]:
+    """Create a skill directory from a promoted note."""
+    skill_name = slugify_name(lesson_path.stem)
+    vendor_root = VENDOR_DIR.resolve()
+
+    if target_path.name == "SKILL.md":
+        skill_file = target_path
+        skill_dir = skill_file.parent
+        skill_name = skill_dir.name or skill_name
+    elif target_path.suffix:
+        raise ValueError(f"Skill target must be a directory or SKILL.md file: {target_path}")
+    elif target_path == SKILLS_DIR or target_path.resolve() == SKILLS_DIR.resolve():
+        skill_dir = target_path / skill_name
+        skill_file = skill_dir / "SKILL.md"
+    elif target_path.is_relative_to(SKILLS_DIR):
+        skill_dir = target_path
+        skill_name = skill_dir.name or skill_name
+        skill_file = skill_dir / "SKILL.md"
+    else:
+        raise ValueError(f"Skill target escapes skills directory: {target_path}")
+
+    if skill_dir.resolve().is_relative_to(vendor_root):
+        raise ValueError(f"Cannot write to vendor directory: {target_path}")
+
+    if skill_file.exists():
+        existing_content = skill_file.read_text(encoding="utf-8")
+        if lesson_path.name in existing_content:
+            log(f"Skill already exists with same source: {skill_file} (idempotent)")
+            return skill_file
+        log(f"Refusing to overwrite existing skill with different content: {skill_file}")
+        return None
+
+    title = lesson_title(lesson_path, lesson)
+    frontmatter = lesson.get("frontmatter", {})
+    body = lesson.get("body", "").strip()
+    sections = parse_markdown_sections(body)
+    note_ref = relative_to_notes(lesson_path)
+
+    description = pick_frontmatter_value(frontmatter, ["description", "summary"])
+    if not description:
+        title_hint = pick_frontmatter_value(frontmatter, ["title", "name"])
+        description = summarize_text(title_hint or title, max_chars=120)
+    else:
+        description = summarize_text(description, max_chars=140)
+
+    trigger_text = (
+        pick_frontmatter_value(frontmatter, ["trigger", "触发条件", "适用场景"])
+        or pick_section_value(sections, ["Trigger", "触发条件", "适用场景", "现象", "问题"])
+    )
+    decision_text = (
+        pick_frontmatter_value(frontmatter, ["decision", "核心原则"])
+        or pick_section_value(sections, ["Decision", "核心原则", "正确做法", "解决方案", "根因"])
+    )
+    execution_text = (
+        pick_frontmatter_value(frontmatter, ["execution", "执行步骤", "执行流程"])
+        or pick_section_value(sections, ["Execution", "执行流程", "执行步骤", "How to Apply", "正确做法", "解决方案"])
+    )
+    anti_patterns_text = (
+        pick_frontmatter_value(frontmatter, ["anti-patterns", "反模式"])
+        or pick_section_value(sections, ["Anti-patterns", "反模式", "错误做法"])
+    )
+    output_text = (
+        pick_frontmatter_value(frontmatter, ["output", "输出要求", "acceptance criteria", "验收标准"])
+        or pick_section_value(sections, ["输出要求", "验收标准", "Checklist", "诊断检查清单"])
+    )
+    source_cases_text = pick_section_value(sections, ["Source Cases", "来源案例", "案例"])
+
+    scenario_items = normalize_list_items(trigger_text, max_items=4)
+    if not scenario_items and trigger_text:
+        scenario_items = sentence_split_items(trigger_text, max_items=3)
+    if not scenario_items and decision_text:
+        scenario_items = sentence_split_items(decision_text, max_items=2)
+
+    execution_items = normalize_list_items(execution_text, max_items=6)
+    if not execution_items and execution_text:
+        execution_items = sentence_split_items(execution_text, max_items=4)
+    if not execution_items and decision_text:
+        execution_items = sentence_split_items(decision_text, max_items=3)
+
+    default_outputs = [
+        "输出明确的处理结论与目标文件变更。",
+        "记录关键决策依据，便于后续复用和审查。",
+        "若不适用，明确说明阻断条件并给出后续动作。",
+    ]
+
+    output_items = normalize_list_items(output_text, max_items=5)
+    if not output_items and output_text:
+        output_items = sentence_split_items(output_text, max_items=3)
+    if not output_items:
+        output_items = list(default_outputs)
+
+    anti_pattern_items = normalize_list_items(anti_patterns_text, max_items=4)
+    if not anti_pattern_items and anti_patterns_text:
+        anti_pattern_items = sentence_split_items(anti_patterns_text, max_items=3)
+
+    source_case_items = normalize_list_items(source_cases_text, max_items=5)
+    if not source_case_items and source_cases_text:
+        source_case_items = sentence_split_items(source_cases_text, max_items=3)
+
+    fallback_steps = [
+        "确认当前问题与该技能适用场景匹配，并定位相关上下文。",
+        "按既有约束执行核心决策，避免偏离主路径。",
+        "产出可复核结果并补充必要证据。",
+        "将本次执行结果回写到对应任务状态或知识资产。",
+    ]
+    background = summarize_text(body, max_chars=360) if body else ""
+
+    skill_content = f"""---
+name: {skill_name}
+description: {description or f"Promoted from {note_ref}"}
+---
+
+# {title}
+
+> 来源：`{note_ref}` | 晋升时间：{datetime.now().strftime("%Y-%m-%d")}
+
+## 适用场景
+
+{format_markdown_bullets(scenario_items, f"由 `{lesson_path.name}` 晋升得到；适用于重复出现且需要按需展开的操作流程。")}
+
+## 执行流程
+
+{format_markdown_steps(execution_items, fallback_steps)}
+
+## 输出要求
+
+{format_markdown_bullets(output_items, "待补充")}
+
+## 边界与不适用场景
+
+{format_markdown_bullets(anti_pattern_items, "当问题仍是一次性案例或证据不足时，不应直接套用该技能。")}
+
+## 决策依据
+
+- 核心决策：{summarize_text(decision_text, max_chars=180) if decision_text else "待补充（建议在后续迭代补齐 Decision/核心原则）。"}
+
+## 背景补充（可选）
+
+{background or "详见原始 note；当前模板仅提炼 procedural memory，不直接搬运全文。"}
+
+## 来源
+
+- 原 note：`{note_ref}`
+- note 路径：`{note_ref}`
+{format_markdown_bullets(source_case_items, "Source Cases 见原 note。")}
+"""
+
+    if not dry_run:
+        skill_dir.mkdir(parents=True, exist_ok=True)
+        skill_file.write_text(skill_content.strip() + "\n", encoding="utf-8")
+        log(f"Created skill: {skill_file}")
+    else:
+        log(f"[DRY-RUN] Would create skill: {skill_file}")
+
+    return skill_file
+
+
+def upsert_declarative_memory(
+    lesson_path: Path,
+    record: dict,
+    target_path_str: Optional[str],
+    dry_run: bool,
+) -> Path:
+    """Upsert a canonical declarative memory record by subject + key."""
+    if not isinstance(record, dict):
+        raise ValueError("Memory promotion requires a canonical record object")
+
+    subject = str(record.get("subject", "")).strip()
+    key = str(record.get("key", "")).strip()
+    kind = str(record.get("kind", "")).strip()
+    scope = str(record.get("scope", "")).strip()
+    status = str(record.get("status", "")).strip()
+    value_type = str(record.get("valueType", "")).strip()
+
+    if not subject or not key or not kind or not value_type:
+        raise ValueError("Declarative record missing required fields: subject/key/kind/valueType")
+    if scope != "cross-session":
+        raise ValueError("Declarative record scope must be cross-session")
+    if status != "active":
+        raise ValueError("Declarative record status must be active")
+    if "value" not in record:
+        raise ValueError("Declarative record missing value")
+
+    target_file = resolve_allowed_target_path(target_path_str) if target_path_str else infer_memory_file(kind)
+    if target_file.suffix != ".json":
+        raise ValueError("Declarative memory target must be a JSON file")
+
+    if not dry_run:
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    normalized_record = dict(record)
+    normalized_record.setdefault("id", f"{subject}.{slugify_name(key)}")
+    normalized_record.setdefault("source", {"type": "file", "ref": relative_to_base(lesson_path)})
+    normalized_record["updatedAt"] = today
+    normalized_record.setdefault("lastVerifiedAt", today)
+
+    try:
+        payload = json.loads(target_file.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        payload = {"version": "0.1", "kind": kind, "records": []}
+
+    records = payload.get("records")
+    if not isinstance(records, list):
+        records = []
+
+    replaced = False
+    for idx, existing in enumerate(records):
+        if (
+            isinstance(existing, dict)
+            and str(existing.get("subject", "")).strip() == subject
+            and str(existing.get("key", "")).strip() == key
+        ):
+            records[idx] = normalized_record
+            replaced = True
+            break
+    if not replaced:
+        records.append(normalized_record)
+
+    payload["kind"] = kind
+    payload["records"] = records
+
+    index_path = DECLARATIVE_MEMORY_DIR / "index.json"
+    try:
+        index_payload = json.loads(index_path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        index_payload = {"version": "0.1", "namespace": "declarative", "files": [], "records": [], "metadata": {}}
+
+    files = index_payload.setdefault("files", [])
+    rel_target = relative_to_base(target_file)
+    if not any(isinstance(item, dict) and item.get("path") == rel_target for item in files):
+        files.append({"name": target_file.stem, "path": rel_target, "kind": kind})
+
+    index_records = index_payload.setdefault("records", [])
+    updated = False
+    for item in index_records:
+        if (
+            isinstance(item, dict)
+            and str(item.get("subject", "")).strip() == subject
+            and str(item.get("key", "")).strip() == key
+        ):
+            item.update(
+                {
+                    "id": normalized_record["id"],
+                    "subject": subject,
+                    "key": key,
+                    "kind": kind,
+                    "status": "active",
+                    "file": rel_target,
+                    "updatedAt": today,
+                }
+            )
+            updated = True
+            break
+    if not updated:
+        index_records.append(
+            {
+                "id": normalized_record["id"],
+                "subject": subject,
+                "key": key,
+                "kind": kind,
+                "status": "active",
+                "file": rel_target,
+                "updatedAt": today,
+            }
+        )
+
+    metadata = index_payload.setdefault("metadata", {})
+    metadata["updatedAt"] = today
+    metadata.setdefault("createdAt", today)
+
+    if not dry_run:
+        target_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        index_path.write_text(json.dumps(index_payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        log(f"Upserted declarative memory: {target_file} ({subject}.{key})")
+    else:
+        log(f"[DRY-RUN] Would upsert declarative memory: {target_file} ({subject}.{key})")
+
+    return target_file
+
+
 def create_rule(lesson_path: Path, target_dir: Path, lesson: dict, dry_run: bool) -> Optional[Path]:
     """创建新 rule"""
     # 确定目标文件名
@@ -262,6 +679,7 @@ def create_rule(lesson_path: Path, target_dir: Path, lesson: dict, dry_run: bool
 
     # 构建 rule 内容
     today = datetime.now().strftime("%Y-%m-%d")
+    note_ref = relative_to_base(lesson_path)
     rule_content = f"""---
 name: {clean_stem}
 description: {fm.get('title', clean_stem)}
@@ -269,7 +687,7 @@ description: {fm.get('title', clean_stem)}
 
 # {fm.get('title', clean_stem.replace('-', ' ').title())}
 
-> 来源：`notes/lessons/{lesson_path.name}` | 晋升时间：{today}
+> 来源：`{note_ref}` | 晋升时间：{today}
 
 ## 触发条件
 
@@ -289,7 +707,7 @@ description: {fm.get('title', clean_stem)}
 
 ## 参考
 
-- Source Cases 见原 lesson：`notes/lessons/{lesson_path.name}`
+- Source Cases 见原 lesson：`{relative_to_base(lesson_path)}`
 """
 
     if not dry_run:
@@ -405,7 +823,15 @@ def apply_promotion(result: dict, dry_run: bool) -> dict:
         target_path_str = action.get("target")
 
         # keep 动作无需验证
-        if action_type == "keep":
+        if action_type in {
+            "keep",
+            "promoted_to_rule",
+            "promoted_to_skill",
+            "indexed_in_memory",
+            "create_rule",
+            "create_skill",
+            "upsert_memory",
+        }:
             return True, ""
 
         # 如果没有 similarity，允许通过（向后兼容）
@@ -460,29 +886,6 @@ def apply_promotion(result: dict, dry_run: bool) -> dict:
             commit_queue_item(action_id, False, dry_run)
             continue
 
-        if action_type == "already_applied":
-            summary_kind = action.get("summary_kind", "kept")
-            if summary_kind == "created":
-                summary["created"] += 1
-            elif summary_kind == "merged":
-                summary["merged"] += 1
-            else:
-                summary["kept"] += 1
-
-            file_entry = {
-                "action": action.get("outcome", action_type),
-                "lesson": str(lesson_path),
-            }
-            if target_path_str:
-                file_entry["target"] = target_path_str
-            if reason:
-                file_entry["reason"] = reason
-            summary["files"].append(file_entry)
-            if action_id:
-                summary["processed_ids"].append(action_id)
-                commit_queue_item(action_id, True, dry_run)
-            continue
-
         if action_type == "defer":
             summary["deferred"] += 1
             summary["files"].append({"action": "defer", "lesson": str(lesson_path), "reason": reason})
@@ -512,8 +915,17 @@ def apply_promotion(result: dict, dry_run: bool) -> dict:
 
         lesson = read_lesson(lesson_path)
 
-        if action_type == "create":
-            target_root = RULES_DIR
+        if action_type == "promoted_to_rule":
+            action_type = "create_rule"
+        elif action_type == "promoted_to_skill":
+            action_type = "create_skill"
+        elif action_type == "indexed_in_memory":
+            action_type = "upsert_memory"
+        elif action_type == "already_applied":
+            action_type = "keep"
+
+        if action_type in {"create", "create_rule"}:
+            target_root = RULES_LIBRARY_DIR
             if target_path_str:
                 try:
                     target_root = resolve_allowed_target_path(target_path_str)
@@ -525,7 +937,8 @@ def apply_promotion(result: dict, dry_run: bool) -> dict:
                     commit_queue_item(action_id, False, dry_run)
                     continue
 
-            if target_root == RULES_DIR or target_root.is_relative_to(RULES_DIR):
+            if (target_root == RULES_LIBRARY_DIR or target_root.is_relative_to(RULES_LIBRARY_DIR)
+                    or target_root == RULES_DIR or target_root.is_relative_to(RULES_DIR)):
                 rule_file = create_rule(lesson_path, target_root, lesson, dry_run)
             else:
                 log(f"Create action currently only supports rules targets: {target_root}")
@@ -536,12 +949,70 @@ def apply_promotion(result: dict, dry_run: bool) -> dict:
                     summary["failed_ids"].append(action_id)
                 commit_queue_item(action_id, False, dry_run)
                 continue
-            update_lesson_status(lesson_path, "create", str(rule_file.relative_to(BASE)), dry_run)
+            update_lesson_status(lesson_path, "create", relative_to_base(rule_file), dry_run)
             summary["created"] += 1
             summary["files"].append({"action": "create", "lesson": str(lesson_path), "target": str(rule_file)})
             if action_id:
                 summary["processed_ids"].append(action_id)
                 # 原子性提交队列状态
+                commit_queue_item(action_id, success=True, dry_run=dry_run)
+
+        elif action_type == "create_skill":
+            skill_target = SKILLS_DIR
+            if target_path_str:
+                try:
+                    skill_target = resolve_allowed_target_path(target_path_str)
+                except ValueError as exc:
+                    log(str(exc))
+                    summary["failed"] += 1
+                    if action_id:
+                        summary["failed_ids"].append(action_id)
+                    commit_queue_item(action_id, False, dry_run)
+                    continue
+
+            try:
+                skill_file = create_skill(lesson_path, skill_target, lesson, dry_run)
+            except ValueError as exc:
+                log(str(exc))
+                summary["failed"] += 1
+                if action_id:
+                    summary["failed_ids"].append(action_id)
+                commit_queue_item(action_id, False, dry_run)
+                continue
+            if not skill_file:
+                summary["failed"] += 1
+                if action_id:
+                    summary["failed_ids"].append(action_id)
+                commit_queue_item(action_id, False, dry_run)
+                continue
+            update_lesson_status(lesson_path, "create", relative_to_base(skill_file), dry_run)
+            summary["created"] += 1
+            summary["files"].append({"action": "create_skill", "lesson": str(lesson_path), "target": str(skill_file)})
+            if action_id:
+                summary["processed_ids"].append(action_id)
+                commit_queue_item(action_id, success=True, dry_run=dry_run)
+
+        elif action_type == "upsert_memory":
+            try:
+                target_file = upsert_declarative_memory(
+                    lesson_path,
+                    action.get("record"),
+                    target_path_str,
+                    dry_run,
+                )
+            except (ValueError, OSError) as exc:
+                log(str(exc))
+                summary["failed"] += 1
+                if action_id:
+                    summary["failed_ids"].append(action_id)
+                commit_queue_item(action_id, False, dry_run)
+                continue
+
+            update_lesson_status(lesson_path, "create", relative_to_base(target_file), dry_run)
+            summary["created"] += 1
+            summary["files"].append({"action": "upsert_memory", "lesson": str(lesson_path), "target": str(target_file)})
+            if action_id:
+                summary["processed_ids"].append(action_id)
                 commit_queue_item(action_id, success=True, dry_run=dry_run)
 
         elif action_type == "merge":
@@ -609,6 +1080,12 @@ def commit_queue_item(candidate_id: str, success: bool, dry_run: bool):
         return
 
     with locked_queue() as queue:
+        candidate_ref = None
+        for candidate in queue["candidates"]:
+            if candidate.get("id") == candidate_id:
+                candidate_ref = candidate
+                break
+
         # 从 processing 移除
         remaining = []
         found = False
@@ -620,11 +1097,18 @@ def commit_queue_item(candidate_id: str, success: bool, dry_run: bool):
                     c["status"] = "completed"
                     c["completed_at"] = datetime.now().isoformat()
                     queue["completed"].append(c)
+                    if candidate_ref is not None:
+                        candidate_ref["status"] = "completed"
+                        candidate_ref["completed_at"] = c["completed_at"]
                 else:
                     # 失败：重置为 pending 重新入队
                     c["status"] = "pending"
                     c["claimed_at"] = None
-                    queue["candidates"].append(c)
+                    if candidate_ref is not None:
+                        candidate_ref["status"] = "pending"
+                        candidate_ref["claimed_at"] = None
+                    else:
+                        queue["candidates"].append(c)
             else:
                 remaining.append(c)
 
@@ -665,6 +1149,12 @@ def cleanup_queue(processed_ids: List[str], failed_ids: List[str], dry_run: bool
             remaining_processing.append(candidate)
 
         queue["processing"] = remaining_processing
+        if not queue["processing"]:
+            queue["dispatch"]["status"] = "failed" if failed_ids else "idle"
+            queue["dispatch"]["finishedAt"] = datetime.now().isoformat()
+            queue["dispatch"]["lastError"] = (
+                f"{len(failed_ids)} item(s) failed" if failed_ids else None
+            )
 
     log(f"Cleaned up {len(processed_ids)} successful items and re-queued {len(failed_ids)} failed items")
 

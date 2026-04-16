@@ -1,6 +1,7 @@
 ---
 name: team-builder
 description: AI 团队组建与管理技能。充当 HR Agent，根据项目实际需求动态招聘（创建）专用 agent，为每个 agent 设定 OKR 指标，定期评估绩效并淘汰末位，按需补招新人。当用户提到"组建团队"、"招人"、"招聘 agent"、"团队管理"、"评估团队"、"淘汰"、"绩效评估"、"团队优化"时触发此技能。也适用于"我需要更多 agent"、"这个项目需要什么角色"、"帮我搭建一个 agent 团队"、"review 一下团队表现"等表述。
+description_en: "AI team-building and management skill. Acts as an HR agent that recruits specialized agents on demand, sets OKR-style goals for each role, reviews performance, removes weak fits, and backfills the team as needed."
 ---
 
 # Team Builder - HR Agent 团队管理

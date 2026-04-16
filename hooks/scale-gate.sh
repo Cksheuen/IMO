@@ -24,16 +24,99 @@ else
   SESSION_ID=$(printf '%s' "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('session_id') or d.get('sessionId') or '')" 2>/dev/null)
 fi
 
+export METRICS_SESSION_ID="$SESSION_ID"
+export METRICS_SCOPE="global"
+
+METRICS_LIB="$HOME/.claude/hooks/metrics/emit.sh"
+if [ -f "$METRICS_LIB" ]; then
+  # shellcheck disable=SC1090
+  . "$METRICS_LIB"
+fi
+
+metrics_start_ms=0
+if command -v metrics_now_ms >/dev/null 2>&1; then
+  metrics_start_ms=$(metrics_now_ms)
+fi
+
+emit_gate_result() {
+  local status="$1"
+  local reason="${2:-}"
+  local duration_ms=""
+  local meta_json=""
+
+  if command -v metrics_now_ms >/dev/null 2>&1 && [ "${metrics_start_ms:-0}" -gt 0 ] 2>/dev/null; then
+    duration_ms=$(( $(metrics_now_ms) - metrics_start_ms ))
+  fi
+
+  if [ -n "$reason" ]; then
+    if command -v jq >/dev/null 2>&1; then
+      meta_json=$(jq -cn --arg reason "$reason" '{reason:$reason}' 2>/dev/null || printf '')
+    else
+      meta_json=$(python3 - "$reason" <<'PY'
+import json
+import sys
+print(json.dumps({"reason": sys.argv[1]}, ensure_ascii=False))
+PY
+      )
+    fi
+  fi
+
+  if command -v metrics_emit >/dev/null 2>&1; then
+    metrics_emit "scale-gate" "PreToolUse" "gate_decision" "$status" "$duration_ms" "$meta_json"
+  fi
+}
+
+print_decision_json() {
+  local decision="$1"
+  local reason="${2:-}"
+
+  if [ -n "$reason" ]; then
+    if command -v jq >/dev/null 2>&1; then
+      jq -cn --arg decision "$decision" --arg reason "$reason" '{decision:$decision,reason:$reason}'
+    else
+      python3 - "$decision" "$reason" <<'PY'
+import json
+import sys
+print(json.dumps({"decision": sys.argv[1], "reason": sys.argv[2]}, ensure_ascii=False))
+PY
+    fi
+  else
+    if command -v jq >/dev/null 2>&1; then
+      jq -cn --arg decision "$decision" '{decision:$decision}'
+    else
+      python3 - "$decision" <<'PY'
+import json
+import sys
+print(json.dumps({"decision": sys.argv[1]}, ensure_ascii=False))
+PY
+    fi
+  fi
+}
+
+allow() {
+  local reason="${1:-}"
+  emit_gate_result "allowed" "$reason"
+  print_decision_json "allow" "$reason"
+  exit 0
+}
+
+deny() {
+  local output_reason="$1"
+  local metrics_reason="${2:-$1}"
+  emit_gate_result "blocked" "$metrics_reason"
+  print_decision_json "deny" "$output_reason"
+  exit 0
+}
+
 # Only gate Edit and Write
 case "$TOOL_NAME" in
   Edit|Write) ;;
-  *) echo '{"decision": "allow"}'; exit 0 ;;
+  *) allow ;;
 esac
 
 # Need session_id to track state
 if [ -z "$SESSION_ID" ]; then
-  echo '{"decision": "allow"}'
-  exit 0
+  allow "missing_session_id"
 fi
 
 STATE_DIR="$HOME/.claude/.scale-gate"
@@ -47,8 +130,7 @@ fi
 
 # If already assessed this session, pass through
 if [ -f "$MARKER" ]; then
-  echo '{"decision": "allow"}'
-  exit 0
+  allow "scale_assessment_already_done"
 fi
 
 # Cleanup old markers (> 24h) to prevent accumulation
@@ -58,8 +140,8 @@ fi
 
 # Block and remind
 mkdir -p "$STATE_DIR"
-python3 - "$MARKER" "$TASK_DIR" <<'PYEOF'
-import json
+touch "$MARKER"
+deny "$(python3 - "$MARKER" "$TASK_DIR" <<'PYEOF'
 import sys
 
 marker, task_dir = sys.argv[1:3]
@@ -82,6 +164,6 @@ Then decide:
 Mark assessment done by running:
   touch {marker}
 """
-print(json.dumps({"decision": "deny", "reason": reason}, ensure_ascii=False))
+print(reason)
 PYEOF
-exit 0
+)" "Scale assessment required before editing files"

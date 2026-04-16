@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 540" width="860" height="540">
+<style>
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes growRight { from { width: 0; } }
+  @keyframes slideUp { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .root { fill: #0a0b09; }
+  .panel { fill: #12130f; rx: 10; ry: 10; stroke: #222120; stroke-width: 1; }
+  .t { fill: #f0ede6; font-family: "Martian Mono", "SF Mono", "Cascadia Code", Consolas, monospace; }
+  .t-title { font-size: 20px; font-weight: 700; letter-spacing: 0.08em; }
+  .t-sub { font-size: 10px; fill: #8a8679; }
+  .t-label { font-size: 10px; fill: #8a8679; text-transform: uppercase; letter-spacing: 0.06em; }
+  .t-value { font-size: 22px; font-weight: 700; }
+  .t-hook { font-size: 11px; }
+  .t-small { font-size: 10px; }
+  .t-section { font-size: 12px; font-weight: 600; fill: #C9A962; letter-spacing: 0.04em; }
+  .anim { animation: fadeIn 0.6s ease both; }
+  .bar-bg { fill: #222120; rx: 4; ry: 4; }
+  .trend-dot { fill: #4a4840; }
+</style>
+<rect class="root" width="860" height="540" rx="16" ry="16"/>
+<rect x="0" y="0" width="860" height="2" fill="#C9A962"/>
+<text x="24" y="32" class="t t-title anim" style="animation-delay:0.05s">运营遥测周报</text>
+<text x="836" y="24" class="t t-sub" text-anchor="end">2026-04-10&#160;~&#160;2026-04-16</text>
+<text x="836" y="40" class="t t-sub" text-anchor="end">数据: 2/7 天</text>
+<rect class="panel" x="24.0" y="64" width="195.5" height="68"/>
+<text x="38.0" y="84" class="t t-label">会话数</text>
+<text x="38.0" y="110" class="t t-value" fill="#f0ede6">25</text>
+<rect class="panel" x="229.5" y="64" width="195.5" height="68"/>
+<text x="243.5" y="84" class="t t-label">事件量</text>
+<text x="243.5" y="110" class="t t-value" fill="#f0ede6">909</text>
+<rect class="panel" x="435.0" y="64" width="195.5" height="68"/>
+<text x="449.0" y="84" class="t t-label">成功率</text>
+<text x="449.0" y="110" class="t t-value" fill="#22c55e">99.4%</text>
+<rect class="bar-bg" x="449.0" y="118" width="167.5" height="5"/>
+<rect fill="#22c55e" rx="4" ry="4" x="449.0" y="118" width="166.495" height="5" style="animation: growRight 1s ease both;"/>
+<rect class="panel" x="640.5" y="64" width="195.5" height="68"/>
+<text x="654.5" y="84" class="t t-label">平均耗时</text>
+<text x="654.5" y="110" class="t t-value" fill="#f0ede6">3 ms</text>
+<line x1="24" y1="146" x2="836" y2="146" stroke="#2e2d28" stroke-width="1"/>
+<text x="24" y="170" class="t t-section">每日趋势</text>
+<circle class="trend-dot" cx="69.0" cy="236" r="3"/>
+<text x="69.0" y="252" class="t t-sub" text-anchor="middle">04-10</text>
+<circle class="trend-dot" cx="159.0" cy="236" r="3"/>
+<text x="159.0" y="252" class="t t-sub" text-anchor="middle">04-11</text>
+<circle class="trend-dot" cx="249.0" cy="236" r="3"/>
+<text x="249.0" y="252" class="t t-sub" text-anchor="middle">04-12</text>
+<circle class="trend-dot" cx="339.0" cy="236" r="3"/>
+<text x="339.0" y="252" class="t t-sub" text-anchor="middle">04-13</text>
+<circle class="trend-dot" cx="429.0" cy="236" r="3"/>
+<text x="429.0" y="252" class="t t-sub" text-anchor="middle">04-14</text>
+<rect fill="#3b82f6" rx="3" ry="3" x="503.0" y="180.0" width="14" height="60.0" opacity="0.9" style="animation: slideUp 0.5s ease 0.5s both;"/>
+<rect fill="#a08840" rx="3" ry="3" x="521.0" y="180.12474012474013" width="14" height="59.87525987525988" opacity="0.95" style="animation: slideUp 0.5s ease 0.55s both;"/>
+<text x="519.0" y="252" class="t t-sub" text-anchor="middle">04-15</text>
+<rect fill="#3b82f6" rx="3" ry="3" x="593.0" y="184.6153846153846" width="14" height="55.38461538461539" opacity="0.9" style="animation: slideUp 0.5s ease 0.6000000000000001s both;"/>
+<rect fill="#a08840" rx="3" ry="3" x="611.0" y="186.48648648648648" width="14" height="53.513513513513516" opacity="0.95" style="animation: slideUp 0.5s ease 0.6500000000000001s both;"/>
+<text x="609.0" y="252" class="t t-sub" text-anchor="middle">04-16</text>
+<rect fill="#3b82f6" rx="2" ry="2" x="662" y="163" width="8" height="8"/>
+<text x="670" y="170" class="t t-sub">会话</text>
+<rect fill="#a08840" rx="2" ry="2" x="740" y="163" width="8" height="8"/>
+<text x="752" y="170" class="t t-sub">事件/37</text>
+<line x1="24" y1="258" x2="836" y2="258" stroke="#2e2d28" stroke-width="1"/>
+<text x="24" y="280" class="t t-section">热门 HOOK</text>
+<text x="836" y="280" class="t t-sub" text-anchor="end">共 11 个</text>
+<text x="24" y="306" class="t t-hook" style="animation: fadeIn 0.4s ease 0.0s both;">scale-gate</text>
+<rect class="bar-bg" x="240" y="294" width="280" height="12"/>
+<rect fill="#ef4444" rx="4" ry="4" x="240" y="294" width="280.0" height="12" opacity="0.92" style="animation: growRight 0.8s ease 0.0s both;"/>
+<text x="530" y="306" class="t t-small">111</text>
+<text x="568" y="306" class="t t-sub">2d</text>
+<rect fill="none" stroke="#ef4444" stroke-width="1" rx="7" ry="7" x="598" y="292" width="68" height="16"/>
+<text x="632" y="304" class="t t-small" text-anchor="middle" fill="#ef4444">99% block</text>
+<text x="24" y="334" class="t t-hook" style="animation: fadeIn 0.4s ease 0.08s both;">skill-inject</text>
+<rect class="bar-bg" x="240" y="322" width="280" height="12"/>
+<rect fill="#a08840" rx="4" ry="4" x="240" y="322" width="264.86486486486484" height="12" opacity="0.92" style="animation: growRight 0.8s ease 0.08s both;"/>
+<text x="530" y="334" class="t t-small">105</text>
+<text x="568" y="334" class="t t-sub">2d</text>
+<text x="24" y="362" class="t t-hook" style="animation: fadeIn 0.4s ease 0.16s both;">project-architecture-inject</text>
+<rect class="bar-bg" x="240" y="350" width="280" height="12"/>
+<rect fill="#a08840" rx="4" ry="4" x="240" y="350" width="259.8198198198198" height="12" opacity="0.92" style="animation: growRight 0.8s ease 0.16s both;"/>
+<text x="530" y="362" class="t t-small">103</text>
+<text x="568" y="362" class="t t-sub">2d</text>
+<text x="24" y="390" class="t t-hook" style="animation: fadeIn 0.4s ease 0.24s both;">recall-entrypoint</text>
+<rect class="bar-bg" x="240" y="378" width="280" height="12"/>
+<rect fill="#a08840" rx="4" ry="4" x="240" y="378" width="259.8198198198198" height="12" opacity="0.92" style="animation: growRight 0.8s ease 0.24s both;"/>
+<text x="530" y="390" class="t t-small">103</text>
+<text x="568" y="390" class="t t-sub">2d</text>
+<text x="24" y="418" class="t t-hook" style="animation: fadeIn 0.4s ease 0.32s both;">rules-inject</text>
+<rect class="bar-bg" x="240" y="406" width="280" height="12"/>
+<rect fill="#a08840" rx="4" ry="4" x="240" y="406" width="259.8198198198198" height="12" opacity="0.92" style="animation: growRight 0.8s ease 0.32s both;"/>
+<text x="530" y="418" class="t t-small">103</text>
+<text x="568" y="418" class="t t-sub">2d</text>
+<text x="24" y="446" class="t t-hook" style="animation: fadeIn 0.4s ease 0.4s both;">context-monitor</text>
+<rect class="bar-bg" x="240" y="434" width="280" height="12"/>
+<rect fill="#a08840" rx="4" ry="4" x="240" y="434" width="252.25225225225225" height="12" opacity="0.92" style="animation: growRight 0.8s ease 0.4s both;"/>
+<text x="530" y="446" class="t t-small">100</text>
+<text x="568" y="446" class="t t-sub">2d</text>
+<text x="24" y="474" class="t t-hook" style="animation: fadeIn 0.4s ease 0.48s both;">recall-capture</text>
+<rect class="bar-bg" x="240" y="462" width="280" height="12"/>
+<rect fill="#a08840" rx="4" ry="4" x="240" y="462" width="249.72972972972974" height="12" opacity="0.92" style="animation: growRight 0.8s ease 0.48s both;"/>
+<text x="530" y="474" class="t t-small">99</text>
+<text x="568" y="474" class="t t-sub">2d</text>
+<text x="24" y="502" class="t t-hook" style="animation: fadeIn 0.4s ease 0.56s both;">pre-edit-gate</text>
+<rect class="bar-bg" x="240" y="490" width="280" height="12"/>
+<rect fill="#a08840" rx="4" ry="4" x="240" y="490" width="221.981981981982" height="12" opacity="0.92" style="animation: growRight 0.8s ease 0.56s both;"/>
+<text x="530" y="502" class="t t-small">88</text>
+<text x="568" y="502" class="t t-sub">2d</text>
+<text x="430.0" y="526" class="t t-sub" text-anchor="middle" fill="#f59e0b">session-end-consolidate: 4 次失败 | scale-gate: 99% 已阻断</text>
+</svg>

@@ -11,7 +11,10 @@
 ## 实践要点
 
 1. **CLAUDE.md 保持精简**：只放核心原则（< 100 行）
-2. **规范分层存储**：`rules/pattern/`, `rules/technique/`, `rules/tool/`, `rules/knowledge/`
+2. **规范两层存储**：
+   - `rules/`：always-loaded，每次会话自动加载（仅放元级约束，当前 4 个文件）
+   - `rules-library/`：按需注入，由 `hooks/rules-inject.py` 根据 prompt 关键词匹配加载
+   - 子分类：`core/`、`pattern/`、`technique/`、`tool/`、`domain/`
 3. **按需引用**：在 CLAUDE.md 中引用相关规则文件
 
 ## Claude Code 原生支持
@@ -20,7 +23,7 @@
 # CLAUDE.md 中引用其他文件
 
 ## 架构规范
-See [architecture.md](rules/pattern/architecture.md)
+See [architecture-evolution.md](rules-library/core/architecture-evolution.md)
 
 ## 当前任务
 See [task-context.md](<project>/.claude/tasks/current/context.md)

@@ -1,6 +1,7 @@
 ---
 name: locate
 description: 代码地图技能。记录源代码路径和关键上下文，帮助 Agent 快速定位代码。按变更规模自动选择索引粒度（L1片段/L2模块/L3系统）。当用户说"记住"、"记录位置"、"标记这里"、"定位"、"回忆"时触发此技能。
+description_en: "Code map skill. Records source paths and key context so the agent can relocate code quickly, choosing indexing granularity automatically from snippet to module to system level."
 ---
 
 # Locate - 代码地图

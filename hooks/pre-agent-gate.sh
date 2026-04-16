@@ -14,16 +14,67 @@ set -euo pipefail
 
 # 读取 stdin JSON
 stdin_json=$(cat)
+session_id=$(printf '%s' "$stdin_json" | jq -r '.session_id // .sessionId // ""')
+export METRICS_SESSION_ID="$session_id"
+export METRICS_SCOPE="global"
+
+METRICS_LIB="$HOME/.claude/hooks/metrics/emit.sh"
+if [ -f "$METRICS_LIB" ]; then
+    # shellcheck disable=SC1090
+    . "$METRICS_LIB"
+fi
+
+metrics_start_ms=0
+if command -v metrics_now_ms >/dev/null 2>&1; then
+    metrics_start_ms=$(metrics_now_ms)
+fi
 
 # 提取子代理类型（兼容 toolInput / tool_input 两种 payload）
-subagent_type=$(echo "$stdin_json" | jq -r '.toolInput.subagent_type // .tool_input.subagent_type // "general-purpose"')
-prompt=$(echo "$stdin_json" | jq -r '.toolInput.prompt // .tool_input.prompt // ""')
-isolation=$(echo "$stdin_json" | jq -r '.toolInput.isolation // .tool_input.isolation // ""')
-delegation_depth=$(echo "$stdin_json" | jq -r '.toolInput.delegation_depth // .tool_input.delegation_depth // .toolInput.depth // .tool_input.depth // .toolInput.parent_depth // .tool_input.parent_depth // ""')
+subagent_type=$(printf '%s' "$stdin_json" | jq -r '.toolInput.subagent_type // .tool_input.subagent_type // "general-purpose"')
+prompt=$(printf '%s' "$stdin_json" | jq -r '.toolInput.prompt // .tool_input.prompt // ""')
+isolation=$(printf '%s' "$stdin_json" | jq -r '.toolInput.isolation // .tool_input.isolation // ""')
+delegation_depth=$(printf '%s' "$stdin_json" | jq -r '.toolInput.delegation_depth // .tool_input.delegation_depth // .toolInput.depth // .tool_input.depth // .toolInput.parent_depth // .tool_input.parent_depth // ""')
+
+emit_gate_result() {
+    local status="$1"
+    local reason="${2:-}"
+    local duration_ms=""
+    local meta_json=""
+
+    if command -v metrics_now_ms >/dev/null 2>&1 && [ "${metrics_start_ms:-0}" -gt 0 ] 2>/dev/null; then
+        duration_ms=$(( $(metrics_now_ms) - metrics_start_ms ))
+    fi
+
+    if [ -n "$reason" ]; then
+        meta_json=$(jq -cn --arg reason "$reason" '{reason:$reason}' 2>/dev/null || printf '')
+    fi
+
+    if command -v metrics_emit >/dev/null 2>&1; then
+        metrics_emit "pre-agent-gate" "PreToolUse" "gate_decision" "$status" "$duration_ms" "$meta_json"
+    fi
+}
+
+print_decision_json() {
+    local decision="$1"
+    local reason="${2:-}"
+    if [ -n "$reason" ]; then
+        jq -cn --arg decision "$decision" --arg reason "$reason" '{decision:$decision,reason:$reason}'
+    else
+        jq -cn --arg decision "$decision" '{decision:$decision}'
+    fi
+}
+
+allow() {
+    local reason="${1:-}"
+    emit_gate_result "allowed" "$reason"
+    print_decision_json "allow" "$reason"
+    exit 0
+}
 
 deny() {
     local reason="$1"
-    printf '{"decision":"deny","reason":"%s"}\n' "$reason"
+    emit_gate_result "blocked" "$reason"
+    print_decision_json "deny" "$reason"
     exit 0
 }
 
@@ -76,4 +127,4 @@ if echo "$prompt" | grep -qiE "完整日志|完整中间过程|完整推理|原�
 fi
 
 # 允许操作
-echo '{"decision":"allow"}'
+allow

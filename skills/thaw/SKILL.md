@@ -1,6 +1,7 @@
 ---
 name: thaw
 description: 解冻元技能。将冻结的内容从冷存储（.cold-storage/）恢复到热存储，使其重新激活。触发条件：(1) 用户说"解冻"/"thaw"/"恢复"/"从冷存储恢复"；(2) 用户搜索的内容在热存储中未找到；(3) 用户提到冷存储中存在的关键词。
+description_en: "Thaw meta-skill. Restores frozen content from .cold-storage back into hot storage so it becomes active and available again."
 ---
 
 # Thaw - 解冻元技能
@@ -65,7 +66,7 @@ for entry in index.entries:
 
 | 序号 | 文件 | 类型 | 冻结时间 | 摘要 |
 |------|------|------|----------|------|
-| 1 | rules/technique/old-pattern.md | technique | 2025-01-15 | 旧的性能优化模式 |
+| 1 | rules-library/technique/old-pattern.md | technique | 2025-01-15 | 旧的性能优化模式 |
 
 **发现匹配项，是否解冻？**（输入序号确认，或输入 "all" 解冻全部）
 ```
@@ -73,14 +74,18 @@ for entry in index.entries:
 ### Step 4: 用户确认后自动执行
 
 ```bash
-# 自动创建目标目录
-mkdir -p ~/.claude/rules/technique
+# 自动创建目标目录（注意：大多数规则应恢复到 rules-library/，仅元级约束恢复到 rules/）
+if [[ "$originalPath" == skills/vendor/* ]]; then
+  echo "该条目指向 vendor/ 只读区，不执行恢复。"
+else
+  mkdir -p ~/.claude/rules-library/technique
 
-# 自动移动文件
-mv ~/.claude/.cold-storage/rules/old-pattern.md ~/.claude/rules/technique/
+  # 自动移动文件（cold-storage 内部保持扁平结构，按 index.json 的 originalPath 恢复到正确位置）
+  mv ~/.claude/.cold-storage/rules/old-pattern.md ~/.claude/rules-library/technique/
 
-# 自动更新索引（移除该条目）
-update_index --remove "old-pattern"
+  # 自动更新索引（移除该条目）
+  update_index --remove "old-pattern"
+fi
 ```
 
 ## 索引同步
@@ -90,7 +95,7 @@ update_index --remove "old-pattern"
 ```json
 // 解冻前
 {"entries": [
-  {"originalPath": "rules/technique/old-pattern.md", ...}
+  {"originalPath": "rules-library/technique/old-pattern.md", ...}
 ]}
 
 // 解冻后（自动移除）
@@ -102,7 +107,7 @@ update_index --remove "old-pattern"
 如果目标位置已有同名文件：
 
 ```markdown
-⚠️ 冲突：rules/technique/old-pattern.md 已存在
+⚠️ 冲突：rules-library/technique/old-pattern.md 已存在
 
 选项：
 1. 覆盖现有文件
@@ -111,6 +116,11 @@ update_index --remove "old-pattern"
 
 请选择（1/2/3）
 ```
+
+## vendor 保护
+
+`skills/vendor/` 是第三方 skill 只读区，thaw 不会将内容恢复到此目录。
+若冻结前的 `originalPath` 指向 vendor/，说明该条目已不适用，应删除而非恢复。
 
 ## 智能提示
 

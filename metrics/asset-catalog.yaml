@@ -1,0 +1,96 @@
+assets:
+  - id: skill-inject
+    script: hooks/skill-loader/skill-inject.sh
+    hook_event: UserPromptSubmit
+    scope: global
+    tags: [inject, startup]
+    description_zh: "在用户提交 prompt 时匹配关键词，推荐相关的 skill，轻量路由不注入 SKILL.md 正文"
+    description_en: "Matches keywords in user prompts to recommend relevant skills without injecting full SKILL.md content"
+
+  - id: project-architecture-inject
+    script: hooks/project-architecture-inject.py
+    hook_event: UserPromptSubmit
+    scope: global
+    tags: [inject, startup]
+    description_zh: "在用户提交 prompt 时，注入当前项目的架构上下文信息"
+    description_en: "Injects the current project's architecture context when a user submits a prompt"
+
+  - id: recall-entrypoint
+    script: hooks/recall-entrypoint.py
+    hook_event: UserPromptSubmit
+    scope: global
+    tags: [recall, inject]
+    description_zh: "在用户提交 prompt 时，从记忆系统检索相关历史上下文"
+    description_en: "Retrieves relevant historical context from the memory system when a user submits a prompt"
+
+  - id: rules-inject
+    script: hooks/rules-inject.py
+    hook_event: UserPromptSubmit
+    scope: global
+    tags: [inject, startup]
+    description_zh: "在用户提交 prompt 时，根据关键词匹配注入按需加载的规则文件"
+    description_en: "Injects on-demand rule files matched by keywords when a user submits a prompt"
+
+  - id: scale-gate
+    script: hooks/scale-gate.sh
+    hook_event: PreToolUse
+    scope: global
+    tags: [gate, task]
+    description_zh: "在编辑或写入文件前，强制要求先进行规模评估，防止未经规划的大范围改动"
+    description_en: "Enforces a scale assessment before file edits or writes to prevent unplanned large-scope changes"
+
+  - id: pre-write-gate
+    script: hooks/pre-write-gate.sh
+    hook_event: PreToolUse
+    scope: global
+    tags: [gate, safety]
+    description_zh: "在写入新文件前，检查路径和内容安全性"
+    description_en: "Checks path and content safety before writing new files"
+
+  - id: pre-edit-gate
+    script: hooks/pre-edit-gate.sh
+    hook_event: PreToolUse
+    scope: global
+    tags: [gate, safety]
+    description_zh: "在编辑现有文件前，检查路径和内容安全性"
+    description_en: "Checks path and content safety before editing existing files"
+
+  - id: pre-agent-gate
+    script: hooks/pre-agent-gate.sh
+    hook_event: PreToolUse
+    scope: global
+    tags: [gate, safety]
+    description_zh: "在启动子代理前，检查是否需要 worktree 隔离等安全约束"
+    description_en: "Checks safety constraints such as worktree isolation before launching a sub-agent"
+
+  - id: recall-capture
+    script: hooks/recall-capture.py
+    hook_event: Stop
+    scope: global
+    tags: [recall, capture]
+    description_zh: "在会话停止时，捕获并存储重要上下文到记忆系统"
+    description_en: "Captures and stores important context into the memory system when a session stops"
+
+  - id: context-monitor
+    script: hooks/context-monitor.sh
+    hook_event: Stop
+    scope: global
+    tags: [monitor]
+    description_zh: "在会话停止时，监控上下文使用情况和健康状态"
+    description_en: "Monitors context usage and health status when a session stops"
+
+  - id: session-end-consolidate
+    script: hooks/consolidate/session-end-consolidate.sh
+    hook_event: SessionEnd
+    scope: global
+    tags: [consolidate, lifecycle]
+    description_zh: "在会话结束时，合并整理会话产出的临时数据"
+    description_en: "Consolidates and organizes temporary session output when a session ends"
+
+  - id: on-rate-limit-stop
+    script: rules-library/technique/rate-limit-management/scripts/on-rate-limit-stop.sh
+    hook_event: StopFailure
+    scope: global
+    tags: [rate-limit, error-handling]
+    description_zh: "在请求因速率限制失败时，执行缓解和重试策略"
+    description_en: "Executes mitigation and retry strategies when a request fails due to rate limiting"

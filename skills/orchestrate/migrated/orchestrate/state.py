@@ -8,30 +8,12 @@ from datetime import datetime
 import operator
 from langgraph.graph import add_messages
 from langchain_core.messages import BaseMessage
+from skills.migrated.shared_runtime.types import DeltaContext, ReviewableFeature
 
 
-class Feature(TypedDict):
+class Feature(ReviewableFeature, total=False):
     """Single feature in the feature list."""
-    id: str
-    category: str  # functional, refactor, fix, etc.
-    description: str
-    acceptance_criteria: List[str]
-    verification_method: str  # e2e, manual, unit
-    passes: Optional[bool]  # None=pending, True=passed, False=failed
-    verified_at: Optional[str]
-    attempt_count: int
-    max_attempts: int
-    notes: str
-    delta_context: Optional[Dict[str, Any]]
-
-
-class DeltaContext(TypedDict):
-    """Context for fixer loop - passed from reviewer to implementer."""
-    problem_location: Dict[str, str]  # file, lines, code_snippet
-    root_cause: str
-    fix_suggestion: Dict[str, str]  # action, target, details, reference_example
-    files_to_read: List[str]
-    files_to_skip: List[str]
+    delta_context: Optional[DeltaContext]
 
 
 class Subtask(TypedDict):

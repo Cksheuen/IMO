@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "description": "Third-party skill vendor directory. Contents are read-only upstream copies. Do NOT modify directly — use vendor-sync to update from marketplace.",
+  "source": "anthropic-agent-skills",
+  "marketplace_path": "plugins/marketplaces/anthropic-agent-skills/skills",
+  "skills": {
+    "pdf": {
+      "source_path": "plugins/marketplaces/anthropic-agent-skills/skills/pdf",
+      "license": "Proprietary",
+      "synced_at": "2026-04-16T07:32:51.610043Z"
+    },
+    "docx": {
+      "source_path": "plugins/marketplaces/anthropic-agent-skills/skills/docx",
+      "license": "Proprietary",
+      "synced_at": "2026-04-16T07:32:51.610043Z"
+    },
+    "pptx": {
+      "source_path": "plugins/marketplaces/anthropic-agent-skills/skills/pptx",
+      "license": "Proprietary",
+      "synced_at": "2026-04-16T07:32:51.610043Z"
+    },
+    "impeccable": {
+      "source_repo": "https://github.com/pbakaus/impeccable",
+      "source_path": ".claude/skills",
+      "version": "2.1.1",
+      "commit": "00d485659af82982aef0328d0419c49a2716d123",
+      "license": "Apache 2.0",
+      "author": "Paul Bakaus <paul@paulbakaus.com>",
+      "homepage": "https://impeccable.style",
+      "description": "Design vocabulary and skills for frontend development. 18 sub-commands + master skill with curated anti-patterns.",
+      "registration": "single-entry-with-router",
+      "hotfix": true,
+      "synced_at": "2026-04-16T22:00:00.000000Z"
+    }
+  }
+}

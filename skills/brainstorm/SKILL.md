@@ -1,6 +1,7 @@
 ---
 name: brainstorm
 description: 调研与需求发现技能。在实现前进行深度调研，通过 Research-first、Diverge→Converge 方法确保充分理解问题空间。当用户描述开发任务、需要技术选型、需求不明确、存在多种实现路径时触发此技能。也可通过 /brainstorm 命令调用。
+description_en: "Research and requirement discovery skill. Runs deep pre-implementation research with a Research-first, Diverge-to-Converge approach so the problem space is understood before choosing a solution."
 ---
 
 # Brainstorm - 调研与需求发现
@@ -53,7 +54,7 @@ Grep pattern="react-query" path="~/.claude/notes/lessons"
 知识库检索记录：
 - 检索关键词：...
 - 命中结果：
-  - rules/technique/xxx.md（相关度：高/中/低）
+  - rules-library/technique/xxx.md（相关度：高/中/低）
   - skills/xxx/SKILL.md（相关度：高/中/低）
   - notes/research/xxx.md（相关度：高/中/低）
   - notes/lessons/xxx.md（相关度：高/中/低）
@@ -229,7 +230,7 @@ Repo 调研记录：
 - 处理动作：更新已有主题 / 新建主题 / 标记 stale / 提炼 rule
 - 是否需要 eat：是/否
 - 理由：...
-- 建议存储位置：rules/technique/ 或 rules/pattern/ 或 rules/best-practice/
+- 建议存储位置：rules-library/technique/ 或 rules-library/pattern/
 ```
 
 ## 输出：调研结果

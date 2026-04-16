@@ -2,14 +2,14 @@
 """Compile CC rules into a compact AGENTS.md for Codex CLI.
 
 Reads rules from ~/.claude/ hierarchy and produces a single Markdown document
-that fits within Codex CLI's AGENTS.md size limit (default 28KB).
+that fits within Codex CLI's AGENTS.md size limit (default <12KB).
 
 Priority tiers control what gets included when space is tight:
-  P0: CLAUDE.md design philosophy (~1KB)
-  P1: rules/core/ (~4KB)
-  P2: rules/pattern/ (~6KB)
+  P0: CLAUDE.md core principles + must-check entries (~2KB)
+  P1: rules/core/ + rules-library/core/ (~4KB)
+  P2: rules/pattern/ + rules-library/pattern/ (~6KB)
   P3: notes/lessons/ active only (~4KB)
-  P4: rules/domain/ (~4KB)
+  P4: rules/domain/ + rules-library/domain/ (~4KB)
 """
 
 import argparse
@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 CLAUDE_DIR = Path.home() / ".claude"
-MAX_SIZE = 28 * 1024  # 28KB
+MAX_SIZE = (12 * 1024) - 1  # Keep default output under 12KB verification threshold
 
 # Sections to extract from rule files
 KEEP_HEADINGS = {
@@ -40,18 +40,32 @@ SKIP_HEADINGS = {
 
 
 def parse_frontmatter(text):
-    """Extract YAML-ish frontmatter and body from markdown."""
-    if not text.startswith("---"):
+    """Extract YAML frontmatter and body from markdown."""
+    if not text.startswith('---'):
         return {}, text
-    end = text.find("---", 3)
+    end = text.find('---', 3)
     if end == -1:
         return {}, text
     fm_text = text[3:end].strip()
     body = text[end + 3:].strip()
+
+    # Try proper YAML parsing first
+    try:
+        import yaml
+        fm = yaml.safe_load(fm_text)
+        if not isinstance(fm, dict):
+            fm = {}
+        return fm, body
+    except ImportError:
+        pass
+    except Exception:
+        pass
+
+    # Fallback: simple key:value parsing
     fm = {}
-    for line in fm_text.split("\n"):
-        if ":" in line:
-            key, _, val = line.partition(":")
+    for line in fm_text.split('\n'):
+        if ':' in line and not line.strip().startswith('-'):
+            key, _, val = line.partition(':')
             fm[key.strip()] = val.strip()
     return fm, body
 
@@ -104,19 +118,80 @@ def extract_sections(body, keep=KEEP_HEADINGS, skip=SKIP_HEADINGS):
     return "\n".join(result).strip()
 
 
-def extract_design_philosophy(claude_md_path):
-    """Extract design philosophy section from CLAUDE.md."""
+def extract_trigger_summary(body):
+    """Extract a one-line trigger summary from a rule body."""
+    lines = body.split("\n")
+    in_trigger_section = False
+
+    def first_meaningful(section_lines):
+        preferred = []
+        fallback = []
+        for raw_line in section_lines:
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith((">", "```")):
+                continue
+            if line.startswith("|"):
+                # Skip table separator rows (e.g. '| --- | --- |')
+                if re.match(r'^\|[\s\-:|]+\|$', line):
+                    continue
+                # Skip table header rows (common header keywords)
+                if re.search(r"(条件|标准|类型|级别|检查项|格式|方案|情况|反模式|层|对象)", line):
+                    continue
+                # Extract first data column
+                cols = line.split("|")
+                if len(cols) >= 2:
+                    cell = cols[1].strip()
+                    if cell and not cell.startswith("-"):
+                        fallback.append(cell[:100])
+                continue
+            if re.match(r"^[-*+]\s+", line) or re.match(r"^\d+\.\s+", line):
+                text = re.sub(r"^([-*+]|\d+\.)\s+", "", line).strip()
+                if text:
+                    preferred.append(text)
+                continue
+            fallback.append(line)
+        summary = preferred[0] if preferred else (fallback[0] if fallback else "")
+        return summary[:100]
+
+    trigger_lines = []
+    for line in lines:
+        heading_match = re.match(r"^(#{2,6})\s+(.+)", line.strip())
+        if heading_match:
+            heading_text = heading_match.group(2).strip()
+            heading_clean = re.sub(r"\s*[\(（].*$", "", heading_text).strip()
+            if in_trigger_section:
+                break
+            if heading_clean == "触发条件":
+                in_trigger_section = True
+                continue
+        if in_trigger_section:
+            trigger_lines.append(line)
+
+    summary = first_meaningful(trigger_lines)
+    if summary:
+        return summary
+
+    return first_meaningful(lines)
+
+
+def extract_claude_p0_sections(claude_md_path):
+    """Extract compact, high-signal sections from CLAUDE.md."""
     if not claude_md_path.exists():
         return ""
     text = claude_md_path.read_text(encoding="utf-8")
-    # Find 设计哲学 section
-    match = re.search(
-        r'^## 设计哲学\s*\n(.*?)(?=\n## |\Z)',
-        text, re.MULTILINE | re.DOTALL
-    )
-    if match:
-        return match.group(1).strip()
-    return ""
+    sections = []
+    for heading in ("核心原则", "高优先级边界", "必查规则入口"):
+        match = re.search(
+            rf'^## {re.escape(heading)}\s*\n(.*?)(?=\n## |\Z)',
+            text,
+            re.MULTILINE | re.DOTALL,
+        )
+        if match:
+            sections.append(f"## {heading}\n\n{match.group(1).strip()}")
+
+    return "\n\n".join(sections).strip()
 
 
 def process_rule_file(filepath):
@@ -138,6 +213,28 @@ def process_rule_file(filepath):
         return None
 
     return f"### {title}\n\n{sections}"
+
+
+def process_rule_file_as_index(filepath):
+    """Process a single rule .md file into one-line index format."""
+    if filepath.name.lower() == "readme.md":
+        return None
+    try:
+        text = filepath.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
+
+    fm, body = parse_frontmatter(text)
+    title = extract_title(body)
+    if not title:
+        title = filepath.stem.replace("-", " ").title()
+
+    trigger_summary = extract_trigger_summary(body)
+    if not trigger_summary:
+        return None
+
+    rel_path = filepath.relative_to(CLAUDE_DIR).as_posix()
+    return f"- **{title}** — {trigger_summary} → `{rel_path}`"
 
 
 def process_lessons(lessons_dir):
@@ -181,6 +278,22 @@ def process_lessons(lessons_dir):
     return results
 
 
+def collect_rule_parts(directories, processor, recursive=False):
+    """Collect processed rule fragments from multiple directories."""
+    parts = []
+    source_files = []
+    for directory in directories:
+        if not directory.exists():
+            continue
+        files = directory.rglob("*.md") if recursive else directory.glob("*.md")
+        for f in sorted(files):
+            result = processor(f)
+            if result:
+                parts.append(result)
+                source_files.append(str(f))
+    return parts, source_files
+
+
 def compile_agents_md(max_size=MAX_SIZE):
     """Compile all sources into AGENTS.md content."""
     sections = []
@@ -193,41 +306,34 @@ def compile_agents_md(max_size=MAX_SIZE):
         "# Source: ~/.claude/rules/\n\n"
         "These rules guide coding style, architecture decisions, and quality standards.\n"
         "Follow them when implementing tasks.\n"
+        "\n> **重要**：标记为索引的规则段落只包含触发条件摘要和文件路径。"
+        "当索引行的触发条件匹配当前任务时，必须先用 cat 读取对应文件的完整内容，再按规则执行。"
+        "不要仅凭摘要行事。\n"
     )
 
-    # P0: Design philosophy
-    philosophy = extract_design_philosophy(CLAUDE_DIR / "CLAUDE.md")
-    if philosophy:
-        p0 = f"\n## 设计哲学\n\n{philosophy}"
-        sections.append(("P0", p0, 1024))
+    # P0: CLAUDE high-signal entry sections
+    claude_p0 = extract_claude_p0_sections(CLAUDE_DIR / "CLAUDE.md")
+    if claude_p0:
+        p0 = f"\n## 全局入口\n\n{claude_p0}"
+        sections.append(("P0", p0, 2048))
         source_files.append(str(CLAUDE_DIR / "CLAUDE.md"))
-        budgets["P0"] = 1024
+        budgets["P0"] = 2048
 
     # P1: rules/core/
-    core_dir = CLAUDE_DIR / "rules" / "core"
-    if core_dir.exists():
-        core_parts = []
-        for f in sorted(core_dir.glob("*.md")):
-            result = process_rule_file(f)
-            if result:
-                core_parts.append(result)
-                source_files.append(str(f))
-        if core_parts:
-            p1 = "\n## 核心规范\n\n" + "\n\n".join(core_parts)
-            sections.append(("P1", p1, 4096))
+    core_dirs = [CLAUDE_DIR / "rules" / "core", CLAUDE_DIR / "rules-library" / "core"]
+    core_parts, core_sources = collect_rule_parts(core_dirs, process_rule_file)
+    if core_parts:
+        p1 = "\n## 核心规范\n\n" + "\n\n".join(core_parts)
+        sections.append(("P1", p1, 4096))
+        source_files.extend(core_sources)
 
     # P2: rules/pattern/
-    pattern_dir = CLAUDE_DIR / "rules" / "pattern"
-    if pattern_dir.exists():
-        pattern_parts = []
-        for f in sorted(pattern_dir.glob("*.md")):
-            result = process_rule_file(f)
-            if result:
-                pattern_parts.append(result)
-                source_files.append(str(f))
-        if pattern_parts:
-            p2 = "\n## 架构模式\n\n" + "\n\n".join(pattern_parts)
-            sections.append(("P2", p2, 6144))
+    pattern_dirs = [CLAUDE_DIR / "rules" / "pattern", CLAUDE_DIR / "rules-library" / "pattern"]
+    pattern_parts, pattern_sources = collect_rule_parts(pattern_dirs, process_rule_file_as_index)
+    if pattern_parts:
+        p2 = "\n## 架构模式（索引）\n\n> 触发条件匹配时，用 cat 读取对应路径获取完整规则\n\n" + "\n".join(pattern_parts)
+        sections.append(("P2", p2, 6144))
+        source_files.extend(pattern_sources)
 
     # P3: notes/lessons/ (active only)
     lessons = process_lessons(CLAUDE_DIR / "notes" / "lessons")
@@ -237,27 +343,29 @@ def compile_agents_md(max_size=MAX_SIZE):
         source_files.append(str(CLAUDE_DIR / "notes" / "lessons"))
 
     # P4: rules/domain/
-    domain_dir = CLAUDE_DIR / "rules" / "domain"
-    if domain_dir.exists():
-        domain_parts = []
-        for f in sorted(domain_dir.rglob("*.md")):
-            result = process_rule_file(f)
-            if result:
-                domain_parts.append(result)
-                source_files.append(str(f))
-        if domain_parts:
-            p4 = "\n## 领域规则\n\n" + "\n\n".join(domain_parts)
-            sections.append(("P4", p4, 4096))
+    domain_dirs = [CLAUDE_DIR / "rules" / "domain", CLAUDE_DIR / "rules-library" / "domain"]
+    domain_parts, domain_sources = collect_rule_parts(domain_dirs, process_rule_file_as_index, recursive=True)
+    if domain_parts:
+        p4 = "\n## 领域规则（索引）\n\n> 触发条件匹配时，用 cat 读取对应路径获取完整规则\n\n" + "\n".join(domain_parts)
+        sections.append(("P4", p4, 4096))
+        source_files.extend(domain_sources)
 
-    # Assemble, respecting max_size
+    # Assemble, respecting max_size. Reserve space for later index sections so
+    # a large P1 full-text block does not crowd out the short P2/P4 routing hints.
     output = header
+    reserved_after = {"P1": {"P2", "P4"}}
     for priority, content, budget in sections:
         candidate = output + content
         if len(candidate.encode("utf-8")) <= max_size:
             output = candidate
         else:
             # Truncate this section to fit
-            remaining = max_size - len(output.encode("utf-8")) - 50  # buffer
+            reserve = 0
+            if priority in reserved_after:
+                for later_priority, later_content, _ in sections:
+                    if later_priority in reserved_after[priority]:
+                        reserve += len(later_content.encode("utf-8"))
+            remaining = max_size - len(output.encode("utf-8")) - reserve - 50  # buffer
             if remaining > 200:
                 truncated = content.encode("utf-8")[:remaining].decode("utf-8", errors="ignore")
                 # Cut at last complete line
@@ -265,6 +373,9 @@ def compile_agents_md(max_size=MAX_SIZE):
                 if last_nl > 0:
                     truncated = truncated[:last_nl]
                 output += truncated + "\n\n*(truncated due to size limit)*\n"
+                continue
+            if priority in {"P3"}:
+                continue
             break  # Skip remaining lower-priority sections
 
     return output, source_files

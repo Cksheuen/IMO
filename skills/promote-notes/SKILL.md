@@ -1,11 +1,22 @@
 ---
 name: promote-notes
 description: notes 晋升技能。当 `notes/` 中的 lesson、research、design 已满足稳定条件时，执行被动晋升评估，决定是否提炼为 `rules/`、`skills/` 或 `memory/`。当用户要求”提炼 notes””把经验升格成规则/技能””检查哪些 note 可以晋升”时触发；也可在运行中由 Promotion Loop 自动调用。
+description_en: "Notes promotion skill. Evaluates lessons, research, and design notes in `notes/` for passive promotion and decides whether they should be distilled into rules, skills, or memory."
 ---
 
 # Promote Notes - 被动晋升技能
 
 **专注把已经稳定的 note 晋升为更强约束的知识资产。**
+
+## 当前设计优先级
+
+**默认采用“手动触发 `/promote-notes` 为主，自动扫描/排队为辅”。**
+
+原因：
+
+- `rules/`、`skills/`、`memory/declarative/` 的污染成本不同，不能把后台自动晋升当默认主路径
+- 自动 Promotion Loop 的主要价值是保留候选信号，不是替代人工做最终抽象决策
+- 用户显式触发时，允许批量处理 queue 中的候选，并在当前 agent 中完成收敛、写结果、应用结果
 
 此技能既可被用户显式调用，也可在运行过程中被 `Promotion Loop` 自动调用。
 
@@ -26,22 +37,15 @@ description: notes 晋升技能。当 `notes/` 中的 lesson、research、design
 
 | 触发方式 | 执行位置 | 原因 |
 |---------|---------|------|
-| **自动触发（Stop / SubagentStop hook，且开关开启）** | **后台独立进程** | 不打断主 agent 流程 |
 | 用户显式调用 `/promote-notes` | 当前 agent | 用户主动请求 |
 
-### 自动触发的后台执行
+> **变更说明**（2026-04-15）：`lesson-gate.sh` 已从全局 `settings.json` 的自动 Stop hook 中移除。自动后台触发路径不再存在于共享 runtime 中。晋升的唯一入口是用户手动 `/promote-notes`。
 
-当 `lesson-gate.sh` 检测到未处理的纠正信号时：
+**当前收敛后的推荐理解**：
 
-1. 使用 `nohup claude --print -p “...” &` 启动后台进程
-2. 进程独立运行，不阻塞主 agent
-3. 日志输出到 `~/.claude/logs/lesson-capture/background-*.log`
-4. 主 agent 正常结束（`exit 0`），用户流程不被打断
-
-**关键约束**：
-- 后台进程不向主 agent 输出任何内容
-- 用户不会看到 `[LESSON CAPTURE REQUIRED]` 等提示
-- Lesson capture 在后台静默完成
+- 自动模式默认只负责 `scan -> queue -> status reminder`
+- 真正的晋升主路径默认是用户显式 `/promote-notes`
+- 只有低风险、低歧义的 candidate 才值得考虑恢复后台自动晋升
 
 `promote-notes` 与 `eat` 的边界：
 
@@ -133,10 +137,18 @@ note 达到稳定门槛 → 晋升评估 → rules / skills / memory / 保持在
 
 **强制动作**：
 
-- [ ] 若输入已包含 `promotionScan.candidates`，优先使用这些候选
+- [ ] 若输入已包含 `promotionDispatch.candidates`，优先只处理这些已 claim 的候选
+- [ ] 否则若输入已包含 `promotionScan.candidates`，优先使用这些候选
 - [ ] 否则搜索 `notes/lessons/` 中 `Status: candidate-rule` 的 note
 - [ ] 否则补充搜索最近被反复更新的 `notes/research/` / `notes/design/`
 - [ ] 记录每个候选 note 的 `Last Verified`、`Source Cases`、`Promotion Criteria`
+
+**手动主路径补充**：
+
+- [ ] 若存在 `promotion-queue.json`，先检查 queue 状态，而不是直接全量扫描
+- [ ] 手动触发时优先按小批量处理（建议每批 `1-3` 个候选）
+- [ ] 若 queue 中已有 `processing` 项，先判断是否需要 `release/fail/apply` 收尾，再继续 claim 新候选
+- [ ] 优先使用 `hooks/promote-notes-run.py` 作为人工 helper，而不是手工拼结果文件
 
 **检索重点**：
 
@@ -190,6 +202,22 @@ note 达到稳定门槛 → 晋升评估 → rules / skills / memory / 保持在
 3. 更新原 note 的状态，例如 `promoted`
 4. 保留 `Source Cases` 作为来源链路
 
+**手动主路径执行顺序**：
+
+1. `python3 "$HOME/.claude/hooks/promote-notes-run.py" scan`
+2. `python3 "$HOME/.claude/hooks/promote-notes-run.py" list`
+3. `python3 "$HOME/.claude/hooks/promote-notes-run.py" claim --count <N>`
+4. `python3 "$HOME/.claude/hooks/promote-notes-run.py" stub-result`
+5. 手动编辑 `promotion-result.json`
+6. `python3 "$HOME/.claude/hooks/promote-notes-run.py" apply`
+7. 复查 queue 是否已出队，必要时再处理下一批
+
+helper 约束：
+
+- `stub-result` 只生成可编辑模板，不自动推断最终 action
+- 默认 stub 会用 `defer` 占位，必须人工改成 `promoted_to_rule` / `promoted_to_skill` / `indexed_in_memory` / `keep` / `merge`
+- helper 只减少机械性输入，不替代晋升判断
+
 若目标是 `memory/declarative/`，将第 1 步收紧为：
 
 1. 仅生成 canonical fact candidate（不复制 note 正文）
@@ -221,6 +249,56 @@ note 达到稳定门槛 → 晋升评估 → rules / skills / memory / 保持在
 - `processed`：已完成晋升或已明确保留在 notes 且可出队
 - `deferred`：证据不足，继续留在 queue 观察
 - `failed`：本次评估失败，需保留并记录原因
+
+`processed` 中的最小推荐字段：
+
+```json
+{
+  "path": "notes/lessons/example.md",
+  "action": "promoted_to_rule | promoted_to_skill | indexed_in_memory | keep | merge",
+  "target_path": "rules-library/pattern/example.md",
+  "reason": "why this decision was made"
+}
+```
+
+当 `action = indexed_in_memory` 时，必须额外提供 canonical declarative record：
+
+```json
+{
+  "path": "notes/lessons/example.md",
+  "action": "indexed_in_memory",
+  "target_path": "memory/declarative/user-preferences.json",
+  "reason": "stable cross-session fact",
+  "record": {
+    "id": "user.output-language",
+    "kind": "preference",
+    "subject": "user",
+    "key": "output.language",
+    "value": "zh-CN",
+    "valueType": "string",
+    "scope": "cross-session",
+    "status": "active",
+    "source": {
+      "type": "file",
+      "ref": "notes/lessons/example.md"
+    },
+    "updatedAt": "2026-04-13",
+    "lastVerifiedAt": "2026-04-13"
+  }
+}
+```
+
+当 `action = keep` 时，表示“本次已评估并继续留在 notes，可出队”；不要把这种项写成 `failed`。
+
+当 `action = promoted_to_skill` 时，生成模板应优先提炼：
+
+- 适用场景
+- 执行流程
+- 输出要求
+- 边界与不适用场景
+- 来源与决策依据
+
+不要把 note body 原样整段搬进 `## 执行流程`。
 
 ```markdown
 # Notes 晋升评估

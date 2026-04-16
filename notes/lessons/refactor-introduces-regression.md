@@ -1,7 +1,7 @@
 # Lesson: 重构/修改引入回归 bug
 
 - Status: promoted
-- Promoted To: rules/pattern/change-impact-review.md
+- Promoted To: rules-library/pattern/change-impact-review.md
 - Promoted At: 2026-03-30
 - First Seen: 2026-03-28
 - Last Verified: 2026-03-30

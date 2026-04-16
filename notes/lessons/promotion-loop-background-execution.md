@@ -2,7 +2,7 @@
 name: promotion-loop-background-execution
 description: Promotion Loop 必须在后台执行，不能打断主 agent
 status: promoted
-promoted_to: rules/pattern/promotion-loop-background-execution.md
+promoted_to: rules-library/pattern/promotion-loop-background-execution.md
 promoted_at: 2026-04-03
 type: lesson
 created_at: 2026-04-03

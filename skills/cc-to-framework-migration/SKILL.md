@@ -1,6 +1,7 @@
 ---
 name: cc-to-framework-migration
 description: Claude Code 配置到 LangChain/LangGraph 框架迁移技能。扫描 ~/.claude/ 下的 skills/rules/agents，识别适合迁移到 LangChain 框架的部分，生成迁移建议报告和代码框架。触发条件：用户说"迁移到框架"、"转成 LangChain"、"框架化"、"LangGraph 迁移"、"CC 配置迁移"或想要将现有的 CC 配置转为可独立部署的框架代码。
+description_en: "Claude Code to LangChain/LangGraph migration skill. Scans skills, rules, and agents under ~/.claude, identifies parts suitable for a LangChain-based framework, and produces a migration report plus starter framework code."
 ---
 
 # CC-to-Framework Migration - Claude Code 配置框架化迁移

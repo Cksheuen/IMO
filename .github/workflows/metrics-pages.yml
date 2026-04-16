@@ -1,0 +1,72 @@
+name: Deploy Metrics Dashboard to GitHub Pages
+
+on:
+  push:
+    paths:
+      - 'metrics/weekly/*.json'
+      - 'metrics/dashboard/weekly.html'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: Build site
+        run: |
+          mkdir -p _site/weekly
+
+          # Copy weekly JSON data files
+          cp metrics/weekly/*.json _site/weekly/ 2>/dev/null || true
+
+          # Generate weeks index from available JSON files
+          python3 -c "
+          import json, glob, os
+          files = sorted(glob.glob('_site/weekly/*.json'))
+          weeks = [os.path.splitext(os.path.basename(f))[0] for f in files]
+          with open('_site/weeks-index.json', 'w') as f:
+              json.dump(weeks, f)
+          print(f'Generated index with {len(weeks)} weeks: {weeks}')
+          "
+
+          # Copy dashboard template as index.html
+          cp metrics/dashboard/weekly.html _site/index.html
+
+      - name: Generate SVG preview
+        run: python3 hooks/metrics/gen_svg.py
+        env:
+          CLAUDE_HOME: ${{ github.workspace }}
+
+      - name: Commit SVG preview
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add metrics/dashboard/preview.svg
+          git diff --cached --quiet && echo "No SVG changes" || git commit -m "chore: update weekly metrics preview"
+          git push || echo "Push failed, skipping"
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

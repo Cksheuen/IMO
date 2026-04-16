@@ -1,6 +1,7 @@
 ---
 name: codex-cc-sync-check
 description: Check whether Codex is currently aligned with Claude Code global configuration, especially shared AGENTS/rules and custom skills under ~/.claude. Use this whenever the user mentions Codex/Claude config sync, AGENTS.md, shared rules, shared skills, global skill visibility, or wants Codex to automatically follow the same Claude configuration from any directory. If alignment is broken, inspect it and repair it by restoring the expected symlink layout.
+description_zh: "检查 Codex 是否与 Claude Code 的全局配置保持对齐，重点覆盖 ~/.claude 下共享的 AGENTS、rules 和自定义 skills；当用户提到 Codex/Claude 配置同步、AGENTS.md、共享规则、共享技能、全局可见性，或希望 Codex 在任意目录自动沿用同一套 Claude 配置时使用。若发现失配，则检查并通过恢复预期的符号链接布局进行修复。"
 ---
 
 # Codex CC Sync Check
@@ -9,10 +10,8 @@ Use this skill to verify that Codex is consuming the same global configuration a
 
 ## What this skill checks
 
-- Shared rules via `~/.claude/AGENTS.md`
-- Codex global instruction entrypoints:
-  - `~/.codex/AGENTS.override.md`
-  - `~/.codex/AGENTS.md`
+- Shared rules via `~/.claude/shared-knowledge/AGENTS.md`
+- Codex global instruction entrypoint: `~/.codex/AGENTS.md`
 - Custom Claude skills under `~/.claude/skills/`
 - Corresponding Codex-visible skill links under `~/.codex/skills/`
 - Corresponding direct-invocation command wrappers under `~/.codex/commands/*.md`
@@ -20,13 +19,15 @@ Use this skill to verify that Codex is consuming the same global configuration a
 ## Workflow
 
 1. Read the current state before changing anything.
-2. Run the sync script:
+2. If the user changed a shared governance asset inside a project directory, first decide whether it should be promoted to `~/.claude/`.
+3. Promote project-local copies into the global Claude source of truth unless they are explicitly project-only.
+4. Run the sync script:
 
 ```bash
 bash ~/.claude/skills/codex-cc-sync-check/scripts/check_and_align.sh
 ```
 
-3. Summarize:
+5. Summarize:
    - what was already correct
    - what was repaired
    - any conflicts that were intentionally not overwritten
@@ -34,7 +35,8 @@ bash ~/.claude/skills/codex-cc-sync-check/scripts/check_and_align.sh
 ## Repair rules
 
 - Prefer symlinks over copies so Claude and Codex share one source of truth.
-- For rules, rely on `~/.claude/hooks/codex-sync/sync-to-codex.sh` when available, because it already compiles and refreshes `~/.claude/AGENTS.md`.
+- If a project-local skill/rule/hook was modified but is actually reusable across projects, promote it to `~/.claude/` first and then align Codex to that global source.
+- For rules, rely on `~/.claude/hooks/codex-sync/sync-to-codex.sh` when available, because it already compiles and refreshes `~/.claude/shared-knowledge/AGENTS.md`.
 - For skills, expose each custom Claude skill to Codex by creating a symlink in `~/.codex/skills/`.
 - For direct skill invocation compatibility, create a matching symlink in `~/.codex/commands/<skill-name>.md` pointing at the skill's `SKILL.md`.
 - Never overwrite Codex system skills under `~/.codex/skills/.system`.
@@ -66,6 +68,7 @@ Report the result in three parts:
 ## Notes
 
 - This skill is specifically for global Codex/Claude alignment, not project-local repository setup.
+- Project-local governance edits are temporary staging at most; unless clearly marked project-only, the durable source of truth should live under `~/.claude/`.
 - If Codex can "see" a skill but cannot be invoked through the expected direct command entrypoint, inspect `~/.codex/commands/` first.
 - A running Codex session does not hot-reload the skill list in its prompt. After repairing links, start a new Codex session to observe newly added skills in the prompt context.
 - If the user asks whether Codex can read the config from an arbitrary directory, prefer proving it with a short `codex exec --cd /tmp` validation after alignment.

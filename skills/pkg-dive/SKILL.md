@@ -1,6 +1,7 @@
 ---
 name: pkg-dive
 description: 探索 npm 包源码实现的技能。当用户需要了解依赖包的实现细节、查看包的源码、理解 API 实现原理、排查依赖问题时自动触发。触发场景包括："这个包是怎么实现的"、"看看 xxx 包的源码"、"这个 API 内部是怎么工作的"、"帮我理解这个依赖的实现"。支持探索 node_modules 中任意 npm 包。
+description_en: "npm package source exploration skill. Examines dependency internals, package source code, API implementation details, and dependency-related issues across any npm package in node_modules."
 user-invocable: true
 ---
 

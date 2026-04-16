@@ -5,6 +5,7 @@
 - **简洁优先**：每次只改完成目标所需的最小范围
 - **根因导向**：拒绝临时修补，优先修正真正的设计或流程问题
 - **最小影响**：不顺手扩范围，不混入无关清理
+- **架构跟随**：进入新项目或陌生模块先读项目架构入口，再按现有分层、目录与命名方式扩展，不按个人偏好重塑结构
 
 ## 语言偏好
 
@@ -23,13 +24,14 @@
   - 当前仓库位于 `~/.claude/`，因此根目录 `tasks/` 只属于这个仓库项目
 - `Execute`
   - 先锁定改动边界，再开始修改
+  - 进入新项目或陌生模块时，先做项目架构预读
   - 子任务可独立时优先委派或并行
   - 用户已确认方向后，默认沿当前路径执行到闭环
 - `Verify`
   - 未证明有效，不标记完成
   - 结论必须附带文件路径、命令或日志证据
 - `Learn`
-  - 纠正、调研、设计结论先判断应写 `rules/`、`skills/`、`notes/` 还是 `tasks/`
+  - 纠正、调研、设计结论先判断应写 `rules/`（always-loaded）、`rules-library/`（按需注入）、`skills/`、`notes/` 还是 `tasks/`
 
 ## 高优先级边界
 
@@ -42,13 +44,16 @@
 ## 必查规则入口
 
 - 上下文注入：`rules/core/context-injection.md`
-- 任务工作流：`rules/core/task-centric-workflow.md`
-- task / notes 边界：`rules/core/task-notes-boundary.md`
-- 改动边界守卫：`rules/pattern/change-scope-guard.md`
-- 变更影响审查：`rules/pattern/change-impact-review.md`
-- 废弃方案清理：`rules/pattern/abandoned-solution-cleanup.md`
-- 闭环学习边界：`rules/pattern/closed-learning-loop.md`
-- LangChain 迁移 runtime 依赖：`rules/tool/langchain-runtime-dependencies.md`
+- 规则目录分流：`rules-library/core/rules-directory-convention.md`
+- 项目架构优先：`rules-library/core/project-architecture-first.md`
+- 任务工作流：`rules-library/core/task-centric-workflow.md`
+- task / notes 边界：`rules-library/core/task-notes-boundary.md`
+- 改动边界守卫：`rules-library/pattern/change-scope-guard.md`
+- 变更影响审查：`rules-library/pattern/change-impact-review.md`
+- 废弃方案清理：`rules-library/pattern/abandoned-solution-cleanup.md`
+- 闭环学习边界：`rules-library/pattern/closed-learning-loop.md`
+- UI / 逻辑边界：`rules-library/domain/frontend/ui-logic-boundary.md`
+- LangChain 迁移 runtime 依赖：`rules-library/tool/langchain-runtime-dependencies.md`
 
 ## Notes 读取协议
 

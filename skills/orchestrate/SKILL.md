@@ -1,6 +1,7 @@
 ---
 name: orchestrate
 description: Multi-agent orchestration skill. Automatically decomposes large tasks into subtasks, assigns them to specialized agents (implementer/researcher/reviewer), and coordinates parallel execution with worktree isolation. Trigger when task involves 3+ files, 2+ domains, or user says "并行"/"parallel"/"orchestrate"/"拆分执行".
+description_zh: "多代理编排技能。自动将大型任务拆分为子任务，分配给实现者、研究者、审查者等专用 agent，并结合 worktree 隔离协调并行执行。当任务涉及 3 个以上文件、2 个以上领域，或用户提到“并行”“parallel”“orchestrate”“拆分执行”时触发。"
 ---
 
 # Orchestrate - Multi-Agent Task Orchestration
@@ -208,9 +209,9 @@ Rules Pack 只保留三层：
 ## 参考文件
 
 - `references/playbook.md`：详细模板与长示例
-- `rules/core/proactive-delegation.md`
-- `rules/core/task-centric-workflow.md`
-- `rules/pattern/change-impact-review.md`
-- `rules/pattern/generator-evaluator-pattern.md`
-- `rules/pattern/self-verification-mechanism.md`
-- `rules/technique/git-worktree-parallelism.md`
+- `rules-library/core/proactive-delegation.md`
+- `rules-library/core/task-centric-workflow.md`
+- `rules-library/pattern/change-impact-review.md`
+- `rules-library/pattern/generator-evaluator-pattern.md`
+- `rules-library/pattern/self-verification-mechanism.md`
+- `rules-library/technique/git-worktree-parallelism.md`

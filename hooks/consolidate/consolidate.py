@@ -24,6 +24,8 @@ from pathlib import Path
 
 BASE = Path.home() / ".claude"
 NOTES = BASE / "notes"
+SKILLS_DIR = BASE / "skills"
+VENDOR_DIR = SKILLS_DIR / "vendor"
 STATE_FILE = BASE / "consolidation-state.json"
 LOG_FILE = BASE / "consolidation.log"
 TODO_FILE = BASE / "consolidation-todo.json"
@@ -311,7 +313,6 @@ def consolidate_research(dry_run: bool) -> dict:
     """Consolidate notes/research/: detect superseded research."""
     research_dir = NOTES / "research"
     rules_dir = BASE / "rules"
-    skills_dir = BASE / "skills"
     results = {"marked_superseded": 0, "marked_stale": 0, "files": []}
 
     if not research_dir.exists():
@@ -325,8 +326,10 @@ def consolidate_research(dry_run: bool) -> dict:
         for rp in rules_dir.rglob("*.md"):
             if rp.name != "README.md":
                 rule_topics.add(rp.stem.lower())
-    if skills_dir.exists():
-        for sp in skills_dir.iterdir():
+    if SKILLS_DIR.exists():
+        for sp in SKILLS_DIR.iterdir():
+            if sp == VENDOR_DIR or VENDOR_DIR in sp.parents:
+                continue
             if sp.is_dir():
                 rule_topics.add(sp.name.lower())
 
@@ -496,10 +499,17 @@ def load_state() -> dict:
     return {"last_run": 0, "session_count": 0, "runs": 0}
 
 
+def _atomic_write_json(path: Path, data: dict):
+    """Write JSON atomically via tmp file + os.replace."""
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    os.replace(str(tmp), str(path))
+
+
 def save_state(state: dict):
     state["last_run"] = int(time.time())
     state["runs"] = state.get("runs", 0) + 1
-    STATE_FILE.write_text(json.dumps(state, indent=2))
+    _atomic_write_json(STATE_FILE, state)
 
 
 def should_run(state: dict, force: bool = False) -> bool:
@@ -514,7 +524,7 @@ def should_run(state: dict, force: bool = False) -> bool:
 def increment_session(state: dict):
     """Called by SessionEnd hook to bump session counter."""
     state["session_count"] = state.get("session_count", 0) + 1
-    STATE_FILE.write_text(json.dumps(state, indent=2))
+    _atomic_write_json(STATE_FILE, state)
 
 
 # ── Main ──

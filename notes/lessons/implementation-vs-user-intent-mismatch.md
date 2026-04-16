@@ -1,7 +1,7 @@
 # Lesson: 实现偏离用户意图
 
 - Status: promoted
-- Promoted To: rules/pattern/requirements-confirmation.md
+- Promoted To: rules-library/pattern/requirements-confirmation.md
 - Promoted At: 2026-03-31
 - First Seen: 2026-03-29
 - Last Verified: 2026-03-31

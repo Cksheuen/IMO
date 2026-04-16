@@ -7,6 +7,8 @@
 # ===== 白名单 =====
 
 # 核心配置
+!.github/
+!.github/**
 !.gitignore
 !CLAUDE.md
 !README.md
@@ -32,9 +34,16 @@ skills/**/*-workspace/
 !hooks/
 !hooks/**
 
-# 自定义 rules (用户规则)
+# 自定义 rules (始终加载的核心规则)
 !rules/
 !rules/**
+
+# 按需加载的规则库
+!rules-library/
+!rules-library/**
+
+# 规则触发索引（由 build-rules-index.py 生成）
+!rules-index.json
 
 # 知识沉淀（全局用户级，位于 ~/.claude/notes）
 !notes/
@@ -54,6 +63,24 @@ shared-knowledge/sync.log
 # 这里只同步目录说明文档；具体 task 实例默认不入库
 !tasks/
 !tasks/README.md
+
+# Metrics 周报数据（发布到 GitHub Pages）
+# 只放行 weekly JSON 和 dashboard 模板，其他运行时数据（events/daily/reports）不入库
+!metrics/
+!metrics/weekly/
+!metrics/weekly/*.json
+!metrics/dashboard/
+!metrics/dashboard/weekly.html
+!metrics/dashboard/preview.svg
+!metrics/i18n/
+!metrics/i18n/*.json
+!metrics/asset-catalog.yaml
+!metrics/asset-descriptions.json
+# 显式排除运行时产物
+metrics/events/
+metrics/daily/
+metrics/reports/
+metrics/dashboard/weekly-rendered.html
 
 # ===== 显式忽略（已被 * 覆盖，此处为文档说明）=====
 
@@ -76,6 +103,8 @@ shared-knowledge/sync.log
 # 本地覆盖配置（不同步）
 # settings.local.json        - 个人/办公环境覆盖
 # .mcp.json                  - 项目级 MCP 覆盖
+# .codex/config.toml         - 本地生成的 Codex MCP bridge
+.codex/config.toml
 
 # ===== 临时文件 =====
 __pycache__/
@@ -89,3 +118,7 @@ __pycache__/
 # 冷记忆（不同步）
 .cold-storage/
 skills/pkg-dive-workspace/
+
+# 第三方 skill 只读原件（从 marketplace 缓存复制，由 vendor-sync.sh 管理）
+skills/vendor/*/
+!skills/vendor/.vendor-manifest.json

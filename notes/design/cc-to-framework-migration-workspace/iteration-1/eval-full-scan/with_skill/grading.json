@@ -1,0 +1,33 @@
+{
+  "run_id": "eval-full-scan-with_skill",
+  "eval_id": 0,
+  "eval_name": "full-scan-migration",
+  "timestamp": "2026-04-07T04:13:00Z",
+  "expectations": [
+    {
+      "text": "生成了迁移分析报告",
+      "passed": true,
+      "evidence": "文件存在：migration-analysis-report.md"
+    },
+    {
+      "text": "报告包含扫描结果（skills/rules/agents 列表）",
+      "passed": true,
+      "evidence": "报告包含扫描概览，列出 Skills: 95个、Rules: 37个、Agents: 12个"
+    },
+    {
+      "text": "报告包含迁移价值评分",
+      "passed": true,
+      "evidence": "报告包含评分表，如 orchestrate 评分8、self-verification 评分8"
+    },
+    {
+      "text": "识别出高价值迁移候选",
+      "passed": true,
+      "evidence": "识别出 5 个高价值候选：orchestrate、self-verification、long-running-agent、dual-review-loop、generator-evaluator"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "total": 4,
+    "pass_rate": 1.0
+  }
+}

@@ -15,6 +15,8 @@ import json
 import os
 import re
 import sys
+import time
+import importlib.util
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -22,10 +24,22 @@ from typing import Any
 HOME = Path.home()
 RECALL_DIR = Path(os.environ.get("CLAUDE_RECALL_DIR", str(HOME / ".claude" / "recall")))
 RECALL_STORE = RECALL_DIR / "entries.jsonl"
+METRICS_EMIT_PATH = HOME / ".claude" / "hooks" / "metrics" / "emit.py"
 
 
 def emit(payload: dict[str, Any]) -> None:
     print(json.dumps(payload, ensure_ascii=False))
+
+
+def load_metrics_emit():
+    if not METRICS_EMIT_PATH.exists():
+        return None
+    spec = importlib.util.spec_from_file_location("metrics_emit", METRICS_EMIT_PATH)
+    if spec is None or spec.loader is None:
+        return None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return getattr(module, "emit_event", None)
 
 
 def parse_input() -> dict[str, Any]:
@@ -255,54 +269,77 @@ def append_entry(entry: dict[str, Any]) -> None:
 
 
 def main() -> None:
-    payload = parse_input()
-    session_id = get_session_id(payload)
-    transcript_path = get_transcript_path(payload)
-
-    if not session_id or transcript_path is None:
-        emit({})
-        return
+    emit_event = load_metrics_emit()
+    start = time.monotonic()
+    response: dict[str, Any] = {}
+    session_id = ""
+    status = "ok"
+    meta: dict[str, Any] = {"captured": False}
 
     try:
-        transcript_mtime = int(transcript_path.stat().st_mtime)
-    except OSError:
-        emit({})
-        return
+        payload = parse_input()
+        session_id = get_session_id(payload)
+        transcript_path = get_transcript_path(payload)
 
-    entry_id = f"{session_id}:{transcript_mtime}"
-    if entry_exists(entry_id):
-        emit({})
-        return
+        if not session_id or transcript_path is None:
+            return
 
-    last_user, user_tail, last_assistant, assistant_tail = parse_transcript(transcript_path, session_id)
-    file_tokens = extract_file_tokens(user_tail + assistant_tail)
-    command_tokens = extract_command_tokens(user_tail + assistant_tail)
-    summary = build_summary(last_user, last_assistant, file_tokens, command_tokens)
-    keywords = extract_keywords(user_tail + assistant_tail + file_tokens + command_tokens)
-    task_dir = resolve_current_task_dir()
+        try:
+            transcript_mtime = int(transcript_path.stat().st_mtime)
+        except OSError:
+            return
 
-    entry = {
-        "schema": "recall.entry.v2",
-        "entry_id": entry_id,
-        "session_id": session_id,
-        "captured_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
-        "transcript_mtime": transcript_mtime,
-        "summary": summary,
-        "intent": normalize_text(last_user, 96) if last_user else "",
-        "assistant_outcome": normalize_text(last_assistant, 96) if last_assistant else "",
-        "action_hints": {
-            "file_tokens": file_tokens,
-            "command_tokens": command_tokens,
-        },
-        "keywords": keywords,
-        "pointer": {
+        entry_id = f"{session_id}:{transcript_mtime}"
+        meta["entry_id"] = entry_id
+        if entry_exists(entry_id):
+            meta["deduped"] = True
+            return
+
+        last_user, user_tail, last_assistant, assistant_tail = parse_transcript(transcript_path, session_id)
+        file_tokens = extract_file_tokens(user_tail + assistant_tail)
+        command_tokens = extract_command_tokens(user_tail + assistant_tail)
+        summary = build_summary(last_user, last_assistant, file_tokens, command_tokens)
+        keywords = extract_keywords(user_tail + assistant_tail + file_tokens + command_tokens)
+        task_dir = resolve_current_task_dir()
+
+        entry = {
+            "schema": "recall.entry.v2",
+            "entry_id": entry_id,
             "session_id": session_id,
-            "transcript_path": str(transcript_path),
-            "task_dir": task_dir,
-        },
-    }
-    append_entry(entry)
-    emit({})
+            "captured_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+            "transcript_mtime": transcript_mtime,
+            "summary": summary,
+            "intent": normalize_text(last_user, 96) if last_user else "",
+            "assistant_outcome": normalize_text(last_assistant, 96) if last_assistant else "",
+            "action_hints": {
+                "file_tokens": file_tokens,
+                "command_tokens": command_tokens,
+            },
+            "keywords": keywords,
+            "pointer": {
+                "session_id": session_id,
+                "transcript_path": str(transcript_path),
+                "task_dir": task_dir,
+            },
+        }
+        append_entry(entry)
+        meta["captured"] = True
+    except Exception:
+        status = "error"
+        response = {}
+    finally:
+        if callable(emit_event):
+            emit_event(
+                hook_id="recall-capture",
+                hook_event="Stop",
+                event="hook_run",
+                status=status,
+                duration_ms=int((time.monotonic() - start) * 1000),
+                session_id=session_id,
+                scope="global",
+                meta=meta,
+            )
+        emit(response)
 
 
 if __name__ == "__main__":

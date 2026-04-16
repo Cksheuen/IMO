@@ -14,6 +14,11 @@ from datetime import datetime
 from operator import add
 from langgraph.graph import add_messages
 from langchain_core.messages import BaseMessage
+from skills.migrated.shared_runtime.agent_protocols import (
+    ImplementerAgentResult,
+    ReviewerAgentResult,
+    ReviewIssue,
+)
 
 
 class Finding(TypedDict):
@@ -44,20 +49,12 @@ class CodexRescueResult(TypedDict):
     error: Optional[str]
 
 
-class CCReviewResult(TypedDict):
+class CCReviewResult(ReviewerAgentResult):
     """Result from CC reviewer agent."""
-    confirmed_issues: int
-    false_positives: int
-    issues: List[Dict[str, Any]]  # Each has delta_context
-    raw_output: str
 
 
-class CCFixResult(TypedDict):
+class CCFixResult(ImplementerAgentResult):
     """Result from CC implementer agent."""
-    fixed: int
-    commits: List[str]
-    files_changed: List[str]
-    raw_output: str
 
 
 class RoundResult(TypedDict):
