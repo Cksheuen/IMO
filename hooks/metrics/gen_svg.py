@@ -17,25 +17,29 @@ I18N_DIR = METRICS_ROOT / "i18n"
 
 # ── Layout constants ──
 W = 860
-CARD_H = 82
-CARD_GAP = 12
-BAR_MAX_W = 260
-ROW_H = 32
-TREND_BAR_W = 18
-TREND_H = 80
+CARD_H = 68
+CARD_GAP = 10
+BAR_MAX_W = 280
+ROW_H = 28
+TREND_BAR_W = 14
+TREND_H = 60
 COLORS = {
-    "bg": "#0A0A0A",
-    "panel": "#111111",
-    "border": "#282828",
-    "text": "#FFFFFF",
-    "muted": "#888888",
+    "bg": "#0a0b09",
+    "panel": "#12130f",
+    "panel_2": "#181916",
+    "panel_3": "#1e1f1b",
+    "border": "#2e2d28",
+    "border_subtle": "#222120",
+    "text": "#f0ede6",
+    "muted": "#8a8679",
     "gold": "#C9A962",
+    "gold_dim": "#a08840",
     "green": "#22c55e",
     "yellow": "#f59e0b",
     "red": "#ef4444",
     "blue": "#3b82f6",
-    "gray": "#444444",
-    "bar_bg": "#1D1D1D",
+    "gray": "#4a4840",
+    "bar_bg": "#222120",
 }
 
 EN_FALLBACK = {
@@ -126,16 +130,16 @@ def render_svg(data: dict[str, Any]) -> str:
     avg_ms = summary.get("overall_avg_duration_ms")
 
     # ── Compute total height ──
-    header_h = 56
-    cards_y = header_h + 16
+    header_h = 50
+    cards_y = header_h + 14
     cards_block_h = CARD_H
-    trend_y = cards_y + cards_block_h + 28
-    trend_label_h = 20
-    trend_block_h = TREND_H + trend_label_h + 16
-    hooks_y = trend_y + trend_block_h + 12
-    hooks_header_h = 24
-    hooks_block_h = hooks_header_h + len(top_hooks) * ROW_H + 8
-    total_h = hooks_y + hooks_block_h + 20
+    trend_y = cards_y + cards_block_h + 26
+    trend_label_h = 18
+    trend_block_h = TREND_H + trend_label_h + 14
+    hooks_y = trend_y + trend_block_h + 18
+    hooks_header_h = 20
+    hooks_block_h = hooks_header_h + len(top_hooks) * ROW_H + 10
+    total_h = hooks_y + hooks_block_h + 18
 
     parts: list[str] = []
 
@@ -147,26 +151,27 @@ def render_svg(data: dict[str, Any]) -> str:
   @keyframes growRight {{ from {{ width: 0; }} }}
   @keyframes slideUp {{ from {{ transform: translateY(8px); opacity: 0; }} to {{ transform: translateY(0); opacity: 1; }} }}
   .root {{ fill: {COLORS["bg"]}; }}
-  .panel {{ fill: {COLORS["panel"]}; rx: 12; ry: 12; stroke: {COLORS["border"]}; stroke-width: 1; }}
-  .t {{ fill: {COLORS["text"]}; font-family: "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace; }}
-  .t-title {{ font-size: 22px; font-weight: 700; letter-spacing: 0.08em; }}
-  .t-sub {{ font-size: 11px; fill: {COLORS["muted"]}; }}
-  .t-label {{ font-size: 11px; fill: {COLORS["muted"]}; text-transform: uppercase; letter-spacing: 0.06em; }}
-  .t-value {{ font-size: 28px; font-weight: 700; }}
-  .t-hook {{ font-size: 12px; }}
-  .t-small {{ font-size: 11px; }}
-  .t-section {{ font-size: 14px; font-weight: 600; fill: {COLORS["gold"]}; letter-spacing: 0.04em; }}
+  .panel {{ fill: {COLORS["panel"]}; rx: 10; ry: 10; stroke: {COLORS["border_subtle"]}; stroke-width: 1; }}
+  .t {{ fill: {COLORS["text"]}; font-family: "Martian Mono", "SF Mono", "Cascadia Code", Consolas, monospace; }}
+  .t-title {{ font-size: 20px; font-weight: 700; letter-spacing: 0.08em; }}
+  .t-sub {{ font-size: 10px; fill: {COLORS["muted"]}; }}
+  .t-label {{ font-size: 10px; fill: {COLORS["muted"]}; text-transform: uppercase; letter-spacing: 0.06em; }}
+  .t-value {{ font-size: 22px; font-weight: 700; }}
+  .t-hook {{ font-size: 11px; }}
+  .t-small {{ font-size: 10px; }}
+  .t-section {{ font-size: 12px; font-weight: 600; fill: {COLORS["gold"]}; letter-spacing: 0.04em; }}
   .anim {{ animation: fadeIn 0.6s ease both; }}
   .bar-bg {{ fill: {COLORS["bar_bg"]}; rx: 4; ry: 4; }}
   .trend-dot {{ fill: {COLORS["gray"]}; }}
 </style>
-<rect class="root" width="{W}" height="{total_h}" rx="16" ry="16"/>""")
+<rect class="root" width="{W}" height="{total_h}" rx="16" ry="16"/>
+<rect x="0" y="0" width="{W}" height="2" fill="{COLORS["gold"]}"/>""")
 
     # ── Header ──
     parts.append(f"""\
-<text x="24" y="34" class="t t-title anim" style="animation-delay:0.05s">{esc(t("svg.title"))}</text>
-<text x="{W - 24}" y="26" class="t t-sub" text-anchor="end">{esc(period.get("start", ""))}&#160;~&#160;{esc(period.get("end", ""))}</text>
-<text x="{W - 24}" y="44" class="t t-sub" text-anchor="end">{esc(t("svg.data_days", data_days))}</text>""")
+<text x="24" y="32" class="t t-title anim" style="animation-delay:0.05s">{esc(t("svg.title"))}</text>
+<text x="{W - 24}" y="24" class="t t-sub" text-anchor="end">{esc(period.get("start", ""))}&#160;~&#160;{esc(period.get("end", ""))}</text>
+<text x="{W - 24}" y="40" class="t t-sub" text-anchor="end">{esc(t("svg.data_days", data_days))}</text>""")
 
     # ── Summary cards ──
     card_items = [
@@ -180,18 +185,20 @@ def render_svg(data: dict[str, Any]) -> str:
         cx = 24 + i * (card_w + CARD_GAP)
         cy = cards_y
         parts.append(f'<rect class="panel" x="{cx}" y="{cy}" width="{card_w}" height="{CARD_H}"/>')
-        parts.append(f'<text x="{cx + 14}" y="{cy + 22}" class="t t-label">{esc(label)}</text>')
-        parts.append(f'<text x="{cx + 14}" y="{cy + 58}" class="t t-value" fill="{color}">{esc(value)}</text>')
+        parts.append(f'<text x="{cx + 14}" y="{cy + 20}" class="t t-label">{esc(label)}</text>')
+        parts.append(f'<text x="{cx + 14}" y="{cy + 46}" class="t t-value" fill="{color}">{esc(value)}</text>')
         # progress bar for success rate
         if i == 2 and isinstance(rate, (int, float)):
-            bar_y = cy + 66
+            bar_y = cy + 54
             bar_w = card_w - 28
             fill_w = max(0, min(bar_w, bar_w * rate))
-            parts.append(f'<rect class="bar-bg" x="{cx + 14}" y="{bar_y}" width="{bar_w}" height="6"/>')
-            parts.append(f'<rect fill="{color}" rx="4" ry="4" x="{cx + 14}" y="{bar_y}" width="{fill_w}" height="6" style="animation: growRight 1s ease both;"/>')
+            parts.append(f'<rect class="bar-bg" x="{cx + 14}" y="{bar_y}" width="{bar_w}" height="5"/>')
+            parts.append(f'<rect fill="{COLORS["gold_dim"] if color == COLORS["yellow"] else color}" rx="4" ry="4" x="{cx + 14}" y="{bar_y}" width="{fill_w}" height="5" style="animation: growRight 1s ease both;"/>')
+
+    parts.append(f'<line x1="24" y1="{trend_y - 12}" x2="{W - 24}" y2="{trend_y - 12}" stroke="{COLORS["border"]}" stroke-width="1"/>')
 
     # ── Daily trend ──
-    parts.append(f'<text x="24" y="{trend_y + 14}" class="t t-section">{esc(t("svg.section.daily_trend"))}</text>')
+    parts.append(f'<text x="24" y="{trend_y + 12}" class="t t-section">{esc(t("svg.section.daily_trend"))}</text>')
     if daily_trend:
         max_sessions = max((d.get("sessions", 0) for d in daily_trend), default=1) or 1
         max_events = max((d.get("total_events", 0) for d in daily_trend), default=1) or 1
@@ -199,7 +206,7 @@ def render_svg(data: dict[str, Any]) -> str:
         norm_max = max(1, max(max(d.get("sessions", 0), d.get("total_events", 0) / event_scale) for d in daily_trend))
 
         chart_x = 24
-        chart_y = trend_y + 26
+        chart_y = trend_y + 22
         day_w = min(90, (W - 48) / max(1, len(daily_trend)))
 
         for j, day in enumerate(daily_trend):
@@ -210,7 +217,7 @@ def render_svg(data: dict[str, Any]) -> str:
 
             if sessions == 0 and events == 0:
                 # empty dot
-                parts.append(f'<circle class="trend-dot" cx="{dx + day_w / 2}" cy="{chart_y + TREND_H - 5}" r="4"/>')
+                parts.append(f'<circle class="trend-dot" cx="{dx + day_w / 2}" cy="{chart_y + TREND_H - 4}" r="3"/>')
             else:
                 # session bar (blue)
                 s_h = max(4, (sessions / norm_max) * TREND_H)
@@ -220,22 +227,24 @@ def render_svg(data: dict[str, Any]) -> str:
                 e_val = events / event_scale
                 e_h = max(4, (e_val / norm_max) * TREND_H)
                 e_y = chart_y + TREND_H - e_h
-                parts.append(f'<rect fill="{COLORS["gold"]}" rx="3" ry="3" x="{dx + day_w / 2 + 2}" y="{e_y}" width="{TREND_BAR_W}" height="{e_h}" opacity="0.9" style="animation: slideUp 0.5s ease {0.1 * j + 0.05}s both;"/>')
+                parts.append(f'<rect fill="{COLORS["gold_dim"]}" rx="3" ry="3" x="{dx + day_w / 2 + 2}" y="{e_y}" width="{TREND_BAR_W}" height="{e_h}" opacity="0.95" style="animation: slideUp 0.5s ease {0.1 * j + 0.05}s both;"/>')
 
             # date label
-            parts.append(f'<text x="{dx + day_w / 2}" y="{chart_y + TREND_H + 14}" class="t t-sub" text-anchor="middle">{esc(date_str)}</text>')
+            parts.append(f'<text x="{dx + day_w / 2}" y="{chart_y + TREND_H + 12}" class="t t-sub" text-anchor="middle">{esc(date_str)}</text>')
 
         # legend
         legend_x = W - 24
-        ly = trend_y + 14
-        parts.append(f'<rect fill="{COLORS["blue"]}" rx="2" ry="2" x="{legend_x - 180}" y="{ly - 8}" width="10" height="10"/>')
+        ly = trend_y + 12
+        parts.append(f'<rect fill="{COLORS["blue"]}" rx="2" ry="2" x="{legend_x - 174}" y="{ly - 7}" width="8" height="8"/>')
         parts.append(f'<text x="{legend_x - 166}" y="{ly}" class="t t-sub">{esc(t("svg.legend.sessions"))}</text>')
-        parts.append(f'<rect fill="{COLORS["gold"]}" rx="2" ry="2" x="{legend_x - 100}" y="{ly - 8}" width="10" height="10"/>')
-        parts.append(f'<text x="{legend_x - 86}" y="{ly}" class="t t-sub">{esc(t("svg.legend.events", event_scale))}</text>')
+        parts.append(f'<rect fill="{COLORS["gold_dim"]}" rx="2" ry="2" x="{legend_x - 96}" y="{ly - 7}" width="8" height="8"/>')
+        parts.append(f'<text x="{legend_x - 84}" y="{ly}" class="t t-sub">{esc(t("svg.legend.events", event_scale))}</text>')
+
+    parts.append(f'<line x1="24" y1="{hooks_y - 10}" x2="{W - 24}" y2="{hooks_y - 10}" stroke="{COLORS["border"]}" stroke-width="1"/>')
 
     # ── Hook usage bars ──
-    parts.append(f'<text x="24" y="{hooks_y + 14}" class="t t-section">{esc(t("svg.section.top_hooks"))}</text>')
-    parts.append(f'<text x="{W - 24}" y="{hooks_y + 14}" class="t t-sub" text-anchor="end">{esc(t("svg.label.total", len(by_hook)))}</text>')
+    parts.append(f'<text x="24" y="{hooks_y + 12}" class="t t-section">{esc(t("svg.section.top_hooks"))}</text>')
+    parts.append(f'<text x="{W - 24}" y="{hooks_y + 12}" class="t t-sub" text-anchor="end">{esc(t("svg.label.total", len(by_hook)))}</text>')
 
     for idx, (hook_id, stats) in enumerate(top_hooks):
         ry = hooks_y + hooks_header_h + idx * ROW_H
@@ -247,21 +256,21 @@ def render_svg(data: dict[str, Any]) -> str:
         delay = f"{0.08 * idx}s"
 
         # hook name
-        parts.append(f'<text x="24" y="{ry + 20}" class="t t-hook" style="animation: fadeIn 0.4s ease {delay} both;">{esc(hook_id)}</text>')
+        parts.append(f'<text x="24" y="{ry + 18}" class="t t-hook" style="animation: fadeIn 0.4s ease {delay} both;">{esc(hook_id)}</text>')
         # bar background
-        parts.append(f'<rect class="bar-bg" x="220" y="{ry + 8}" width="{BAR_MAX_W}" height="14"/>')
+        parts.append(f'<rect class="bar-bg" x="240" y="{ry + 6}" width="{BAR_MAX_W}" height="12"/>')
         # bar fill
-        parts.append(f'<rect fill="{bar_color}" rx="4" ry="4" x="220" y="{ry + 8}" width="{bar_w}" height="14" opacity="0.9" style="animation: growRight 0.8s ease {delay} both;"/>')
+        parts.append(f'<rect fill="{COLORS["gold_dim"] if bar_color == COLORS["blue"] else bar_color}" rx="4" ry="4" x="240" y="{ry + 6}" width="{bar_w}" height="12" opacity="0.92" style="animation: growRight 0.8s ease {delay} both;"/>')
         # count
-        parts.append(f'<text x="{220 + BAR_MAX_W + 10}" y="{ry + 20}" class="t t-small">{run_count}</text>')
+        parts.append(f'<text x="{240 + BAR_MAX_W + 10}" y="{ry + 18}" class="t t-small">{run_count}</text>')
         # active days
         active = stats.get("active_days", 0)
-        parts.append(f'<text x="{220 + BAR_MAX_W + 56}" y="{ry + 20}" class="t t-sub">{active}d</text>')
+        parts.append(f'<text x="{240 + BAR_MAX_W + 48}" y="{ry + 18}" class="t t-sub">{active}d</text>')
         # blocked tag
         if blocked > 0:
-            tag_x = 220 + BAR_MAX_W + 90
-            parts.append(f'<rect fill="none" stroke="{COLORS["red"]}" stroke-width="1" rx="8" ry="8" x="{tag_x}" y="{ry + 6}" width="72" height="18"/>')
-            parts.append(f'<text x="{tag_x + 36}" y="{ry + 19}" class="t t-small" text-anchor="middle" fill="{COLORS["red"]}">{block_rate * 100:.0f}% block</text>')
+            tag_x = 240 + BAR_MAX_W + 78
+            parts.append(f'<rect fill="none" stroke="{COLORS["red"]}" stroke-width="1" rx="7" ry="7" x="{tag_x}" y="{ry + 4}" width="68" height="16"/>')
+            parts.append(f'<text x="{tag_x + 34}" y="{ry + 16}" class="t t-small" text-anchor="middle" fill="{COLORS["red"]}">{block_rate * 100:.0f}% block</text>')
 
     # ── Issues summary line ──
     error_hooks = [(h, s) for h, s in hooks_sorted if s.get("error_count", 0) > 0]

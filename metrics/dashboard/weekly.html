@@ -4,20 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Metrics Weekly</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@600;700;800&family=Martian+Mono:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0A0A0A;
-      --panel: #111111;
-      --panel-2: #151515;
-      --text: #FFFFFF;
-      --muted: #9A9A9A;
-      --border: #333333;
+      --bg: #0a0b09;
+      --panel: #12130f;
+      --panel-2: #181916;
+      --panel-3: #1e1f1b;
+      --text: #f0ede6;
+      --muted: #8a8679;
+      --border: #2e2d28;
+      --border-subtle: #222120;
       --gold: #C9A962;
+      --gold-dim: #a08840;
       --green: #22c55e;
       --yellow: #f59e0b;
       --red: #ef4444;
       --blue: #3b82f6;
-      --gray-dot: #5A5A5A;
+      --gray-dot: #4a4840;
+      --sp-1: 4px;
+      --sp-2: 8px;
+      --sp-3: 12px;
+      --sp-4: 16px;
+      --sp-5: 24px;
+      --sp-6: 32px;
+      --sp-7: 48px;
+      --sp-8: 64px;
+      --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --duration-instant: 90ms;
+      --duration-fast: 180ms;
+      --duration-normal: 320ms;
+      --duration-slow: 560ms;
     }
 
     * {
@@ -26,25 +46,33 @@
 
     body {
       margin: 0;
-      background: radial-gradient(circle at top right, rgba(201, 169, 98, 0.12), transparent 28%), var(--bg);
+      background: radial-gradient(ellipse at 80% 0%, rgba(201, 169, 98, 0.06) 0%, transparent 50%), var(--bg);
       color: var(--text);
-      font-family: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+      font-family: "Martian Mono", "SFMono-Regular", Menlo, Consolas, monospace;
       min-height: 100vh;
     }
 
     .page {
       max-width: 1360px;
       margin: 0 auto;
-      padding: 32px 20px 40px;
+      padding: var(--sp-6) 20px 40px;
     }
 
     .section {
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 100%), var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 18px;
+      background: var(--panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
       padding: 20px;
       margin-bottom: 18px;
       overflow: hidden;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity var(--duration-slow) var(--ease-out-expo), transform var(--duration-slow) var(--ease-out-expo), border-color var(--duration-fast) ease;
+    }
+
+    .section.is-visible {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .header {
@@ -56,10 +84,10 @@
     }
 
     .title {
-      font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+      font-family: "Red Hat Display", "Segoe UI", sans-serif;
       font-size: clamp(28px, 5vw, 42px);
-      font-weight: 700;
-      letter-spacing: 0.08em;
+      font-weight: 800;
+      letter-spacing: 0.06em;
       margin: 0;
     }
 
@@ -77,7 +105,7 @@
     }
 
     .week-selector {
-      font-family: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+      font-family: "Martian Mono", "SFMono-Regular", Menlo, Consolas, monospace;
       font-size: 13px;
       background: var(--panel-2);
       color: var(--text);
@@ -116,6 +144,13 @@
       flex-direction: column;
       justify-content: space-between;
       gap: 10px;
+      transition: transform var(--duration-fast) var(--ease-out-quart), border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: var(--gold-dim);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
     }
 
     .card-title {
@@ -126,23 +161,23 @@
     }
 
     .card-value {
-      font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
-      font-size: clamp(26px, 4vw, 40px);
-      font-weight: 700;
+      font-family: "Red Hat Display", "Segoe UI", sans-serif;
+      font-size: clamp(24px, 3.5vw, 36px);
+      font-weight: 800;
       line-height: 1;
     }
 
     .progress-track,
     .bar-track {
       width: 100%;
-      background: #1D1D1D;
-      border: 1px solid var(--border);
+      background: var(--border-subtle);
+      border: none;
       border-radius: 999px;
       overflow: hidden;
     }
 
     .progress-track {
-      height: 10px;
+      height: 8px;
     }
 
     .progress-fill,
@@ -161,8 +196,9 @@
 
     .section-title {
       margin: 0;
-      font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
-      font-size: 20px;
+      font-family: "Red Hat Display", "Segoe UI", sans-serif;
+      font-size: 17px;
+      font-weight: 600;
       letter-spacing: 0.04em;
     }
 
@@ -199,6 +235,11 @@
       min-height: 6px;
       border-radius: 10px 10px 4px 4px;
       opacity: 0.95;
+      transition: filter var(--duration-fast) ease;
+    }
+
+    .trend-bar:hover {
+      filter: brightness(1.3);
     }
 
     .trend-dot {
@@ -268,11 +309,15 @@
       font: inherit;
       font-size: 12px;
       letter-spacing: 0.04em;
-      transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+      transition: background var(--duration-fast) ease, color var(--duration-fast) ease, transform var(--duration-fast) ease;
     }
 
     .tab-btn:hover {
       color: var(--text);
+    }
+
+    .tab-btn:active {
+      transform: scale(0.97);
     }
 
     .tab-btn.active {
@@ -286,6 +331,11 @@
       border-radius: 16px;
       margin-bottom: 12px;
       overflow: hidden;
+      transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease;
+    }
+
+    .hook-card:hover {
+      border-color: rgba(201, 169, 98, 0.36);
     }
 
     .hook-card-header {
@@ -306,13 +356,16 @@
       min-width: 0;
       display: flex;
       align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
+      gap: 8px;
+      flex-wrap: nowrap;
     }
 
     .hook-title {
       min-width: 0;
       font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .category-tag {
@@ -333,11 +386,11 @@
 
     .hook-bar-track {
       position: relative;
-      height: 10px;
+      height: 8px;
       flex: 1;
       min-width: 90px;
-      background: #1D1D1D;
-      border: 1px solid var(--border);
+      background: var(--border-subtle);
+      border: none;
       border-radius: 999px;
       overflow: hidden;
     }
@@ -345,7 +398,7 @@
     .hook-bar-fill {
       height: 100%;
       border-radius: inherit;
-      background: linear-gradient(90deg, rgba(201, 169, 98, 0.85), rgba(59, 130, 246, 0.92));
+      background: var(--gold-dim);
     }
 
     .hook-count-value {
@@ -378,7 +431,7 @@
       color: var(--muted);
       font-size: 18px;
       line-height: 1;
-      transition: transform 0.24s ease, color 0.24s ease;
+      transition: transform var(--duration-fast) ease, color var(--duration-fast) ease;
     }
 
     .hook-card.is-open .expand-arrow {
@@ -387,24 +440,26 @@
     }
 
     .hook-card-detail {
-      max-height: 0;
+      display: grid;
+      grid-template-rows: 0fr;
       opacity: 0;
+      transition: grid-template-rows var(--duration-normal) var(--ease-out-quart), opacity var(--duration-normal) ease;
+    }
+
+    .detail-content-wrapper {
       overflow: hidden;
-      transition: max-height 0.28s ease, opacity 0.28s ease, padding 0.28s ease;
-      padding: 0 18px;
     }
 
     .hook-card.is-open .hook-card-detail {
-      max-height: 560px;
+      grid-template-rows: 1fr;
       opacity: 1;
-      padding: 0 18px 18px;
     }
 
     .detail-content {
       display: grid;
       grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.9fr);
       gap: 18px;
-      padding-top: 6px;
+      padding: 12px 18px 18px;
       border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
 
@@ -519,18 +574,38 @@
 
     .event-row {
       display: grid;
-      grid-template-columns: minmax(130px, 1fr) minmax(120px, 1.2fr) 64px;
+      grid-template-columns: minmax(0, 1fr) minmax(120px, 200px) 72px;
       gap: 10px;
       align-items: center;
+      padding: 10px 12px;
+      border-radius: 10px;
+      transition: background var(--duration-fast) ease;
+    }
+
+    .event-row .mono {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .event-row:hover {
+      background: rgba(201, 169, 98, 0.08);
     }
 
     .issue-row {
       display: grid;
-      grid-template-columns: 12px minmax(160px, auto) 1fr;
+      grid-template-columns: 12px minmax(0, auto) 1fr;
       gap: 10px;
-      align-items: start;
+      align-items: center;
       padding: 10px 0;
       border-bottom: 1px solid rgba(51, 51, 51, 0.45);
+    }
+
+    .issue-title {
+      font-size: 13px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .issue-dot {
@@ -540,19 +615,23 @@
       margin-top: 4px;
     }
 
-    .issue-title {
-      font-size: 13px;
-    }
-
     .issue-desc {
       color: var(--muted);
       font-size: 12px;
       line-height: 1.5;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: white-space var(--duration-fast) ease;
+    }
+
+    .issue-row:hover .issue-desc {
+      white-space: normal;
     }
 
     .empty-state {
       color: var(--green);
-      font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+      font-family: "Red Hat Display", "Segoe UI", sans-serif;
       font-size: 22px;
       padding: 12px 0 4px;
     }
@@ -617,9 +696,6 @@
         text-align: left;
       }
 
-      .hook-card.is-open .hook-card-detail {
-        max-height: 980px;
-      }
     }
 
     .lang-toggle {
@@ -640,7 +716,7 @@
       cursor: pointer;
       font: inherit;
       font-size: 12px;
-      transition: background 0.2s, color 0.2s;
+      transition: background var(--duration-fast) ease, color var(--duration-fast) ease;
     }
 
     .lang-btn.active {
@@ -651,8 +727,10 @@
     .hook-desc {
       font-size: 12px;
       color: var(--muted);
-      line-height: 1.4;
-      width: 100%;
+      line-height: 1.5;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      margin-top: 4px;
     }
 
     .skill-desc, .rule-title {
@@ -660,6 +738,36 @@
       color: var(--muted);
       line-height: 1.3;
       margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+      max-height: 0;
+      opacity: 0;
+      margin-top: 0;
+      transition: max-height var(--duration-fast) var(--ease-out-quart),
+                  opacity var(--duration-fast) var(--ease-out-quart),
+                  margin-top var(--duration-fast) var(--ease-out-quart);
+    }
+
+    .event-row:hover .skill-desc,
+    .event-row:hover .rule-title {
+      max-height: 20px;
+      opacity: 1;
+      margin-top: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition-duration: 0ms !important;
+        scroll-behavior: auto !important;
+      }
+
+      .section {
+        opacity: 1;
+        transform: none;
+      }
     }
   </style>
 </head>
@@ -752,11 +860,12 @@
 
     const COLORS = {
       gold: "#C9A962",
+      goldDim: "#a08840",
       green: "#22c55e",
       yellow: "#f59e0b",
       red: "#ef4444",
       blue: "#3b82f6",
-      gray: "#5A5A5A"
+      gray: "#4a4840"
     };
 
     const HOOK_CATEGORY_COLORS = {
@@ -769,9 +878,14 @@
     const STATE = { tab: "all", sort: "run_count", expanded: new Set() };
     let currentLang = localStorage.getItem("metrics-lang") || "zh";
     let currentData = DATA;
+    let sectionObserver = null;
 
     if (!I18N[currentLang]) {
       currentLang = "zh";
+    }
+
+    function prefersReducedMotion() {
+      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     }
 
     function t(key, ...args) {
@@ -816,12 +930,72 @@
       return COLORS.red;
     }
 
-    function createCard(title, value, detailHtml) {
+    function initSectionReveal() {
+      const sections = document.querySelectorAll(".section");
+      if (!sections.length) {
+        return;
+      }
+
+      if (prefersReducedMotion() || typeof IntersectionObserver !== "function") {
+        sections.forEach((section) => section.classList.add("is-visible"));
+        return;
+      }
+
+      if (sectionObserver) {
+        sectionObserver.disconnect();
+      }
+
+      sectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            return;
+          }
+          entry.target.classList.add("is-visible");
+          sectionObserver.unobserve(entry.target);
+        });
+      }, { threshold: 0.05, rootMargin: "0px 0px 0px 0px" });
+
+      sections.forEach((section) => sectionObserver.observe(section));
+
+      // Fallback: ensure all sections visible after 1.5s regardless
+      setTimeout(() => {
+        sections.forEach((section) => section.classList.add("is-visible"));
+      }, 1500);
+    }
+
+    function animateValue(element, endValue, formatter = formatNumber, duration = 900) {
+      if (!element) {
+        return;
+      }
+
+      const safeTarget = Math.max(0, n(endValue));
+      if (prefersReducedMotion()) {
+        element.textContent = formatter(safeTarget);
+        return;
+      }
+
+      const startTime = performance.now();
+      const startValue = 0;
+
+      function tick(now) {
+        const progress = Math.min(1, (now - startTime) / duration);
+        const eased = 1 - Math.pow(1 - progress, 4);
+        const currentValue = Math.round(startValue + (safeTarget - startValue) * eased);
+        element.textContent = formatter(currentValue);
+        if (progress < 1) {
+          requestAnimationFrame(tick);
+        }
+      }
+
+      requestAnimationFrame(tick);
+    }
+
+    function createCard(title, valueHtml, detailHtml) {
       const card = document.createElement("article");
       card.className = "card";
       card.innerHTML = `
         <div class="card-title">${title}</div>
-        <div class="card-value">${value}</div>
+        <div class="card-value">${valueHtml}</div>
         <div>${detailHtml || ""}</div>
       `;
       return card;
@@ -977,8 +1151,8 @@
       const rateColor = successColor(rate);
       const rateWidth = typeof rate === "number" ? Math.max(0, Math.min(100, rate * 100)) : 0;
 
-      cards.appendChild(createCard(t("dashboard.card.sessions"), formatNumber(summary.sessions), `<div class="small">${t("dashboard.card.sessions_detail")}</div>`));
-      cards.appendChild(createCard(t("dashboard.card.events"), formatNumber(summary.total_events), `<div class="small">${t("dashboard.card.events_detail")}</div>`));
+      cards.appendChild(createCard(t("dashboard.card.sessions"), `<span class="metric-animated" data-target="${n(summary.sessions)}"></span>`, `<div class="small">${t("dashboard.card.sessions_detail")}</div>`));
+      cards.appendChild(createCard(t("dashboard.card.events"), `<span class="metric-animated" data-target="${n(summary.total_events)}"></span>`, `<div class="small">${t("dashboard.card.events_detail")}</div>`));
       cards.appendChild(
         createCard(
           t("dashboard.card.success_rate"),
@@ -993,6 +1167,10 @@
           `<div class="small">${t("dashboard.card.avg_duration_detail")}</div>`
         )
       );
+
+      cards.querySelectorAll(".metric-animated").forEach((node) => {
+        animateValue(node, Number(node.dataset.target || 0));
+      });
     }
 
     function renderTrend(data) {
@@ -1123,10 +1301,9 @@
         return `
           <article class="hook-card${isOpen ? " is-open" : ""}">
             <button class="hook-card-header" type="button" data-hook="${hook}">
-              <div class="hook-title-block">
+              <div class="hook-title-block" ${hookDesc ? `title="${hookDesc}"` : ""}>
                 <span class="hook-title mono">${hook}</span>
                 <span class="category-tag" style="color:${categoryColor};">${t(`dashboard.tab.${category}`)}</span>
-                ${hookDesc ? `<div class="hook-desc">${hookDesc}</div>` : ""}
               </div>
               <div class="hook-stat-block">
                 <div class="hook-bar-track"><div class="hook-bar-fill" style="width:${barWidth};"></div></div>
@@ -1141,19 +1318,22 @@
               <div class="expand-arrow">▾</div>
             </button>
             <div class="hook-card-detail">
-              <div class="detail-content">
-                <div class="detail-grid">${metricEntries.join("")}</div>
-                <div class="detail-viz">
-                  <div class="viz-title">${vizTitle}</div>
-                  ${renderStackedBar(vizSegments)}
-                  <div class="stacked-legend">
-                    ${vizSegments.map((segment) => {
-                      const total = vizSegments.reduce((sum, item) => sum + n(item.value), 0);
-                      const percent = total > 0 ? `${((n(segment.value) / total) * 100).toFixed(1)}%` : "0.0%";
-                      return renderLegendRow(segment.color, segment.label, `${formatNumber(segment.value)} · ${percent}`);
-                    }).join("")}
+              <div class="detail-content-wrapper">
+                ${hookDesc ? `<div class="hook-desc">${hookDesc}</div>` : ""}
+                <div class="detail-content">
+                  <div class="detail-grid">${metricEntries.join("")}</div>
+                  <div class="detail-viz">
+                    <div class="viz-title">${vizTitle}</div>
+                    ${renderStackedBar(vizSegments)}
+                    <div class="stacked-legend">
+                      ${vizSegments.map((segment) => {
+                        const total = vizSegments.reduce((sum, item) => sum + n(item.value), 0);
+                        const percent = total > 0 ? `${((n(segment.value) / total) * 100).toFixed(1)}%` : "0.0%";
+                        return renderLegendRow(segment.color, segment.label, `${formatNumber(segment.value)} · ${percent}`);
+                      }).join("")}
+                    </div>
+                    ${reasonBlock}
                   </div>
-                  ${reasonBlock}
                 </div>
               </div>
             </div>
@@ -1182,9 +1362,10 @@
         const ruleTitle = stats.title || "";
         const row = document.createElement("div");
         row.className = "event-row";
+        const displayPath = rulePath.startsWith("rules-library/") ? rulePath.slice("rules-library/".length) : rulePath;
         row.innerHTML = `
-          <div>
-            <div class="mono">${rulePath.startsWith("rules-library/") ? rulePath.slice("rules-library/".length) : rulePath}</div>
+          <div title="${ruleTitle ? ruleTitle + '\n' + rulePath : rulePath}">
+            <div class="mono">${displayPath}</div>
             ${ruleTitle ? `<div class="rule-title">${ruleTitle}</div>` : ""}
           </div>
           <div class="value-block">
@@ -1219,7 +1400,7 @@
         const row = document.createElement("div");
         row.className = "event-row";
         row.innerHTML = `
-          <div>
+          <div title="${skillDesc || skillName}">
             <div class="mono">${skillName}</div>
             ${skillDesc ? `<div class="skill-desc">${skillDesc}</div>` : ""}
           </div>
@@ -1448,6 +1629,7 @@
 
     renderStaticText();
     bindHookAnalyticsEvents();
+    initSectionReveal();
 
     // Boot
     if (isLocalFile) {

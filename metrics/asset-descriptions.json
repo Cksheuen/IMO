@@ -66,10 +66,6 @@
       "description_zh": "检查 Codex 是否与 Claude Code 的全局配置保持对齐，重点覆盖 ~/.claude 下共享的 AGENTS、rules 和自定义 skills；当用户提到 Codex/Claude 配置同步、AGENTS.md、共享规则、共享技能、全局可见性，或希望 Codex 在任意目录自动沿用同一套 Claude 配置时使用。若发现失配，则检查并通过恢复预期的符号链接布局进行修复。",
       "description_en": "Check whether Codex is currently aligned with Claude Code global configuration, especially shared AGENTS/rules and custom skills under ~/.claude. Use this whenever the user mentions Codex/Claude config sync, AGENTS.md, shared rules, shared skills, global skill visibility, or wants Codex to automatically follow the same Claude configuration from any directory. If alignment is broken, inspect it and repair it by restoring the expected symlink layout."
     },
-    "design": {
-      "description_zh": "AI 驱动的 UI 设计技能，引导用户从模糊想法到精美的 .pen 文件设计。 使用 Pencil MCP 工具，覆盖完整工作流：需求收敛（结构化提问明确用户真实需求）、 设计系统对齐（风格指南、token）、自动化生成（batch_design）、视觉验证（截图）、 迭代精修。当用户想要设计 UI、创建界面、构建页面、做原型、布局时使用此技能—— 即使用户只是说\"我需要一个仪表盘\"或\"帮我设计登录页\"。也适用于\"帮我做 UI\"、 \"创建 web 应用设计\"、\"让它好看点\"，或任何提及设计页面/屏幕/布局的请求。 如果用户描述了一个应用想法但没有明确要求设计，也考虑此技能是否能帮助他们可视化。",
-      "description_en": "AI-driven UI design skill. Guides users from vague ideas to polished .pen designs through a full Pencil MCP workflow: requirement convergence, design-system alignment, automated generation, visual verification, and iterative refinement."
-    },
     "docx": {
       "description_zh": "当用户需要创建、读取、编辑或处理 Word 文档（.docx）时使用此技能。触发场景包括提到“Word doc”“word document”“.docx”，或要求生成带目录、标题、页码、信头等格式的专业文档；也适用于提取或重组 .docx 内容、在文档中插入或替换图片、执行查找替换、处理修订或评论，或将内容整理成成品 Word 文档。不适用于 PDF、表格、Google Docs 或与文档生成无关的一般编码任务。",
       "description_en": "Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). Triggers include: any mention of 'Word doc', 'word document', '.docx', or requests to produce professional documents with formatting like tables of contents, headings, page numbers, or letterheads. Also use when extracting or reorganizing content from .docx files, inserting or replacing images in documents, performing find-and-replace in Word files, working with tracked changes or comments, or converting content into a polished Word document. If the user asks for a 'report', 'memo', 'letter', 'template', or similar deliverable as a Word or .docx file, use this skill. Do NOT use for PDFs, spreadsheets, Google Docs, or general coding tasks unrelated to document generation."
@@ -94,6 +90,10 @@
       "description_zh": "为可测试的项目生成功能测试原子操作、可复用子链和长链主链，并输出可继续落地为自动化脚本的测试步骤骨架。适用于用户要求“整理测试表”“设计测试链”“按操作和期望结果编排长链测试”“为 UI / 逻辑解耦后的项目生成自动化功能测试计划”。",
       "description_en": "Functional test chain skill for testable projects. Generates atomic test actions, reusable subchains, and long-form test flows, then outputs a step skeleton that can be turned into automated scripts."
     },
+    "impeccable": {
+      "description_zh": "",
+      "description_en": "Create distinctive, production-grade frontend interfaces with high design quality. Generates creative, polished code that avoids generic AI aesthetics. Use when the user asks to build web components, pages, artifacts, posters, or applications, or when any design skill requires project context. Call with 'craft' for shape-then-build, 'teach' for design context setup, or 'extract' to pull reusable components and tokens into the design system."
+    },
     "locate": {
       "description_zh": "代码地图技能。记录源代码路径和关键上下文，帮助 Agent 快速定位代码。按变更规模自动选择索引粒度（L1片段/L2模块/L3系统）。当用户说\"记住\"、\"记录位置\"、\"标记这里\"、\"定位\"、\"回忆\"时触发此技能。",
       "description_en": "Code map skill. Records source paths and key context so the agent can relocate code quickly, choosing indexing granularity automatically from snippet to module to system level."
@@ -117,6 +117,10 @@
     "pdf": {
       "description_zh": "只要用户需要处理 PDF 文件，就使用此技能。包括读取或提取 PDF 中的文本与表格、合并或拆分 PDF、旋转页面、添加水印、创建新 PDF、填写 PDF 表单、加密或解密 PDF、提取图片，以及对扫描版 PDF 做 OCR 以实现可搜索。只要用户提到 .pdf 文件或要求产出 PDF，即可触发。",
       "description_en": "Use this skill whenever the user wants to do anything with PDF files. This includes reading or extracting text/tables from PDFs, combining or merging multiple PDFs into one, splitting PDFs apart, rotating pages, adding watermarks, creating new PDFs, filling PDF forms, encrypting/decrypting PDFs, extracting images, and OCR on scanned PDFs to make them searchable. If the user mentions a .pdf file or asks to produce one, use this skill."
+    },
+    "pencil-design": {
+      "description_zh": "Pencil MCP 特化的 AI 驱动 UI 设计技能，引导用户从模糊想法到精美的 .pen 文件设计。 使用 Pencil MCP 工具，覆盖完整工作流：需求收敛（结构化提问明确用户真实需求）、 设计系统对齐（风格指南、token）、自动化生成（batch_design）、视觉验证（截图）、 迭代精修。当用户想要设计 UI、创建界面、构建页面、做原型、布局时使用此技能—— 即使用户只是说\"我需要一个仪表盘\"或\"帮我设计登录页\"。也适用于\"帮我做 UI\"、 \"创建 web 应用设计\"、\"让它好看点\"，或任何提及设计页面/屏幕/布局的请求。 如果用户描述了一个应用想法但没有明确要求设计，也考虑此技能是否能帮助他们可视化。",
+      "description_en": "AI-driven UI design skill. Guides users from vague ideas to polished .pen designs through a full Pencil MCP workflow: requirement convergence, design-system alignment, automated generation, visual verification, and iterative refinement."
     },
     "pkg-dive": {
       "description_zh": "探索 npm 包源码实现的技能。当用户需要了解依赖包的实现细节、查看包的源码、理解 API 实现原理、排查依赖问题时自动触发。触发场景包括：\"这个包是怎么实现的\"、\"看看 xxx 包的源码\"、\"这个 API 内部是怎么工作的\"、\"帮我理解这个依赖的实现\"。支持探索 node_modules 中任意 npm 包。",
@@ -278,6 +282,10 @@
     },
     "rules-library/pattern/self-verification-mechanism.md": {
       "title": "Agent 自验证机制",
+      "always_loaded": false
+    },
+    "rules-library/pattern/vendor-skill-management.md": {
+      "title": "第三方 Skill 管理规范",
       "always_loaded": false
     },
     "rules-library/technique/browser-auth-reuse.md": {
