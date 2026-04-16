@@ -116,3 +116,7 @@ __pycache__/
 # 冷记忆（不同步）
 .cold-storage/
 skills/pkg-dive-workspace/
+
+# 第三方 skill 只读原件（从 marketplace 缓存复制，由 vendor-sync.sh 管理）
+skills/vendor/*/
+!skills/vendor/.vendor-manifest.json

@@ -24,6 +24,8 @@ from pathlib import Path
 
 BASE = Path.home() / ".claude"
 NOTES = BASE / "notes"
+SKILLS_DIR = BASE / "skills"
+VENDOR_DIR = SKILLS_DIR / "vendor"
 STATE_FILE = BASE / "consolidation-state.json"
 LOG_FILE = BASE / "consolidation.log"
 TODO_FILE = BASE / "consolidation-todo.json"
@@ -311,7 +313,6 @@ def consolidate_research(dry_run: bool) -> dict:
     """Consolidate notes/research/: detect superseded research."""
     research_dir = NOTES / "research"
     rules_dir = BASE / "rules"
-    skills_dir = BASE / "skills"
     results = {"marked_superseded": 0, "marked_stale": 0, "files": []}
 
     if not research_dir.exists():
@@ -325,8 +326,10 @@ def consolidate_research(dry_run: bool) -> dict:
         for rp in rules_dir.rglob("*.md"):
             if rp.name != "README.md":
                 rule_topics.add(rp.stem.lower())
-    if skills_dir.exists():
-        for sp in skills_dir.iterdir():
+    if SKILLS_DIR.exists():
+        for sp in SKILLS_DIR.iterdir():
+            if sp == VENDOR_DIR or VENDOR_DIR in sp.parents:
+                continue
             if sp.is_dir():
                 rule_topics.add(sp.name.lower())
 

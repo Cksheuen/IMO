@@ -27,6 +27,7 @@ STATE_FILE = BASE / "consolidation-state.json"
 LESSONS_DIR = BASE / "notes" / "lessons"
 RULES_DIR = BASE / "rules"
 SKILLS_DIR = BASE / "skills"
+VENDOR_DIR = SKILLS_DIR / "vendor"
 LOG_DIR = BASE / "logs" / "promotion"
 QUEUE_LOCK_FILE = BASE / "promotion-queue.lock"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -283,6 +284,8 @@ def find_similar_rules(lesson_path: Path) -> list:
     # 扫描 skills/
     if SKILLS_DIR.exists():
         for skill_dir in SKILLS_DIR.iterdir():
+            if skill_dir == VENDOR_DIR or VENDOR_DIR in skill_dir.parents:
+                continue
             if skill_dir.is_dir():
                 skill_file = skill_dir / "SKILL.md"
                 if skill_file.exists():

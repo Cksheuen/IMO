@@ -75,13 +75,17 @@ for entry in index.entries:
 
 ```bash
 # 自动创建目标目录（注意：大多数规则应恢复到 rules-library/，仅元级约束恢复到 rules/）
-mkdir -p ~/.claude/rules-library/technique
+if [[ "$originalPath" == skills/vendor/* ]]; then
+  echo "该条目指向 vendor/ 只读区，不执行恢复。"
+else
+  mkdir -p ~/.claude/rules-library/technique
 
-# 自动移动文件（cold-storage 内部保持扁平结构，按 index.json 的 originalPath 恢复到正确位置）
-mv ~/.claude/.cold-storage/rules/old-pattern.md ~/.claude/rules-library/technique/
+  # 自动移动文件（cold-storage 内部保持扁平结构，按 index.json 的 originalPath 恢复到正确位置）
+  mv ~/.claude/.cold-storage/rules/old-pattern.md ~/.claude/rules-library/technique/
 
-# 自动更新索引（移除该条目）
-update_index --remove "old-pattern"
+  # 自动更新索引（移除该条目）
+  update_index --remove "old-pattern"
+fi
 ```
 
 ## 索引同步
@@ -112,6 +116,11 @@ update_index --remove "old-pattern"
 
 请选择（1/2/3）
 ```
+
+## vendor 保护
+
+`skills/vendor/` 是第三方 skill 只读区，thaw 不会将内容恢复到此目录。
+若冻结前的 `originalPath` 指向 vendor/，说明该条目已不适用，应删除而非恢复。
 
 ## 智能提示
 

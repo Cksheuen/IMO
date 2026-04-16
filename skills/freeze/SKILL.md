@@ -24,7 +24,7 @@ description_en: "Freeze meta-skill. Moves rarely used skills and rules from hot 
 
 ```bash
 # 自动检查，无需人工启动
-skill_count=$(find ~/.claude/skills -name "SKILL.md" | wc -l)
+skill_count=$(find ~/.claude/skills -path '*/vendor' -prune -o -name 'SKILL.md' -print | wc -l)
 rule_lines=$(find ~/.claude/rules -name "*.md" -exec cat {} \; | wc -l)
 
 if [ $skill_count -gt 20 ] || [ $rule_lines -gt 500 ]; then
@@ -42,6 +42,8 @@ fi
   - rules 中超过 30 天未修改的文件
   - 项目特定的知识（非通用）
   - 用户标记为"实验性"的内容
+  排除:
+    - skills/vendor/ 下的第三方只读原件（由 vendor-sync 管理，不参与冻结）
 ```
 
 ### Step 3: 自动展示报告
@@ -64,6 +66,7 @@ fi
 ```bash
 # 自动冻结（无需确认）
 for file in $auto_freeze_list; do
+  [[ "$file" == *"/vendor/"* ]] && continue
   mv "$file" ~/.claude/.cold-storage/
 done
 
@@ -92,7 +95,7 @@ update_index "$auto_freeze_list"
 |----------|--------|------|
 | 实验性技能 | 项目特定规则 | 核心工作流 |
 | 超过 30 天未用 | 低频使用规则 | 通用原则 |
-| 未被 CLAUDE.md 引用 | 可能有用的知识 | 最近使用 |
+| 未被 CLAUDE.md 引用 | 可能有用的知识 | 最近使用、vendor/ 第三方原件 |
 
 ## 索引格式
 

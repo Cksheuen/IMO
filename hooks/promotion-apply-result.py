@@ -26,6 +26,7 @@ LESSONS_DIR = BASE / "notes" / "lessons"
 NOTES_DIR = BASE / "notes"
 RULES_DIR = BASE / "rules"
 SKILLS_DIR = BASE / "skills"
+VENDOR_DIR = SKILLS_DIR / "vendor"
 MEMORY_DIR = BASE / "memory"
 DECLARATIVE_MEMORY_DIR = MEMORY_DIR / "declarative"
 LOG_DIR = BASE / "logs" / "promotion"
@@ -363,6 +364,7 @@ def format_markdown_steps(items: List[str], fallback_steps: List[str]) -> str:
 def create_skill(lesson_path: Path, target_path: Path, lesson: dict, dry_run: bool) -> Optional[Path]:
     """Create a skill directory from a promoted note."""
     skill_name = slugify_name(lesson_path.stem)
+    vendor_root = VENDOR_DIR.resolve()
 
     if target_path.name == "SKILL.md":
         skill_file = target_path
@@ -379,6 +381,9 @@ def create_skill(lesson_path: Path, target_path: Path, lesson: dict, dry_run: bo
         skill_file = skill_dir / "SKILL.md"
     else:
         raise ValueError(f"Skill target escapes skills directory: {target_path}")
+
+    if skill_dir.resolve().is_relative_to(vendor_root):
+        raise ValueError(f"Cannot write to vendor directory: {target_path}")
 
     if skill_file.exists():
         existing_content = skill_file.read_text(encoding="utf-8")

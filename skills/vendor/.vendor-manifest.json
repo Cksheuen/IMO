@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "description": "Third-party skill vendor directory. Contents are read-only upstream copies. Do NOT modify directly — use vendor-sync to update from marketplace.",
+  "source": "anthropic-agent-skills",
+  "marketplace_path": "plugins/marketplaces/anthropic-agent-skills/skills",
+  "skills": {
+    "pdf": {
+      "source_path": "plugins/marketplaces/anthropic-agent-skills/skills/pdf",
+      "license": "Proprietary",
+      "synced_at": "2026-04-16T07:32:51.610043Z"
+    },
+    "docx": {
+      "source_path": "plugins/marketplaces/anthropic-agent-skills/skills/docx",
+      "license": "Proprietary",
+      "synced_at": "2026-04-16T07:32:51.610043Z"
+    },
+    "pptx": {
+      "source_path": "plugins/marketplaces/anthropic-agent-skills/skills/pptx",
+      "license": "Proprietary",
+      "synced_at": "2026-04-16T07:32:51.610043Z"
+    }
+  }
+}
