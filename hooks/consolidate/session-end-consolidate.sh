@@ -115,4 +115,12 @@ if [ -f "$SYNC_SCRIPT" ]; then
   fi
 fi
 
+# === Weekly freeze candidate check (per-host, ISO-week gated) ===
+# Runs freeze-analyzer.py at most once per ISO week per host.
+# Internal gating in weekly-freeze-check.sh decides whether to actually run.
+FREEZE_CHECK="$HOME/.claude/hooks/consolidate/weekly-freeze-check.sh"
+if [ -x "$FREEZE_CHECK" ]; then
+  nohup bash "$FREEZE_CHECK" >> "$LOG" 2>&1 &
+fi
+
 exit 0
