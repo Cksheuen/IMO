@@ -31,6 +31,20 @@
       "registration": "single-entry-with-router",
       "hotfix": true,
       "synced_at": "2026-04-16T22:00:00.000000Z"
+    },
+    "caveman": {
+      "source_repo": "https://github.com/JuliusBrussee/caveman",
+      "source_path": "skills",
+      "commit": "c2ed24b3e5d412cd0c25197b2bc9af587621fd99",
+      "license": "MIT",
+      "author": "Julius Brussee",
+      "homepage": "https://juliusbrussee.github.io/caveman/",
+      "description": "Global concise-Chinese output protocol (locally-modified fork). Injected via UserPromptSubmit hook, managed by /caveman-mode.",
+      "local_modifications": true,
+      "modification_summary": "English caveman → concise-Chinese protocol; SessionStart → UserPromptSubmit hook; allowlist-driven skill bypass; drops wenyan/compress-CLI/statusline.",
+      "vendor_sync_managed": false,
+      "synced_at": "2026-04-17T00:00:00.000000Z",
+      "see_also": "skills/vendor/caveman/UPSTREAM.md"
     }
   }
 }

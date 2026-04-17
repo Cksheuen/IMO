@@ -124,3 +124,6 @@ skills/pkg-dive-workspace/
 # 第三方 skill 只读原件（从 marketplace 缓存复制，由 vendor-sync.sh 管理）
 skills/vendor/*/
 !skills/vendor/.vendor-manifest.json
+# 例外：手动魔改的 vendor fork（需入 git 跨机同步）
+!skills/vendor/caveman/
+!skills/vendor/caveman/**
