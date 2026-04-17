@@ -1,10 +1,21 @@
 ---
-status: active
+status: resolved
+promotion_status: resolved
+promotion_reason: "超集已存在于 notes/lessons/lesson-gate-false-positive-corrections.md 且标记 resolved；lesson-gate.sh 已退化为 no-op shim，该 bug 路径不再激活"
 trigger: lesson-gate hook 误将 skill prompt injection 文本检测为用户纠正信号
 last_verified: 2026-04-02
+resolved_at: 2026-04-17
+resolution: |
+  1. signal-detector.sh 已增加 is_system_injection() 过滤（详见 corrections 版本）
+  2. hooks/lesson-capture/lesson-gate.sh 已退化为 exit 0 shim，默认 Stop 链不再调用
+  3. lesson capture 改由 /lesson-review skill 显式触发
 ---
 
 # Lesson Gate 误报：Skill Prompt Injection 被当作纠正信号
+
+> 注：本 lesson 的完整版与修复记录已沉淀于
+> [`lesson-gate-false-positive-corrections.md`](./lesson-gate-false-positive-corrections.md)。
+> 本文件保留为历史片段，不再作为 promotion 候选。
 
 ## Decision
 

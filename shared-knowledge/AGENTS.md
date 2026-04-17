@@ -241,10 +241,6 @@ See [task-context.md](<project>/.claude/tasks/current/context.md)
 
 Agent 当前对“中文”约束主要落在 `skills/`、`rules/`、`notes/`、`tasks/` 等持久化内容，导致用户交互层仍可能混入英文默认话术、英文状态更新或英文结论。
 
-## 核心原则
-
-**只要是在和用户说话，默认使用中文。**
-
 
 *(truncated due to size limit)*
 
@@ -258,6 +254,7 @@ Agent 当前对“中文”约束主要落在 `skills/`、`rules/`、`notes/`、
 - **改动边界守卫规范** — 修改现有文件或现有规则 → `rules-library/pattern/change-scope-guard.md`
 - **Closed Learning Loop Pattern** — 需要决定 transcript / task / notes / memory / recall / skills / user model 的边界 → `rules-library/pattern/closed-learning-loop.md`
 - **Code-as-Interface Pattern** — 需要控制复杂系统（浏览器、文件系统、API） → `rules-library/pattern/code-as-interface.md`
+- **中文简洁输出规范** — progress update / intermediary status → `rules-library/pattern/concise-chinese-output.md`
 - **跨层功能预检规范** — Master→Worker→Python 调用链 → `rules-library/pattern/cross-layer-preflight.md`
 - **连续执行规范** — 用户已经明确总体目标或接受了当前执行方向 → `rules-library/pattern/execution-continuity.md`
 - **Generator-Evaluator 模式规范** — 当任务满足以下任一条件时，**必须**使用 Generator-Evaluator 分离： → `rules-library/pattern/generator-evaluator-pattern.md`
