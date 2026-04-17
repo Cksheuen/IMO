@@ -94,6 +94,10 @@
           {
             "type": "command",
             "command": "bash \"$HOME/.claude/hooks/pre-agent-gate.sh\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$HOME/.claude/hooks/subagent-probe.py\""
           }
         ]
       },
@@ -103,6 +107,30 @@
           {
             "type": "command",
             "command": "bash \"$HOME/.claude/hooks/pre-agent-gate.sh\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$HOME/.claude/hooks/subagent-probe.py\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/codex-sync/on-rule-edit.sh\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/codex-sync/on-rule-edit.sh\""
           }
         ]
       }
@@ -118,6 +146,10 @@
           {
             "type": "command",
             "command": "bash \"$HOME/.claude/hooks/context-monitor.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/codex-sync/on-session-stop.sh\""
           }
         ]
       }
