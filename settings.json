@@ -5,12 +5,6 @@
   },
   "permissions": {
     "allow": [
-      "Bash(bash ~/.claude/rules-library/technique/rate-limit-management/scripts/*)",
-      "Bash(bash ~/.claude/hooks/*)",
-      "Bash(bash ~/.claude/hooks/lesson-capture/*)",
-      "Bash(bash ~/.claude/hooks/consolidate/*)",
-      "Bash(bash ~/.claude/hooks/codex-sync/*)",
-      "Bash(bash ~/.claude/hooks/skill-loader/*)",
       "mcp__pencil"
     ],
     "global": {
@@ -37,7 +31,6 @@
     }
   },
   "hooks": {
-    "SessionStart": [],
     "UserPromptSubmit": [
       {
         "matcher": "",
@@ -93,20 +86,7 @@
         ]
       },
       {
-        "matcher": "Agent",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$HOME/.claude/hooks/pre-agent-gate.sh\""
-          },
-          {
-            "type": "command",
-            "command": "python3 \"$HOME/.claude/hooks/subagent-probe.py\""
-          }
-        ]
-      },
-      {
-        "matcher": "Task",
+        "matcher": "Agent|Task",
         "hooks": [
           {
             "type": "command",
@@ -121,16 +101,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$HOME/.claude/hooks/codex-sync/on-rule-edit.sh\""
-          }
-        ]
-      },
-      {
-        "matcher": "Write",
+        "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
