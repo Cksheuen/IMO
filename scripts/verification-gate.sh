@@ -3,6 +3,10 @@
 # Checks for pending features in the current project's feature-list.json before allowing session to stop.
 # If pending features exist, blocks stopping (exit 2) and triggers verification.
 #
+# NOTE: 项目级 Stop hook。~/.claude/settings.json（全局）不挂载此脚本。
+# 如需启用，在对应项目的 .claude/settings.json 的 Stop 事件里添加：
+#   bash "$HOME/.claude/scripts/verification-gate.sh"
+#
 # Safety: checks stop_hook_active to prevent infinite loops.
 # Iteration limit: checks attempt_count vs max_attempts to prevent endless retry.
 #

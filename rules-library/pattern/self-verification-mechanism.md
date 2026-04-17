@@ -114,7 +114,7 @@ reviewer 判定失败
 | 文件 | 路径 | 作用 |
 |------|------|------|
 | Feature List | 当前项目 `tasks/current/feature-list.json` | 状态跟踪 |
-| Verification Gate | `~/.claude/hooks/verification-gate.sh` | 手动验证工具（已从自动 Stop hook 移除） |
+| Verification Gate | `~/.claude/scripts/verification-gate.sh` | 手动验证工具（已从自动 Stop hook 移除） |
 | Reviewer Agent | `~/.claude/agents/reviewer.md` | 验证与回写 |
 | Orchestrate Skill | `~/.claude/skills/orchestrate/SKILL.md` | 分解与调度 |
 
