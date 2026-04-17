@@ -266,6 +266,13 @@ Agent 当前对“中文”约束主要落在 `skills/`、`rules/`、`notes/`、
 - **需求确认规范** — 需求存在多种合理理解 → `rules-library/pattern/requirements-confirmation.md`
 - **Agent 自验证机制** — 所有 feature 通过验证 → `rules-library/pattern/self-verification-mechanism.md`
 - **第三方 Skill 管理规范** — 安装或更新第三方 skill → `rules-library/pattern/vendor-skill-management.md`
+## 活跃教训
+
+- **vim 退出命令**: **Trigger**: 当在 vim 中编辑 commit message 或其他内容后需要退出时。 | **Decision**: | 命令 | 用途 | 场景 |
+|------|------|------|
+| `:q` | 退出 | 未做任何修改 |
+| `:q!` | 强制退出，**放弃修改** | 想放弃更改 |
+| `:wq` | 保存并退出 | **merge commit 时使用** |
 ## 领域规则（索引）
 
 > 触发条件匹配时，用 cat 读取对应路径获取完整规则
@@ -274,6 +281,5 @@ Agent 当前对“中文”约束主要落在 `skills/`、`rules/`、`notes/`、
 - **前端 UI / 逻辑边界规范** — 修改 `src/pages/**`、`src/components/**` → `rules-library/domain/frontend/ui-logic-boundary.md`
 - **UI / 逻辑解耦后的测试编写规范** — 只测后端纯逻辑，失去真实前端调用链 → `rules-library/domain/frontend/ui-logic-decoupled-testing.md`
 - **ML 训练代码预评估规范** — 训练时间 > 1 小时 → `rules-library/domain/ml/ml-training-preflight-checks.md`
-- **Rust + egui 桌面应用测试方案** — UI 交互逻辑验证 → `rules-library/domain/native/rust-egui-testing.md`
-- **通用/全栈领域架构阶段定义** — CLI 工具 / 命令行脚本项目 → `rules-library/domain/shared/architecture-stages.md`
-- **可测试架构范式** — 新建桌面/移动应用项目 → `rules-library/domain/shared/testable-architecture.md`
+
+*(truncated due to size limit)*

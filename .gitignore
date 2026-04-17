@@ -58,6 +58,8 @@ skills/**/*-workspace/
 !shared-knowledge/**
 shared-knowledge/codex-feedback.jsonl
 shared-knowledge/sync.log
+# 机器本地产物：含绝对路径和时间戳，跨机同步会互相覆盖
+shared-knowledge/sync-manifest.json
 
 # 当前仓库这个项目自己的任务目录（标准形态是 <project>/.claude/tasks/）
 # 这里只同步目录说明文档；具体 task 实例默认不入库
