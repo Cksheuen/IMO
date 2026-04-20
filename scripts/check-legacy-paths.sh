@@ -47,7 +47,7 @@ EXCLUDE_DIRS=(
 
 found=0
 for pattern in "${LEGACY_PATTERNS[@]}"; do
-  hits="$(git grep -nF -- "${pattern}" "${EXCLUDE_DIRS[@]}" 2>/dev/null || true)"
+  hits="$(git grep -nF -- "${pattern}" -- . "${EXCLUDE_DIRS[@]}" 2>/dev/null || true)"
   if [[ -n "${hits}" ]]; then
     echo "[legacy] 发现旧路径引用 '${pattern}':" >&2
     echo "${hits}" >&2

@@ -63,6 +63,8 @@ def resolve_project_root(cwd: Path) -> Path | None:
 
 
 def project_config_path(project_root: Path) -> Path:
+    if project_root.name == ".claude":
+        return project_root / CONFIG_FILENAME
     return project_root / ".claude" / CONFIG_FILENAME
 
 

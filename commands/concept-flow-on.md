@@ -5,9 +5,9 @@
 执行：
 ```bash
 if [ "$ARGUMENTS" = "global" ]; then
-  python3 "/Users/bytedance/.claude/hooks/concept-flow-mode.py" enable --scope global
+  python3 "$HOME/.claude/hooks/concept-flow-mode.py" enable --scope global
 else
-  python3 "/Users/bytedance/.claude/hooks/concept-flow-mode.py" enable
+  python3 "$HOME/.claude/hooks/concept-flow-mode.py" enable
 fi
 ```
 

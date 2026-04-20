@@ -78,7 +78,7 @@
 推荐命令：
 
 ```bash
-python3 ~/.claude/hooks/task-audit.py --root ~/.claude/tasks
+python3 ~/.claude/scripts/task-audit.py --root ~/.claude/tasks
 ```
 
 工具输出会标记：

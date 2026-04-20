@@ -25,7 +25,7 @@ from typing import Any
 RECALL_STORE = Path(
     os.environ.get("CLAUDE_RECALL_STORE", str(Path.home() / ".claude" / "recall" / "entries.jsonl"))
 )
-CONTEXT_BUNDLE = Path.home() / ".claude" / "hooks" / "context-bundle.py"
+CONTEXT_BUNDLE = Path.home() / ".claude" / "scripts" / "context-bundle.py"
 METRICS_EMIT_PATH = Path.home() / ".claude" / "hooks" / "metrics" / "emit.py"
 EXPLICIT_DEFAULT_K = 2
 AUTO_DEFAULT_K = 1

@@ -86,6 +86,7 @@ nohup python3 "$CONSOLIDATE" --target all >> "$LOG" 2>&1 &
 # === CC ↔ Codex sync ===
 CODEX_SYNC="$HOME/.claude/hooks/codex-sync/sync-to-codex.sh"
 CODEX_SYNC_LOG="$HOME/.claude/shared-knowledge/sync.log"
+CODEX_FEEDBACK="${CODEX_FEEDBACK:-$HOME/.claude/hooks/codex-sync/process-codex-feedback.py}"
 
 # Sync CC rules → Codex AGENTS.md (background, non-blocking)
 if [ -x "$CODEX_SYNC" ]; then

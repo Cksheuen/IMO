@@ -10,7 +10,6 @@ Runtime contract (Claude Code UserPromptSubmit hook):
   exit:   always 0 (failure should never block user prompt)
 
 Config: ~/.claude/caveman-config.json
-Skill source of truth: skills/vendor/caveman/caveman/SKILL.md
 """
 
 from __future__ import annotations
@@ -22,7 +21,17 @@ from pathlib import Path
 
 CLAUDE_HOME = Path.home() / ".claude"
 CONFIG_PATH = CLAUDE_HOME / "caveman-config.json"
-SKILL_PATH = CLAUDE_HOME / "skills" / "vendor" / "caveman" / "caveman" / "SKILL.md"
+
+
+def emit_context(text: str) -> None:
+    if not text:
+        return
+    sys.stdout.write(
+        json.dumps(
+            {"hookSpecificOutput": {"additionalContext": text}},
+            ensure_ascii=False,
+        )
+    )
 
 
 def read_config() -> dict | None:
@@ -111,12 +120,9 @@ def main() -> None:
     prompt = read_stdin_prompt()
 
     if prompt and is_allowlisted(prompt, allowlist):
-        sys.stdout.write(
-            "[caveman-mode bypassed | allowlist skill detected → full verbosity permitted]\n"
-        )
         return
 
-    sys.stdout.write(build_injection(intensity) + "\n")
+    emit_context(build_injection(intensity))
 
 
 if __name__ == "__main__":
