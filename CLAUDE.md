@@ -48,6 +48,7 @@
 - 项目架构优先：`rules-library/core/project-architecture-first.md`
 - 任务工作流：`rules-library/core/task-centric-workflow.md`
 - task / notes 边界：`rules-library/core/task-notes-boundary.md`
+- CC↔Codex 同步链路：`rules-library/core/cc-codex-sync-architecture.md`（修改 codex-sync 行为或 AGENTS.md 时必读）
 - 改动边界守卫：`rules-library/pattern/change-scope-guard.md`
 - 变更影响审查：`rules-library/pattern/change-impact-review.md`
 - 废弃方案清理：`rules-library/pattern/abandoned-solution-cleanup.md`

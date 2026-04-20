@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "last_sync": "2026-04-17T08:09:19.959020+00:00",
-  "rules_hash": "d4176c61cab3cc5f75b9480758e8ef9c3631f208c52bbdda1030c5f97bd20684",
+  "last_sync": "2026-04-20T07:01:40.642712+00:00",
+  "rules_hash": "1e7e01af4d3190b9c8823b12ffb89ca8d4e34acc12ec5c9365ba07d3f104a166",
   "synced_rules": [
     "/Users/bytedance/.claude/CLAUDE.md",
     "/Users/bytedance/.claude/rules/core/context-injection.md",
@@ -9,12 +9,14 @@
     "/Users/bytedance/.claude/rules/core/llm-friendly-format.md",
     "/Users/bytedance/.claude/rules/core/user-facing-language.md",
     "/Users/bytedance/.claude/rules-library/core/architecture-evolution.md",
+    "/Users/bytedance/.claude/rules-library/core/cc-codex-sync-architecture.md",
     "/Users/bytedance/.claude/rules-library/core/proactive-delegation.md",
     "/Users/bytedance/.claude/rules-library/core/project-architecture-first.md",
     "/Users/bytedance/.claude/rules-library/core/rules-directory-convention.md",
     "/Users/bytedance/.claude/rules-library/core/task-centric-workflow.md",
     "/Users/bytedance/.claude/rules-library/core/task-notes-boundary.md",
     "/Users/bytedance/.claude/rules-library/pattern/abandoned-solution-cleanup.md",
+    "/Users/bytedance/.claude/rules-library/pattern/agent-concept-flow.md",
     "/Users/bytedance/.claude/rules-library/pattern/auto-created-feature-list-noise.md",
     "/Users/bytedance/.claude/rules-library/pattern/change-impact-review.md",
     "/Users/bytedance/.claude/rules-library/pattern/change-scope-guard.md",
@@ -38,6 +40,8 @@
     "/Users/bytedance/.claude/rules-library/domain/shared/architecture-stages.md",
     "/Users/bytedance/.claude/rules-library/domain/shared/testable-architecture.md"
   ],
+  "feedback_count": 0,
+  "codex_agents_md_path": "~/.codex/AGENTS.md",
   "excluded_skills": [
     "migrated",
     "vendor"
@@ -88,7 +92,5 @@
       "README"
     ],
     "codex_only_purpose": "skill-proxy"
-  },
-  "feedback_count": 0,
-  "codex_agents_md_path": "~/.codex/AGENTS.md"
+  }
 }
