@@ -32,7 +32,7 @@ paths:
 运行：
 
 ```bash
-python3 ~/.claude/hooks/check-langchain-runtime-deps.py --runtime <runtime>
+python3 ~/.claude/scripts/check-langchain-runtime-deps.py --runtime <runtime>
 ```
 
 常见 `<runtime>`：
@@ -46,7 +46,7 @@ python3 ~/.claude/hooks/check-langchain-runtime-deps.py --runtime <runtime>
 若只需检查共享基础依赖，也可用：
 
 ```bash
-python3 ~/.claude/hooks/check-langchain-runtime-deps.py --runtime all
+python3 ~/.claude/scripts/check-langchain-runtime-deps.py --runtime all
 ```
 
 ### Step 2: 缺依赖则安装

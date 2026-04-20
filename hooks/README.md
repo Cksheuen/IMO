@@ -82,7 +82,7 @@
 - 某条脚本若挂在根 `settings.json`，它属于共享 profile
 - 某条脚本若挂在仓库内 `.claude/settings.json`，它只服务“开发这个仓库自身”
 - 若要快速对照两套 profile，运行：
-  - `python3 "$HOME/.claude/hooks/runtime-profile-audit.py"`
+  - `python3 "$HOME/.claude/scripts/runtime-profile-audit.py"`
 
 这个 audit 是只读工具，不属于自动 hook，不改变任何挂载。
 
@@ -207,7 +207,7 @@
 
 ### Declarative Consumer Helper（Batch 7 / 子任务 2）
 
-- 新增 `hooks/context-bundle.py`，用于承接 declarative consumer 的共享逻辑（从 `recall-entrypoint` 可复用抽离点）
+- 新增 `scripts/context-bundle.py`，用于承接 declarative consumer 的共享逻辑（从 `recall-entrypoint` 可复用抽离点）
 - helper 职责只包含三件事：
   - declarative snapshot 加载（调用 `memory/declarative/runtime.py` 的 `build_snapshot`）
   - session cache/frozen 语义
@@ -254,7 +254,7 @@
 - `promote-notes` subagent：只处理已 claim 的候选，并写 `promotion-result.json`
 - `promotion-apply-result.py`：把 subagent 结果回写到 queue
 - `promotion-dispatch.py fail`：subagent 异常时恢复 queue
-- `hooks/audit-runtime-links.py`：静态审计文档中的”已落地/当前运行时协议”声明是否真的有对应 settings 挂载（只读，不自动执行）
+- `scripts/audit-runtime-links.py`：静态审计文档中的”已落地/当前运行时协议”声明是否真的有对应 settings 挂载（只读，不自动执行）
 
 ### Promotion Loop 后台执行（2026-04-03 更新）
 
@@ -290,9 +290,9 @@
   - `/promotion-auto-on`
   - `/promotion-auto-off`
 - 底层脚本：
-  - `python3 "$HOME/.claude/hooks/promotion-mode.py" status`
-  - `python3 "$HOME/.claude/hooks/promotion-mode.py" enable`
-  - `python3 "$HOME/.claude/hooks/promotion-mode.py" disable`
+  - `python3 "$HOME/.claude/scripts/promotion-mode.py" status`
+  - `python3 "$HOME/.claude/scripts/promotion-mode.py" enable`
+  - `python3 "$HOME/.claude/scripts/promotion-mode.py" disable`
 
 约束：
 

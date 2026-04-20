@@ -2,8 +2,8 @@
 # vendor-sync.sh - 同步 marketplace 缓存到 skills/vendor/
 #
 # 用法:
-#   bash ~/.claude/hooks/vendor-sync.sh           # 对比差异（dry-run）
-#   bash ~/.claude/hooks/vendor-sync.sh --apply   # 实际同步
+#   bash ~/.claude/scripts/vendor-sync.sh           # 对比差异（dry-run）
+#   bash ~/.claude/scripts/vendor-sync.sh --apply   # 实际同步
 #
 # 来源: plugins/marketplaces/anthropic-agent-skills/skills/
 # 目标: skills/vendor/
@@ -105,5 +105,5 @@ if [ "$has_diff" = false ]; then
     echo "所有 vendor skill 与 marketplace 缓存一致，无需同步。"
 elif [ "$MODE" = "dry-run" ]; then
     echo ""
-    echo "以上为差异预览。运行 'bash ~/.claude/hooks/vendor-sync.sh --apply' 执行同步。"
+    echo "以上为差异预览。运行 'bash ~/.claude/scripts/vendor-sync.sh --apply' 执行同步。"
 fi

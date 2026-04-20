@@ -16,11 +16,11 @@
 
 ## 执行要求
 
-1. `on` → `python3 "$HOME/.claude/hooks/caveman-mode.py" enable`
-2. `off` → `python3 "$HOME/.claude/hooks/caveman-mode.py" disable`
-3. `status` → `python3 "$HOME/.claude/hooks/caveman-mode.py" status`
-4. `intensity <X>` → `python3 "$HOME/.claude/hooks/caveman-mode.py" intensity <X>`
-5. `allowlist <...>` → `python3 "$HOME/.claude/hooks/caveman-mode.py" allowlist <...>`
+1. `on` → `python3 "$HOME/.claude/scripts/caveman-mode.py" enable`
+2. `off` → `python3 "$HOME/.claude/scripts/caveman-mode.py" disable`
+3. `status` → `python3 "$HOME/.claude/scripts/caveman-mode.py" status`
+4. `intensity <X>` → `python3 "$HOME/.claude/scripts/caveman-mode.py" intensity <X>`
+5. `allowlist <...>` → `python3 "$HOME/.claude/scripts/caveman-mode.py" allowlist <...>`
 6. 返回当前 config 摘要，并给出下一步建议：
    - 刚 `on`：提醒本次会话需要重新发一条 prompt 才会注入
    - 刚 `off`：提醒需要在下一条 prompt 生效

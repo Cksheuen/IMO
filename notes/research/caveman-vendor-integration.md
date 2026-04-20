@@ -65,7 +65,7 @@
 对齐 `promotion-mode`：
 
 - 配置文件：`~/.claude/caveman-config.json`（机器本地，不入 git）
-- 管理脚本：`hooks/caveman-mode.py`（`enable` / `disable` / `status` / `intensity` / `allowlist`）
+- 管理脚本：`scripts/caveman-mode.py`（`enable` / `disable` / `status` / `intensity` / `allowlist`）
 - 主命令：`commands/caveman-mode.md`
 - 别名：`caveman-on` / `caveman-off` / `caveman-status`
 
@@ -149,5 +149,5 @@
 - 上游：[JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman)
 - Landing：[Caveman | Lithic Token Compression](https://juliusbrussee.github.io/caveman/)
 - 研究基础声称："Brevity Constraints Reverse Performance Hierarchies in Language Models", 2026-03
-- promotion-mode 参考实现：`hooks/promotion-mode.py`, `commands/promotion-mode.md`
+- promotion-mode 参考实现：`scripts/promotion-mode.py`, `commands/promotion-mode.md`
 - vendor skill 先例：`skills/vendor/impeccable/`

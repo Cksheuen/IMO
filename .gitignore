@@ -34,6 +34,10 @@ skills/**/*-workspace/
 !hooks/
 !hooks/**
 
+# CLI 工具脚本 (非事件钩子；从 hooks/ 迁出)
+!scripts/
+!scripts/**
+
 # 自定义 rules (始终加载的核心规则)
 !rules/
 !rules/**

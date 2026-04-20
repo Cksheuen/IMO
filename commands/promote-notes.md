@@ -10,12 +10,12 @@
 - 需要人工检查 queue 中的候选并做 promote / merge / keep 决策
 
 推荐手动主路径：
-1. `python3 "$HOME/.claude/hooks/promote-notes-run.py" scan`
-2. `python3 "$HOME/.claude/hooks/promote-notes-run.py" list`
-3. `python3 "$HOME/.claude/hooks/promote-notes-run.py" claim --count 1`
-4. `python3 "$HOME/.claude/hooks/promote-notes-run.py" stub-result`
+1. `python3 "$HOME/.claude/scripts/promote-notes-run.py" scan`
+2. `python3 "$HOME/.claude/scripts/promote-notes-run.py" list`
+3. `python3 "$HOME/.claude/scripts/promote-notes-run.py" claim --count 1`
+4. `python3 "$HOME/.claude/scripts/promote-notes-run.py" stub-result`
 5. 手动编辑 `"$HOME/.claude/promotion-result.json"`，把占位 `defer` 改成最终 action
-6. `python3 "$HOME/.claude/hooks/promote-notes-run.py" apply`
+6. `python3 "$HOME/.claude/scripts/promote-notes-run.py" apply`
 7. 若 queue 中仍有待处理项，再 claim 下一批
 
 兼容底层命令：

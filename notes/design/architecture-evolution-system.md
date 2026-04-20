@@ -63,7 +63,7 @@ goals:
 - 量化条件排除了"我觉得该重构了"这种不可靠的主观信号
 - 阈值可以随项目类型调整，但始终保持可测量性
 
-`hooks/architecture-fitness.py` 的存在正是这一决策的产物：把触发器变成可以机械执行的代码。
+`scripts/architecture-fitness.py` 的存在正是这一决策的产物：把触发器变成可以机械执行的代码。
 
 ### c. 为什么限制单次升级 < 5 文件
 
@@ -111,7 +111,7 @@ goals:
     状态: 待创建
 
 自动化检测:
-  文件: hooks/architecture-fitness.py
+  文件: scripts/architecture-fitness.py
   职责: 扫描项目目录，检测量化触发器是否命中，输出结构化建议
   触发方式: 手动运行或 PostToolUse hook 调用
 
@@ -151,7 +151,7 @@ goals:
 
 核心贡献：**适应度函数（Fitness Functions）**概念——用可执行的自动化检测来守护架构特性，而不是靠人工 review。
 
-本系统的 `hooks/architecture-fitness.py` 直接对应这一理念：把架构约束变成可执行代码。
+本系统的 `scripts/architecture-fitness.py` 直接对应这一理念：把架构约束变成可执行代码。
 
 ### Factory.ai 的 lint-as-guardrail 模式
 

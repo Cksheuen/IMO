@@ -73,7 +73,7 @@ wrapper 不包含：
 ```
 marketplace 发布新版本
     │
-    ├─ 运行 hooks/vendor-sync.sh
+    ├─ 运行 scripts/vendor-sync.sh
     │    ├─ diff marketplace 缓存 vs vendor/
     │    ├─ 有差异 → 更新 vendor/ 原件
     │    └─ 更新 .vendor-manifest.json 的 synced_at

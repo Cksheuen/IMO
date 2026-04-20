@@ -188,11 +188,11 @@ AI agent 在架构演化中的特殊弱点：
 
 ## 自动化检测
 
-`hooks/architecture-fitness.py` 提供可执行的适应度检测：
+`scripts/architecture-fitness.py` 提供可执行的适应度检测：
 
 ```bash
 # 手动运行
-python3 ~/.claude/hooks/architecture-fitness.py --path /project/dir --domain frontend
+python3 ~/.claude/scripts/architecture-fitness.py --path /project/dir --domain frontend
 
 # 输出格式
 {

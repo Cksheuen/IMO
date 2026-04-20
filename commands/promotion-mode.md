@@ -8,9 +8,9 @@
 - `status`：查看当前模式
 
 执行要求：
-1. `on` → `python3 "$HOME/.claude/hooks/promotion-mode.py" enable`
-2. `off` → `python3 "$HOME/.claude/hooks/promotion-mode.py" disable`
-3. `status` → `python3 "$HOME/.claude/hooks/promotion-mode.py" status`
+1. `on` → `python3 "$HOME/.claude/scripts/promotion-mode.py" enable`
+2. `off` → `python3 "$HOME/.claude/scripts/promotion-mode.py" disable`
+3. `status` → `python3 "$HOME/.claude/scripts/promotion-mode.py" status`
 4. 返回当前模式，并给出下一步动作：
    - 自动模式：继续正常工作，后台会自动处理 promotion
    - 手动模式：如需继续晋升，运行 `/promote-notes`

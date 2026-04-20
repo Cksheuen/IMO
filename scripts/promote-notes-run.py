@@ -143,7 +143,7 @@ def cmd_stub_result(args: argparse.Namespace) -> int:
     result_payload = {
         "actions": build_stub_actions(candidates),
         "meta": {
-            "generated_by": "hooks/promote-notes-run.py",
+            "generated_by": "scripts/promote-notes-run.py",
             "note": "Stub only. Edit actions before apply.",
             "candidate_count": len(candidates),
         },

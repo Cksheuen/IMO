@@ -3,7 +3,7 @@
 只读审计本地 runtime-heavy 目录的体积与职责边界。
 
 执行要求：
-1. 运行 `python3 "$HOME/.claude/hooks/runtime-storage-audit.py"`
+1. 运行 `python3 "$HOME/.claude/scripts/runtime-storage-audit.py"`
 2. 返回：
    - `plugins`
    - `projects`

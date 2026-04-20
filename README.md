@@ -56,12 +56,12 @@ git clone <repo-url> .claude
 手动主路径：
 
 ```bash
-python3 "$HOME/.claude/hooks/promote-notes-run.py" scan
-python3 "$HOME/.claude/hooks/promote-notes-run.py" list
-python3 "$HOME/.claude/hooks/promote-notes-run.py" claim --count 1
-python3 "$HOME/.claude/hooks/promote-notes-run.py" stub-result
+python3 "$HOME/.claude/scripts/promote-notes-run.py" scan
+python3 "$HOME/.claude/scripts/promote-notes-run.py" list
+python3 "$HOME/.claude/scripts/promote-notes-run.py" claim --count 1
+python3 "$HOME/.claude/scripts/promote-notes-run.py" stub-result
 # 手动编辑 promotion-result.json
-python3 "$HOME/.claude/hooks/promote-notes-run.py" apply
+python3 "$HOME/.claude/scripts/promote-notes-run.py" apply
 ```
 
 ## 你实际高频使用的功能

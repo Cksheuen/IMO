@@ -9,7 +9,7 @@
 这份文档只保留桥接层的设计动机；当前协议以这些入口为准：
 
 - [`hooks/promotion-scan.py`](../../hooks/promotion-scan.py)
-- [`hooks/promotion-dispatch.py`](../../hooks/promotion-dispatch.py)
+- [`scripts/promotion-dispatch.py`](../../scripts/promotion-dispatch.py)
 - [`rules/pattern/promotion-loop-background-execution.md`](../../rules/pattern/promotion-loop-background-execution.md)
 - [`notes/design/promotion-loop-dispatch-runtime.md`](./promotion-loop-dispatch-runtime.md)
 

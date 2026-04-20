@@ -8,8 +8,8 @@
 
 这份文档不再承担运行时规范职责；当前事实以代码和规则为准：
 
-- [`hooks/promotion-dispatch.py`](../../hooks/promotion-dispatch.py)
-- [`hooks/promotion-apply-result.py`](../../hooks/promotion-apply-result.py)
+- [`scripts/promotion-dispatch.py`](../../scripts/promotion-dispatch.py)
+- [`scripts/promotion-apply-result.py`](../../scripts/promotion-apply-result.py)
 - [`rules/pattern/promotion-loop-background-execution.md`](../../rules/pattern/promotion-loop-background-execution.md)
 - [`skills/promote-notes/SKILL.md`](../../skills/promote-notes/SKILL.md)
 
