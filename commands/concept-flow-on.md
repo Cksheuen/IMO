@@ -1,8 +1,14 @@
-/concept-flow-on
+/concept-flow-on [global]
 
 快捷入口。
 
 执行：
-`python3 "/Users/bytedance/.claude/hooks/concept-flow-mode.py" enable`
+```bash
+if [ "$ARGUMENTS" = "global" ]; then
+  python3 "/Users/bytedance/.claude/hooks/concept-flow-mode.py" enable --scope global
+else
+  python3 "/Users/bytedance/.claude/hooks/concept-flow-mode.py" enable
+fi
+```
 
-等价于 `/concept-flow-mode on`。
+默认 scope=`project`；追加 `global` 等价于 `/concept-flow-mode on global`。

@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import json
+import os
 import signal
 import sys
 import time
 import importlib.util
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +25,14 @@ METRICS_EMIT_PATH = Path.home() / ".claude" / "hooks" / "metrics" / "emit.py"
 OPT_OUT_RULES = {
     "rules-library/pattern/agent-concept-flow.md": "concept-flow-config.json",
 }
+PROJECT_ROOT_MARKERS = (
+    "AGENTS.md",
+    "CLAUDE.md",
+    "package.json",
+    "pyproject.toml",
+    "Cargo.toml",
+    ".git",
+)
 
 
 class HookTimeout(Exception):
@@ -119,21 +129,63 @@ def match_entries(prompt: str, entries: list[dict[str, Any]]) -> list[tuple[int,
     return ranked
 
 
-def is_opt_out_rule_enabled(config_filename: str) -> bool:
-    config_path = CLAUDE_DIR / config_filename
-    if not config_path.exists():
-        return True
+def resolve_project_root(cwd: Path) -> Path | None:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=str(cwd),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        root = result.stdout.strip()
+        if result.returncode == 0 and root:
+            return Path(root).resolve()
+    except Exception:
+        pass
+
+    try:
+        current = cwd.resolve()
+    except OSError:
+        return None
+
+    for candidate in (current, *current.parents):
+        if any((candidate / marker).exists() for marker in PROJECT_ROOT_MARKERS):
+            return candidate
+    return None
+
+
+def read_opt_out_enabled(config_path: Path) -> bool | None:
     try:
         data = json.loads(config_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        return True
+        return None
     if not isinstance(data, dict):
-        return True
+        return None
     return data.get("enabled") is not False
+
+
+def is_opt_out_rule_enabled(config_filename: str, cwd: Path | None) -> bool:
+    if cwd is not None:
+        project_root = resolve_project_root(cwd)
+        if project_root is not None:
+            project_config_path = project_root / ".claude" / config_filename
+            if project_config_path.exists():
+                enabled = read_opt_out_enabled(project_config_path)
+                if enabled is not None:
+                    return enabled
+
+    config_path = CLAUDE_DIR / config_filename
+    if config_path.exists():
+        enabled = read_opt_out_enabled(config_path)
+        if enabled is not None:
+            return enabled
+    return True
 
 
 def filter_opt_out_entries(
     ranked: list[tuple[int, dict[str, Any]]],
+    cwd: Path | None,
 ) -> tuple[list[tuple[int, dict[str, Any]]], list[str]]:
     filtered: list[tuple[int, dict[str, Any]]] = []
     skipped_paths: list[str] = []
@@ -144,7 +196,7 @@ def filter_opt_out_entries(
             filtered.append(item)
             continue
         config_filename = OPT_OUT_RULES.get(rel_path)
-        if config_filename is None or is_opt_out_rule_enabled(config_filename):
+        if config_filename is None or is_opt_out_rule_enabled(config_filename, cwd):
             filtered.append(item)
             continue
         skipped_paths.append(rel_path)
@@ -191,9 +243,11 @@ def main() -> int:
         prompt = payload.get("prompt", "")
         if not isinstance(prompt, str) or not prompt.strip():
             return 0
+        raw_cwd = payload.get("cwd")
+        cwd = Path(raw_cwd) if isinstance(raw_cwd, str) and raw_cwd.strip() else Path(os.getcwd())
 
         ranked = match_entries(prompt, load_index())
-        ranked, skipped_paths = filter_opt_out_entries(ranked)
+        ranked, skipped_paths = filter_opt_out_entries(ranked, cwd)
         if skipped_paths:
             meta["opt_out_skipped"] = skipped_paths
         selected, selected_paths = select_contents(ranked)
