@@ -154,7 +154,40 @@
       "evolution"
     ],
     "keywords": [],
-    "size_bytes": 8907,
+    "size_bytes": 8911,
+    "always_loaded": false
+  },
+  {
+    "path": "rules-library/core/cc-codex-sync-architecture.md",
+    "title": "CC ↔ Codex 同步链路架构",
+    "strong_keywords": [
+      "修改或新增",
+      "同步行为",
+      "的可见内容",
+      "增加一条共享治理事实",
+      "理事实",
+      "治理事实",
+      "享治理事实",
+      "出现非自动生成",
+      "手写段落",
+      "出现非自动生成的手写段落",
+      "写段落",
+      "的手写段落",
+      "codex",
+      "agents",
+      "shared-knowledge",
+      "同步链路架构",
+      "sync",
+      "architecture"
+    ],
+    "keywords": [
+      "想给",
+      "发现",
+      "cc",
+      "md",
+      "cli"
+    ],
+    "size_bytes": 3625,
     "always_loaded": false
   },
   {
@@ -258,7 +291,7 @@
       "convention"
     ],
     "keywords": [],
-    "size_bytes": 4076,
+    "size_bytes": 4080,
     "always_loaded": false
   },
   {
@@ -636,6 +669,56 @@
     "always_loaded": false
   },
   {
+    "path": "rules-library/pattern/agent-concept-flow.md",
+    "title": "Agent 概念流规范",
+    "strong_keywords": [
+      "建议启用概念流",
+      "概念流",
+      "用概念流",
+      "启用概念流",
+      "用户明确要求",
+      "讲讲原理",
+      "为什么这样做",
+      "帮我理解",
+      "用户表明自己刚接触相关内容",
+      "关内容",
+      "相关内容",
+      "触相关内容",
+      "或明显处于",
+      "当前任务包含架构拆分",
+      "构拆分",
+      "架构拆分",
+      "含架构拆分",
+      "边界划分",
+      "调试思路",
+      "测试取舍",
+      "异步流程",
+      "状态建模等可迁移判断",
+      "移判断",
+      "迁移判断",
+      "可迁移判断",
+      "当前回复除了交付结果外",
+      "结果外",
+      "付结果外",
+      "交付结果外",
+      "补一小段概念说明能显著提升理解",
+      "升理解",
+      "提升理解",
+      "著提升理解",
+      "novice",
+      "概念流规范",
+      "agent",
+      "concept",
+      "flow"
+    ],
+    "keywords": [
+      "概念",
+      "状态"
+    ],
+    "size_bytes": 5916,
+    "always_loaded": false
+  },
+  {
     "path": "rules-library/pattern/auto-created-feature-list-noise.md",
     "title": "自动创建的 Feature List 噪音处理",
     "strong_keywords": [
@@ -850,6 +933,46 @@
     "always_loaded": false
   },
   {
+    "path": "rules-library/pattern/concise-chinese-output.md",
+    "title": "中文简洁输出规范",
+    "strong_keywords": [
+      "面向用户",
+      "任何输出",
+      "面向用户的任何输出",
+      "何输出",
+      "的任何输出",
+      "结论说明",
+      "错误解释",
+      "解释命令",
+      "配置项含义",
+      "调研汇报",
+      "需求确认",
+      "操作建议",
+      "下一步动作",
+      "progress",
+      "update",
+      "intermediary",
+      "status",
+      "review",
+      "findings",
+      "blocker",
+      "中文简洁输出规范",
+      "出规范",
+      "输出规范",
+      "洁输出规范",
+      "concise",
+      "chinese",
+      "output"
+    ],
+    "keywords": [
+      "包括",
+      "日志",
+      "报错"
+    ],
+    "size_bytes": 4091,
+    "always_loaded": false
+  },
+  {
     "path": "rules-library/pattern/cross-layer-preflight.md",
     "title": "跨层功能预检规范",
     "strong_keywords": [
@@ -1047,7 +1170,7 @@
       "mechanism"
     ],
     "keywords": [],
-    "size_bytes": 3530,
+    "size_bytes": 3532,
     "always_loaded": false
   },
   {
@@ -1080,7 +1203,7 @@
       "扫描",
       "目录"
     ],
-    "size_bytes": 3010,
+    "size_bytes": 3012,
     "always_loaded": false
   },
   {
@@ -1372,7 +1495,7 @@
       "迁移",
       "工具"
     ],
-    "size_bytes": 2859,
+    "size_bytes": 2863,
     "always_loaded": false
   },
   {

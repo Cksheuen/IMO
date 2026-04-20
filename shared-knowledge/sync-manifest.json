@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_sync": "2026-04-20T07:01:40.642712+00:00",
+  "last_sync": "2026-04-20T07:27:57.959672+00:00",
   "rules_hash": "1e7e01af4d3190b9c8823b12ffb89ca8d4e34acc12ec5c9365ba07d3f104a166",
   "synced_rules": [
     "/Users/bytedance/.claude/CLAUDE.md",
@@ -52,6 +52,7 @@
     "cc-to-framework-migration",
     "codex-cc-sync-check",
     "codex-feedback-review",
+    "concept-flow-mode",
     "docx",
     "dual-review-loop",
     "eat",
