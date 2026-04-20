@@ -121,7 +121,7 @@ fi
 
 STATE_DIR="$HOME/.claude/.scale-gate"
 MARKER="$STATE_DIR/$SESSION_ID"
-BOOTSTRAP_SCRIPT="$HOME/.claude/hooks/task-bootstrap.sh"
+BOOTSTRAP_SCRIPT="$HOME/.claude/scripts/task-bootstrap.sh"
 
 TASK_DIR=""
 if [ -x "$BOOTSTRAP_SCRIPT" ]; then

@@ -158,7 +158,7 @@
 当前共享运行时新增接通的部分：
 
 - 根目录 `settings.json` 在 `PreToolUse` 的 `Edit` / `Write` matcher 上挂载了 `hooks/scale-gate.sh`
-- `hooks/scale-gate.sh` 在首次编辑前调用 `hooks/task-bootstrap.sh` 自动创建 task 目录
+- `hooks/scale-gate.sh` 在首次编辑前调用 `scripts/task-bootstrap.sh` 自动创建 task 目录（task-bootstrap 是 helper 而非事件 hook，已归 scripts/）
 - 当前共享链路已经可以把”大任务先做规模评估，再进入 task workflow”落成运行时守门
 
 ### Minimal Recall Runtime（2026-04-10）
