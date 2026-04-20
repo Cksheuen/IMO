@@ -20,6 +20,9 @@ WEAK_WEIGHT = 1
 LARGE_RULE_THRESHOLD = 5000
 LARGE_RULE_MIN_SCORE = 6
 METRICS_EMIT_PATH = Path.home() / ".claude" / "hooks" / "metrics" / "emit.py"
+OPT_OUT_RULES = {
+    "rules-library/pattern/agent-concept-flow.md": "concept-flow-config.json",
+}
 
 
 class HookTimeout(Exception):
@@ -110,6 +113,38 @@ def match_entries(prompt: str, entries: list[dict[str, Any]]) -> list[tuple[int,
     return ranked
 
 
+def is_opt_out_rule_enabled(config_filename: str) -> bool:
+    config_path = CLAUDE_DIR / config_filename
+    if not config_path.exists():
+        return True
+    try:
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return True
+    if not isinstance(data, dict):
+        return True
+    return data.get("enabled") is not False
+
+
+def filter_opt_out_entries(
+    ranked: list[tuple[int, dict[str, Any]]],
+) -> tuple[list[tuple[int, dict[str, Any]]], list[str]]:
+    filtered: list[tuple[int, dict[str, Any]]] = []
+    skipped_paths: list[str] = []
+    for item in ranked:
+        entry = item[1]
+        rel_path = entry.get("path")
+        if not isinstance(rel_path, str):
+            filtered.append(item)
+            continue
+        config_filename = OPT_OUT_RULES.get(rel_path)
+        if config_filename is None or is_opt_out_rule_enabled(config_filename):
+            filtered.append(item)
+            continue
+        skipped_paths.append(rel_path)
+    return filtered, skipped_paths
+
+
 def select_contents(ranked: list[tuple[int, dict[str, Any]]]) -> tuple[list[str], list[str]]:
     selected: list[str] = []
     selected_paths: list[str] = []
@@ -152,6 +187,9 @@ def main() -> int:
             return 0
 
         ranked = match_entries(prompt, load_index())
+        ranked, skipped_paths = filter_opt_out_entries(ranked)
+        if skipped_paths:
+            meta["opt_out_skipped"] = skipped_paths
         selected, selected_paths = select_contents(ranked)
         if not selected:
             return 0
