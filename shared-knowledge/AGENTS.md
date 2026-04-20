@@ -23,6 +23,18 @@ Follow them when implementing tasks.
 - 历史过程检索走 `recall/`
 - `hooks/` 只放事件脚本；未挂到 `settings.json` 或项目级 `.claude/settings.json` 前，不算已接通运行链
 
+### CC↔Codex 同步链路双挂说明
+
+- `Stop` hook 挂 `hooks/codex-sync/on-session-stop.sh`
+- 该脚本是 fallback：30 秒窗口内若 `PostToolUse(Edit|Write)` 已触发过 sync，则直接跳过
+- 若 30 秒内没有 recent post-edit sync，且 `rules/`、`rules-library/`、`notes/lessons/` 仍有变更，则后台触发一次同步
+- `SessionEnd` hook 挂 `hooks/codex-sync/sync-to-codex.sh`
+- 这条链路走强制路径，用于会话结束兜底收口；不做 debounce
+- `hooks/codex-sync/sync-to-codex.sh` 读取 `shared-knowledge/sync-manifest.json`
+- 其中 `commands_divergence_policy` 明确声明：CC/Codex commands 不要求完全对齐
+- 合法分化包含：Codex 侧因不支持 skills，允许以 proxy commands 镜像 skill
+- 合法分化也包含：CC 侧 `caveman-*`、`promotion-mode`、`lesson-review`、`task-audit` 等专属命令不镜像到 Codex
+
 ## 必查规则入口
 
 - 上下文注入：`rules/core/context-injection.md`

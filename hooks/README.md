@@ -25,6 +25,13 @@
 - 知识沉淀类文档
 - 密钥、令牌、机器私有路径
 
+补充边界：
+
+- `hooks/` 顶层只放事件脚本，且应已挂到 `settings.json`，或在文件头明确声明对应 hook 事件
+- 非事件触发的 CLI 工具统一放 `scripts/`
+- `caveman-mode`、`promotion-mode`、`task-audit` 等运维 CLI 已迁到 `scripts/`
+- `scripts/verification-gate.sh` 也放在 `scripts/`，因为它是项目级 hook 配套工具，不是全局共享 hook 脚本
+
 ## 推荐职责
 
 按事件类型收敛职责，避免 hook 变成第二套规则系统：
