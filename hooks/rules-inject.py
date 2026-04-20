@@ -58,7 +58,13 @@ def parse_payload() -> dict[str, Any]:
 
 def load_index() -> list[dict[str, Any]]:
     data = json.loads(INDEX_PATH.read_text(encoding="utf-8"))
-    return data if isinstance(data, list) else []
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        rules = data.get("rules")
+        if isinstance(rules, list):
+            return rules
+    return []
 
 
 def match_entries(prompt: str, entries: list[dict[str, Any]]) -> list[tuple[int, dict[str, Any]]]:
