@@ -10,6 +10,12 @@ from pathlib import Path
 CLAUDE_DIR = Path.home() / ".claude"
 OUTPUT_PATH = CLAUDE_DIR / "rules-index.json"
 SEARCH_DIRS = (CLAUDE_DIR / "rules", CLAUDE_DIR / "rules-library")
+INDEX_META = {
+    "do_not_edit": True,
+    "auto_generated_by": "scripts/build-rules-index.py",
+    "source_of_truth": "rules-library/",
+    "regenerate_command": "python3 ~/.claude/scripts/build-rules-index.py",
+}
 DOMAIN_KEYWORDS = {
     "domain/frontend": ["前端", "frontend", "组件", "页面", "component", "react", "css", "tailwind", "ui"],
     "domain/backend": ["后端", "backend", "api", "handler", "controller", "route"],
@@ -226,8 +232,12 @@ def build_entry(path: Path) -> dict[str, object] | None:
 
 def main() -> int:
     entries = [entry for path in iter_rule_files() if (entry := build_entry(path))]
+    payload = {
+        "_meta": INDEX_META,
+        "rules": entries,
+    }
     OUTPUT_PATH.write_text(
-        json.dumps(entries, ensure_ascii=False, indent=2) + "\n",
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
     return 0

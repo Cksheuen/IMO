@@ -1,4 +1,10 @@
 {
+  "_meta": {
+    "do_not_edit": true,
+    "auto_generated_by": "hooks/metrics/aggregate.py",
+    "source_of_truth": "metrics/events/, metrics/daily/",
+    "regenerate_command": "python3 ~/.claude/hooks/metrics/aggregate.py --weekly"
+  },
   "period": {
     "start": "2026-04-09",
     "end": "2026-04-15"

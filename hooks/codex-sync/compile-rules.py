@@ -415,21 +415,43 @@ def load_manifest(manifest_path):
     return manifest
 
 
+def manifest_meta():
+    """Return the canonical metadata header for generated manifest files."""
+    return {
+        "do_not_edit": True,
+        "auto_generated_by": "hooks/codex-sync/compile-rules.py",
+        "source_of_truth": "rules/, rules-library/, notes/lessons/, CLAUDE.md, skills/, commands/",
+        "regenerate_command": "bash ~/.claude/hooks/codex-sync/sync-to-codex.sh",
+    }
+
+
+def normalize_manifest(manifest):
+    """Keep _meta first while preserving the existing field order for the rest."""
+    normalized = {"_meta": manifest_meta()}
+    for key, value in manifest.items():
+        if key != "_meta":
+            normalized[key] = value
+    return normalized
+
+
 def update_manifest(manifest_path, content, source_files):
     """Update sync-manifest.json only when content actually changed."""
     manifest = load_manifest(manifest_path)
     content_hash = compute_content_hash(content)
+    meta_needs_update = manifest.get("_meta") != manifest_meta()
+    meta_not_first = list(manifest.keys())[:1] != ["_meta"]
 
-    # Skip write if hash unchanged — avoids dirtying the repo on no-op syncs
-    if manifest.get("rules_hash") == content_hash:
+    # Skip write only when both generated content and manifest schema are unchanged.
+    if manifest.get("rules_hash") == content_hash and not meta_needs_update and not meta_not_first:
         return content_hash
 
-    manifest["last_sync"] = datetime.now(timezone.utc).isoformat()
-    manifest["rules_hash"] = content_hash
-    manifest["synced_rules"] = source_files
+    if manifest.get("rules_hash") != content_hash:
+        manifest["last_sync"] = datetime.now(timezone.utc).isoformat()
+        manifest["rules_hash"] = content_hash
+        manifest["synced_rules"] = source_files
 
     manifest_path.write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+        json.dumps(normalize_manifest(manifest), ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
     return content_hash

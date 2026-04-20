@@ -18,6 +18,12 @@ EVENTS_DIR = METRICS_ROOT / "events"
 DAILY_DIR = METRICS_ROOT / "daily"
 WEEKLY_DIR = METRICS_ROOT / "weekly"
 ASSET_DESCRIPTIONS_PATH = METRICS_ROOT / "asset-descriptions.json"
+WEEKLY_META = {
+    "do_not_edit": True,
+    "auto_generated_by": "hooks/metrics/aggregate.py",
+    "source_of_truth": "metrics/events/, metrics/daily/",
+    "regenerate_command": "python3 ~/.claude/hooks/metrics/aggregate.py --weekly",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -409,8 +415,41 @@ def write_weekly_summary(summary: dict[str, Any]) -> Path:
     WEEKLY_DIR.mkdir(parents=True, exist_ok=True)
     end_date = summary["period"]["end"]
     output = WEEKLY_DIR / f"{end_date}.json"
-    output.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    body: dict[str, Any] = summary
+    if output.exists():
+        try:
+            existing = json.loads(output.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            existing = None
+        if isinstance(existing, dict):
+            preserved = {key: value for key, value in existing.items() if key != "_meta"}
+            if preserved:
+                body = preserved
+    payload = {"_meta": dict(WEEKLY_META), **body}
+    output.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return output
+
+
+def backfill_weekly_meta() -> None:
+    if not WEEKLY_DIR.exists():
+        return
+
+    for path in sorted(WEEKLY_DIR.glob("*.json")):
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(raw, dict):
+            continue
+
+        payload = {"_meta": dict(WEEKLY_META)}
+        payload.update({key: value for key, value in raw.items() if key != "_meta"})
+        rendered = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
+        try:
+            if path.read_text(encoding="utf-8") != rendered:
+                path.write_text(rendered, encoding="utf-8")
+        except OSError:
+            continue
 
 
 def main() -> int:
@@ -432,6 +471,7 @@ def main() -> int:
         ]
         summary = build_weekly_summary(target_date, events, dates_with_data, asset_descriptions)
         output = write_weekly_summary(summary)
+        backfill_weekly_meta()
 
     print(output)
     return 0

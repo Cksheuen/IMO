@@ -6,150 +6,165 @@
     "regenerate_command": "python3 ~/.claude/hooks/metrics/aggregate.py --weekly"
   },
   "period": {
-    "start": "2026-04-10",
-    "end": "2026-04-16"
+    "start": "2026-04-14",
+    "end": "2026-04-20"
   },
-  "data_days": 2,
+  "data_days": 4,
   "summary": {
-    "sessions": 25,
-    "total_events": 909,
-    "hook_runs": 613,
-    "gate_decisions": 274,
-    "session_boundaries": 22,
-    "overall_success_rate": 0.994,
+    "sessions": 83,
+    "total_events": 1791,
+    "hook_runs": 1245,
+    "gate_decisions": 474,
+    "session_boundaries": 72,
+    "overall_success_rate": 0.965,
     "overall_avg_duration_ms": 3
   },
   "by_hook": {
     "context-monitor": {
-      "run_count": 100,
-      "success_count": 100,
+      "run_count": 198,
+      "success_count": 198,
       "avg_duration_ms": 0,
-      "active_days": 2,
-      "avg_daily_runs": 50.0,
+      "active_days": 4,
+      "avg_daily_runs": 49.5,
       "description_zh": "在会话停止时，监控上下文使用情况和健康状态",
       "description_en": "Monitors context usage and health status when a session stops"
     },
+    "on-rate-limit-stop": {
+      "run_count": 2,
+      "success_count": 1,
+      "avg_duration_ms": 0,
+      "active_days": 2,
+      "avg_daily_runs": 1.0,
+      "description_zh": "在请求因速率限制失败时，执行缓解和重试策略",
+      "description_en": "Executes mitigation and retry strategies when a request fails due to rate limiting"
+    },
     "pre-agent-gate": {
-      "run_count": 53,
-      "allowed_count": 31,
-      "blocked_count": 22,
+      "run_count": 85,
+      "allowed_count": 42,
+      "blocked_count": 43,
       "avg_duration_ms": 0,
       "block_reasons": [
         {
           "reason": "涉及写文件的子代理必须使用 worktree 隔离",
-          "count": 22
+          "count": 43
         }
       ],
-      "active_days": 2,
-      "avg_daily_runs": 26.5,
+      "active_days": 4,
+      "avg_daily_runs": 21.25,
       "description_zh": "在启动子代理前，检查是否需要 worktree 隔离等安全约束",
       "description_en": "Checks safety constraints such as worktree isolation before launching a sub-agent"
     },
     "pre-edit-gate": {
-      "run_count": 88,
-      "allowed_count": 88,
+      "run_count": 117,
+      "allowed_count": 117,
       "avg_duration_ms": 0,
-      "active_days": 2,
-      "avg_daily_runs": 44.0,
+      "active_days": 4,
+      "avg_daily_runs": 29.25,
       "description_zh": "在编辑现有文件前，检查路径和内容安全性",
       "description_en": "Checks path and content safety before editing existing files"
     },
     "pre-write-gate": {
-      "run_count": 22,
-      "allowed_count": 22,
+      "run_count": 75,
+      "allowed_count": 75,
       "avg_duration_ms": 0,
-      "active_days": 2,
-      "avg_daily_runs": 11.0,
+      "active_days": 4,
+      "avg_daily_runs": 18.75,
       "description_zh": "在写入新文件前，检查路径和内容安全性",
       "description_en": "Checks path and content safety before writing new files"
     },
     "project-architecture-inject": {
-      "run_count": 103,
-      "success_count": 103,
+      "run_count": 210,
+      "success_count": 210,
       "avg_duration_ms": 5,
-      "active_days": 2,
-      "avg_daily_runs": 51.5,
+      "active_days": 4,
+      "avg_daily_runs": 52.5,
       "description_zh": "在用户提交 prompt 时，注入当前项目的架构上下文信息",
       "description_en": "Injects the current project's architecture context when a user submits a prompt"
     },
     "recall-capture": {
-      "run_count": 99,
-      "success_count": 99,
-      "avg_duration_ms": 15,
-      "active_days": 2,
-      "avg_daily_runs": 49.5,
+      "run_count": 197,
+      "success_count": 197,
+      "avg_duration_ms": 14,
+      "active_days": 4,
+      "avg_daily_runs": 49.25,
       "description_zh": "在会话停止时，捕获并存储重要上下文到记忆系统",
       "description_en": "Captures and stores important context into the memory system when a session stops"
     },
     "recall-entrypoint": {
-      "run_count": 103,
-      "success_count": 103,
+      "run_count": 210,
+      "success_count": 210,
       "avg_duration_ms": 1,
-      "active_days": 2,
-      "avg_daily_runs": 51.5,
+      "active_days": 4,
+      "avg_daily_runs": 52.5,
       "description_zh": "在用户提交 prompt 时，从记忆系统检索相关历史上下文",
       "description_en": "Retrieves relevant historical context from the memory system when a user submits a prompt"
     },
     "rules-inject": {
-      "run_count": 103,
-      "success_count": 103,
+      "run_count": 216,
+      "success_count": 216,
       "avg_duration_ms": 3,
-      "active_days": 2,
-      "avg_daily_runs": 51.5,
+      "active_days": 4,
+      "avg_daily_runs": 54.0,
       "description_zh": "在用户提交 prompt 时，根据关键词匹配注入按需加载的规则文件",
       "description_en": "Injects on-demand rule files matched by keywords when a user submits a prompt"
     },
     "scale-gate": {
-      "run_count": 111,
-      "allowed_count": 1,
-      "blocked_count": 110,
+      "run_count": 197,
+      "allowed_count": 64,
+      "blocked_count": 133,
       "avg_duration_ms": 0,
       "block_reasons": [
         {
           "reason": "Scale assessment required before editing files",
-          "count": 110
+          "count": 133
         }
       ],
-      "active_days": 2,
-      "avg_daily_runs": 55.5,
+      "active_days": 4,
+      "avg_daily_runs": 49.25,
       "description_zh": "在编辑或写入文件前，强制要求先进行规模评估，防止未经规划的大范围改动",
       "description_en": "Enforces a scale assessment before file edits or writes to prevent unplanned large-scope changes"
     },
     "session-end-consolidate": {
-      "run_count": 22,
-      "success_count": 18,
-      "error_count": 4,
+      "run_count": 72,
+      "success_count": 26,
+      "error_count": 46,
       "avg_duration_ms": 0,
-      "active_days": 2,
-      "avg_daily_runs": 11.0,
+      "active_days": 4,
+      "avg_daily_runs": 18.0,
       "description_zh": "在会话结束时，合并整理会话产出的临时数据",
       "description_en": "Consolidates and organizes temporary session output when a session ends"
     },
     "skill-inject": {
-      "run_count": 105,
-      "success_count": 105,
+      "run_count": 212,
+      "success_count": 212,
       "avg_duration_ms": 0,
-      "active_days": 2,
-      "avg_daily_runs": 52.5,
+      "active_days": 4,
+      "avg_daily_runs": 53.0,
       "description_zh": "在用户提交 prompt 时匹配关键词，推荐相关的 skill，轻量路由不注入 SKILL.md 正文",
       "description_en": "Matches keywords in user prompts to recommend relevant skills without injecting full SKILL.md content"
     }
   },
   "by_hook_event": {
-    "PreToolUse": 274,
-    "SessionEnd": 22,
-    "Stop": 199,
-    "UserPromptSubmit": 414
+    "PreToolUse": 474,
+    "SessionEnd": 72,
+    "Stop": 395,
+    "StopFailure": 2,
+    "UserPromptSubmit": 848
   },
   "by_rule": {
-    "rules-library/core/task-centric-workflow.md": {
-      "inject_count": 1,
+    "rules-library/core/cc-codex-sync-architecture.md": {
+      "inject_count": 7,
       "active_days": 1,
+      "title": ""
+    },
+    "rules-library/core/task-centric-workflow.md": {
+      "inject_count": 11,
+      "active_days": 3,
       "title": "Task-Centric Workflow"
     },
     "rules-library/core/task-notes-boundary.md": {
-      "inject_count": 11,
-      "active_days": 1,
+      "inject_count": 29,
+      "active_days": 3,
       "title": "Task / Notes Boundary"
     },
     "rules-library/domain/backend/architecture-stages.md": {
@@ -167,44 +182,79 @@
       "active_days": 1,
       "title": "UI / 逻辑解耦后的测试编写规范"
     },
-    "rules-library/pattern/auto-created-feature-list-noise.md": {
-      "inject_count": 8,
+    "rules-library/pattern/agent-concept-flow.md": {
+      "inject_count": 6,
       "active_days": 1,
+      "title": ""
+    },
+    "rules-library/pattern/auto-created-feature-list-noise.md": {
+      "inject_count": 26,
+      "active_days": 3,
       "title": "自动创建的 Feature List 噪音处理"
     },
-    "rules-library/pattern/closed-learning-loop.md": {
-      "inject_count": 18,
+    "rules-library/pattern/change-impact-review.md": {
+      "inject_count": 2,
       "active_days": 1,
+      "title": "变更影响审查规范"
+    },
+    "rules-library/pattern/change-scope-guard.md": {
+      "inject_count": 1,
+      "active_days": 1,
+      "title": "改动边界守卫规范"
+    },
+    "rules-library/pattern/closed-learning-loop.md": {
+      "inject_count": 36,
+      "active_days": 3,
       "title": "Closed Learning Loop Pattern"
     },
     "rules-library/pattern/code-as-interface.md": {
-      "inject_count": 5,
-      "active_days": 1,
+      "inject_count": 22,
+      "active_days": 3,
       "title": "Code-as-Interface Pattern"
     },
-    "rules-library/pattern/vendor-skill-management.md": {
+    "rules-library/pattern/concise-chinese-output.md": {
       "inject_count": 3,
       "active_days": 1,
+      "title": ""
+    },
+    "rules-library/pattern/generator-evaluator-pattern.md": {
+      "inject_count": 4,
+      "active_days": 2,
+      "title": "Generator-Evaluator 模式规范"
+    },
+    "rules-library/pattern/promotion-loop-background-execution.md": {
+      "inject_count": 6,
+      "active_days": 2,
+      "title": "Promotion Loop 后台执行约束"
+    },
+    "rules-library/pattern/self-verification-mechanism.md": {
+      "inject_count": 2,
+      "active_days": 2,
+      "title": "Agent 自验证机制"
+    },
+    "rules-library/pattern/vendor-skill-management.md": {
+      "inject_count": 10,
+      "active_days": 3,
       "title": "第三方 Skill 管理规范"
     },
     "rules-library/technique/rate-limit-management/claude-code-rate-limit-management.md": {
-      "inject_count": 10,
-      "active_days": 1,
+      "inject_count": 26,
+      "active_days": 3,
       "title": "Claude Code Rate Limit 自动管理"
     },
     "rules-library/technique/skills-cli-discovery.md": {
-      "inject_count": 14,
-      "active_days": 1,
+      "inject_count": 19,
+      "active_days": 3,
       "title": "Skills CLI 发现与安装规范"
     },
     "rules-library/tool/agent-file-operations.md": {
-      "inject_count": 3,
-      "active_days": 1,
+      "inject_count": 4,
+      "active_days": 2,
       "title": "Agent 文件操作效率规范"
     },
     "rules-library/tool/codex-review-symlink-eisdir.md": {
-      "inject_count": 9,
-      "active_days": 1,
+      "inject_count": 22,
+      "active_days": 3,
       "title": "Codex Review EISDIR 规避"
     },
     "rules-library/tool/langchain-runtime-dependencies.md": {
@@ -213,8 +263,8 @@
       "title": "LangChain 迁移 Runtime 依赖规范"
     },
     "rules-library/tool/runtime-dependency-resolution.md": {
-      "inject_count": 9,
-      "active_days": 1,
+      "inject_count": 14,
+      "active_days": 3,
       "title": "Runtime 依赖自动解决规范"
     }
   },
@@ -258,34 +308,6 @@
   },
   "daily_trend": [
     {
-      "date": "2026-04-10",
-      "sessions": 0,
-      "total_events": 0,
-      "hook_runs": 0,
-      "gate_decisions": 0
-    },
-    {
-      "date": "2026-04-11",
-      "sessions": 0,
-      "total_events": 0,
-      "hook_runs": 0,
-      "gate_decisions": 0
-    },
-    {
-      "date": "2026-04-12",
-      "sessions": 0,
-      "total_events": 0,
-      "hook_runs": 0,
-      "gate_decisions": 0
-    },
-    {
-      "date": "2026-04-13",
-      "sessions": 0,
-      "total_events": 0,
-      "hook_runs": 0,
-      "gate_decisions": 0
-    },
-    {
       "date": "2026-04-14",
       "sessions": 0,
       "total_events": 0,
@@ -301,10 +323,38 @@
     },
     {
       "date": "2026-04-16",
-      "sessions": 12,
-      "total_events": 429,
-      "hook_runs": 305,
-      "gate_decisions": 114
+      "sessions": 21,
+      "total_events": 628,
+      "hook_runs": 460,
+      "gate_decisions": 150
+    },
+    {
+      "date": "2026-04-17",
+      "sessions": 24,
+      "total_events": 370,
+      "hook_runs": 249,
+      "gate_decisions": 98
+    },
+    {
+      "date": "2026-04-18",
+      "sessions": 0,
+      "total_events": 0,
+      "hook_runs": 0,
+      "gate_decisions": 0
+    },
+    {
+      "date": "2026-04-19",
+      "sessions": 0,
+      "total_events": 0,
+      "hook_runs": 0,
+      "gate_decisions": 0
+    },
+    {
+      "date": "2026-04-20",
+      "sessions": 26,
+      "total_events": 313,
+      "hook_runs": 228,
+      "gate_decisions": 66
     }
   ]
 }

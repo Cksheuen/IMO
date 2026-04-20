@@ -1,6 +1,12 @@
 {
+  "_meta": {
+    "do_not_edit": true,
+    "auto_generated_by": "hooks/codex-sync/compile-rules.py",
+    "source_of_truth": "rules/, rules-library/, notes/lessons/, CLAUDE.md, skills/, commands/",
+    "regenerate_command": "bash ~/.claude/hooks/codex-sync/sync-to-codex.sh"
+  },
   "version": 1,
-  "last_sync": "2026-04-20T07:27:57.959672+00:00",
+  "last_sync": "2026-04-20T08:06:41.444868+00:00",
   "rules_hash": "1e7e01af4d3190b9c8823b12ffb89ca8d4e34acc12ec5c9365ba07d3f104a166",
   "synced_rules": [
     "/Users/bytedance/.claude/CLAUDE.md",
