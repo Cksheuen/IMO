@@ -67,7 +67,7 @@ diff /tmp/caveman-upstream/skills/caveman/SKILL.md \
 
 ## 相关资产
 
-- 开关脚本：`~/.claude/hooks/caveman-mode.py`
+- 开关脚本：`~/.claude/scripts/caveman-mode.py`
 - 注入 hook：`~/.claude/hooks/caveman-inject.py`
 - 主命令：`~/.claude/commands/caveman-mode.md`
 - 别名：`caveman-on.md` / `caveman-off.md` / `caveman-status.md`

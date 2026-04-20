@@ -131,7 +131,7 @@ note 达到稳定门槛 → 晋升评估 → rules / skills / memory / 保持在
 - 主 agent 不直接在当前用户链路中展开完整晋升分析
 - subagent 读取 queue / 候选 note 后独立完成评估
 - subagent 完成后回传：是否晋升、去向、更新了哪些文件、是否清空 queue
-- subagent 完成后应写 `promotion-result.json`，并由主链路显式运行 `python3 "$HOME/.claude/.claude/hooks/promotion-apply-result.py" --result-file promotion-result.json`
+- subagent 完成后应写 `promotion-result.json`，并由主链路显式运行 `python3 "$HOME/.claude/scripts/promotion-apply-result.py" --result-file promotion-result.json`
 
 ### Step 0: 候选 note 检索（必须执行）
 
@@ -148,7 +148,7 @@ note 达到稳定门槛 → 晋升评估 → rules / skills / memory / 保持在
 - [ ] 若存在 `promotion-queue.json`，先检查 queue 状态，而不是直接全量扫描
 - [ ] 手动触发时优先按小批量处理（建议每批 `1-3` 个候选）
 - [ ] 若 queue 中已有 `processing` 项，先判断是否需要 `release/fail/apply` 收尾，再继续 claim 新候选
-- [ ] 优先使用 `hooks/promote-notes-run.py` 作为人工 helper，而不是手工拼结果文件
+- [ ] 优先使用 `scripts/promote-notes-run.py` 作为人工 helper，而不是手工拼结果文件
 
 **检索重点**：
 
@@ -204,12 +204,12 @@ note 达到稳定门槛 → 晋升评估 → rules / skills / memory / 保持在
 
 **手动主路径执行顺序**：
 
-1. `python3 "$HOME/.claude/hooks/promote-notes-run.py" scan`
-2. `python3 "$HOME/.claude/hooks/promote-notes-run.py" list`
-3. `python3 "$HOME/.claude/hooks/promote-notes-run.py" claim --count <N>`
-4. `python3 "$HOME/.claude/hooks/promote-notes-run.py" stub-result`
+1. `python3 "$HOME/.claude/scripts/promote-notes-run.py" scan`
+2. `python3 "$HOME/.claude/scripts/promote-notes-run.py" list`
+3. `python3 "$HOME/.claude/scripts/promote-notes-run.py" claim --count <N>`
+4. `python3 "$HOME/.claude/scripts/promote-notes-run.py" stub-result`
 5. 手动编辑 `promotion-result.json`
-6. `python3 "$HOME/.claude/hooks/promote-notes-run.py" apply`
+6. `python3 "$HOME/.claude/scripts/promote-notes-run.py" apply`
 7. 复查 queue 是否已出队，必要时再处理下一批
 
 helper 约束：

@@ -14,7 +14,7 @@
 运行前可先检查：
 
 ```bash
-python3 ~/.claude/hooks/check-langchain-runtime-deps.py --runtime multi-model-agent
+python3 ~/.claude/scripts/check-langchain-runtime-deps.py --runtime multi-model-agent
 ```
 
 ## LiteLLM 配置自动发现

@@ -45,7 +45,7 @@ PROJECT_PATH="${1:-$(pwd)}"
 ### Step 3: 运行适应度检测
 
 ```bash
-python3 ~/.claude/hooks/architecture-fitness.py --path "$PROJECT_PATH" --domain "$DOMAIN" --format json
+python3 ~/.claude/scripts/architecture-fitness.py --path "$PROJECT_PATH" --domain "$DOMAIN" --format json
 ```
 
 ### Step 4: 解读结果并格式化输出

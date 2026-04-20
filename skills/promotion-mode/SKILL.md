@@ -14,9 +14,9 @@ Use this skill when the user asks to:
 
 ## Command Mapping
 
-- `/promotion-mode on` -> `python3 "$HOME/.claude/hooks/promotion-mode.py" enable`
-- `/promotion-mode off` -> `python3 "$HOME/.claude/hooks/promotion-mode.py" disable`
-- `/promotion-mode status` -> `python3 "$HOME/.claude/hooks/promotion-mode.py" status`
+- `/promotion-mode on` -> `python3 "$HOME/.claude/scripts/promotion-mode.py" enable`
+- `/promotion-mode off` -> `python3 "$HOME/.claude/scripts/promotion-mode.py" disable`
+- `/promotion-mode status` -> `python3 "$HOME/.claude/scripts/promotion-mode.py" status`
 
 ## Response Requirements
 
