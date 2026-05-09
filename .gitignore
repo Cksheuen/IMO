@@ -1,0 +1,36 @@
+# 项目白名单
+# 只同步当前保留的共享源码面
+
+*
+
+# Trellis 引导与 runtime 资产不属于本项目源码
+.trellis/
+
+# 保留的共享源码
+!.gitignore
+!.imo/
+!.imo/**
+!skills/
+!skills/**
+!scripts/
+!scripts/**
+!tasks/
+!tasks/README.md
+
+# skills 本地/工作区产物不入库
+skills/**/workspace/
+skills/**/*-workspace/
+skills/local/
+skills/pkg-dive-workspace/
+
+# 临时文件
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+*.swp
+*.swo
+*~
+
+# 冷存储
+.cold-storage/

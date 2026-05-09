@@ -1,0 +1,23 @@
+{
+  "skill_name": "design",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我设计一个项目管理工具的界面",
+      "expected_output": "Should ask clarifying questions (product surface, context, style) before generating. Should produce a Design Brief, then generate a .pen file with at least a dashboard/board view.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我需要一个 SaaS 定价页面，有三个价格档次，月付/年付切换，暗色主题，要现代感",
+      "expected_output": "Should recognize enough detail to minimize questions (maybe 1-2). Should generate a dark-themed pricing page with 3 tiers and a toggle in a .pen file.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "设计一个移动端的健身 App，需要首页（今日训练计划+进度环）、训练详情页、个人中心页，配色用绿色系，要活泼但不幼稚",
+      "expected_output": "Should recognize this is detailed enough to proceed with minimal questions. Should generate 3 mobile screens in a .pen file with green color scheme.",
+      "files": []
+    }
+  ]
+}

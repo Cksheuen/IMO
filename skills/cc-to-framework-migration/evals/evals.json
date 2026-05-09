@@ -1,0 +1,76 @@
+{
+  "skill_name": "cc-to-framework-migration",
+  "evals": [
+    {
+      "id": 1,
+      "name": "full-scan-migration",
+      "prompt": "扫描我的 CC 配置，告诉我哪些适合迁移到 LangChain 框架",
+      "expected_output": "生成迁移分析报告，包含扫描结果、评分、迁移建议",
+      "files": [],
+      "assertions": [
+        {
+          "name": "report_exists",
+          "description": "生成了迁移分析报告"
+        },
+        {
+          "name": "has_scanning_results",
+          "description": "报告包含扫描结果（skills/rules/agents 列表）"
+        },
+        {
+          "name": "has_migration_value_scores",
+          "description": "报告包含迁移价值评分"
+        },
+        {
+          "name": "has_high_value_candidates",
+          "description": "识别出高价值迁移候选"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "specific-skill-migration",
+      "prompt": "把 orchestrate skill 迁移到 LangGraph，生成代码框架",
+      "expected_output": "生成 LangGraph 代码框架 + 对照文档",
+      "files": [],
+      "assertions": [
+        {
+          "name": "langgraph_code_exists",
+          "description": "生成了 LangGraph Python 代码"
+        },
+        {
+          "name": "has_comparison_doc",
+          "description": "生成了对照文档 COMPARISON.md"
+        },
+        {
+          "name": "code_has_state_graph",
+          "description": "代码使用了 StateGraph"
+        },
+        {
+          "name": "preserves_original_logic",
+          "description": "代码保留了原 skill 的核心逻辑"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "partial-migration",
+      "prompt": "只迁移高价值的 rules，生成迁移计划",
+      "expected_output": "生成针对 rules 的迁移计划 + 高价值 rules 的代码框架",
+      "files": [],
+      "assertions": [
+        {
+          "name": "rules_only",
+          "description": "只处理了 rules，没有处理 skills/agents"
+        },
+        {
+          "name": "high_value_filter",
+          "description": "正确识别了高价值 rules"
+        },
+        {
+          "name": "migration_plan",
+          "description": "生成了迁移计划"
+        }
+      ]
+    }
+  ]
+}
