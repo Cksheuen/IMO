@@ -19,14 +19,12 @@ This directory is the source-of-truth workspace for the IMO framework.
 ## Current Status
 
 - Phase 1 built directory and contract scaffolding only.
-- Phase 2 introduces the first executable managed-output loop through `scripts/imo.sh`.
-- The current Phase 2 closure only manages:
-  - Claude/Codex agent files
-  - Claude/Codex hook scripts
-  - Claude/Codex shared config fragments (`.claude/settings.json`, `.codex/hooks.json`, `.codex/config.toml`)
+- This task adds a repo-local ownership audit guardrail for Trellis-owned host surfaces.
+- IMO does not project Trellis-owned Claude/Codex host files in this repo state.
+- `scripts/imo.sh audit [claude|codex|all]` verifies that IMO manifests do not claim host outputs still owned by Trellis.
 - Skills, commands, and broader product migration remain deferred until the first output loop is stable.
 
 ## Runtime State
 
-- Fully managed file outputs use `.imo/.runtime/managed-hashes.json` to remember the last generated content hash.
-- Shared config outputs preserve non-IMO content and only replace IMO-owned keys or blocks.
+- In the current repo state, Trellis remains the active owner of the Trellis Claude/Codex host surfaces.
+- IMO remains the framework source-of-truth workspace for its own contracts, scripts, and future migrations; only projection into Trellis-owned host targets is disabled here.

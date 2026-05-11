@@ -1,35 +1,5 @@
 {
   "platform": "claude",
-  "managed_files": [
-    {
-      "source": ".imo/adapters/claude/agents/trellis-check.md",
-      "target": ".claude/agents/trellis-check.md"
-    },
-    {
-      "source": ".imo/adapters/claude/agents/trellis-implement.md",
-      "target": ".claude/agents/trellis-implement.md"
-    },
-    {
-      "source": ".imo/adapters/claude/agents/trellis-research.md",
-      "target": ".claude/agents/trellis-research.md"
-    },
-    {
-      "source": ".imo/adapters/claude/hooks/session-start.py",
-      "target": ".claude/hooks/session-start.py"
-    },
-    {
-      "source": ".imo/adapters/claude/hooks/inject-subagent-context.py",
-      "target": ".claude/hooks/inject-subagent-context.py"
-    },
-    {
-      "source": ".imo/adapters/claude/hooks/inject-workflow-state.py",
-      "target": ".claude/hooks/inject-workflow-state.py"
-    }
-  ],
-  "json_merges": [
-    {
-      "source": ".imo/adapters/claude/settings/managed-settings.json",
-      "target": ".claude/settings.json"
-    }
-  ]
+  "managed_files": [],
+  "json_merges": []
 }

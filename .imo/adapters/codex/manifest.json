@@ -1,38 +1,6 @@
 {
   "platform": "codex",
-  "managed_files": [
-    {
-      "source": ".imo/adapters/codex/agents/trellis-check.toml",
-      "target": ".codex/agents/trellis-check.toml"
-    },
-    {
-      "source": ".imo/adapters/codex/agents/trellis-implement.toml",
-      "target": ".codex/agents/trellis-implement.toml"
-    },
-    {
-      "source": ".imo/adapters/codex/agents/trellis-research.toml",
-      "target": ".codex/agents/trellis-research.toml"
-    },
-    {
-      "source": ".imo/adapters/codex/hooks/session-start.py",
-      "target": ".codex/hooks/session-start.py"
-    },
-    {
-      "source": ".imo/adapters/codex/hooks/inject-workflow-state.py",
-      "target": ".codex/hooks/inject-workflow-state.py"
-    }
-  ],
-  "json_merges": [
-    {
-      "source": ".imo/adapters/codex/config/managed-hooks.json",
-      "target": ".codex/hooks.json"
-    }
-  ],
-  "toml_blocks": [
-    {
-      "source": ".imo/adapters/codex/config/managed-config.toml",
-      "target": ".codex/config.toml",
-      "block_id": "imo-managed-codex-config"
-    }
-  ]
+  "managed_files": [],
+  "json_merges": [],
+  "toml_blocks": []
 }

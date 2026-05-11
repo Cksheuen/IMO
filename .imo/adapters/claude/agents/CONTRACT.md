@@ -6,4 +6,4 @@ This directory will own templates or mapping rules for generated `.claude/agents
 
 - Source data originates in `.imo/`, not in generated host files.
 - Host output shape is expected to mirror Claude agent entry files (for example `*.md` descriptors).
-- Phase 2 promotes the copied `trellis-*.md` files in this directory to the canonical source for generated `.claude/agents/trellis-*.md` outputs.
+- For Trellis-owned Claude agent targets, this directory is a boundary contract rather than an active projection source in the current repo state. Do not store copied Trellis agent templates here while Trellis remains the active owner of `.claude/agents/trellis-*.md`.

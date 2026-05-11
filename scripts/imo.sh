@@ -3,18 +3,20 @@ set -euo pipefail
 
 print_placeholder() {
 cat <<'EOF'
-imo: repo-local managed output entry
+imo: repo-local host ownership guardrail
 
 Source of truth lives under `.imo/`.
 
 Usage:
-  scripts/imo.sh sync [claude|codex|all] [--force]
-  scripts/imo.sh generate [claude|codex|all] [--force]
+  scripts/imo.sh audit [claude|codex|all]
 
 Notes:
-  - `generate` is currently an alias of `sync`.
-  - This Phase 2 surface only manages the minimal adapter closed loop
-    (agents, hooks, and shared config fragments).
+  - `audit` is read-only and checks whether IMO reintroduces Trellis-owned
+    Claude/Codex host-surface management.
+  - This narrow entrypoint only covers the Trellis host-ownership boundary.
+    It does not define the full IMO framework surface.
+  - `sync` / `generate` are intentionally not exposed in this repo because
+    Trellis remains the active owner of that host projection layer.
 EOF
 }
 
@@ -28,8 +30,8 @@ case "${1}" in
     print_placeholder
     exit 0
     ;;
-  sync|generate)
-    exec python3 .imo/product/scripts/sync_managed_outputs.py "$@"
+  audit)
+    exec python3 .imo/product/scripts/audit_managed_ownership.py "${@:2}"
     ;;
   *)
     print_placeholder >&2
