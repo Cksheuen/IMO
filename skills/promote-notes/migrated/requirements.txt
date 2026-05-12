@@ -1,1 +1,1 @@
--r ../../migrated/requirements.txt
+../../../.imo/product/skills/promote-notes/migrated/requirements.txt
