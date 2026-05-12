@@ -10,6 +10,11 @@
 - Phase 1 expanded the pilot with `architecture-health`, including its skill-local support scripts.
 - Phase 1 now also includes `pkg-dive` as a canonical skill family under this subtree.
 - Phase 1 now also includes `locate` as a canonical skill family under this subtree.
+- Phase 1 now also includes `shit` as a canonical skill family under this subtree.
+- Phase 1 now also includes `brainstorm` as a canonical skill family under this subtree.
+- Phase 1 now also includes `promotion-mode` as a canonical skill family under this subtree.
+- Phase 1 now also includes `codex-feedback-review` as a canonical skill family under this subtree.
+- Phase 1 now also includes `lesson-review` as a canonical skill family under this subtree.
 - Root `skills/` may remain as compatibility projections while migration is in progress, but they should no longer be treated as the long-term source-of-truth for migrated families.
 
 ## Inclusion Rule
