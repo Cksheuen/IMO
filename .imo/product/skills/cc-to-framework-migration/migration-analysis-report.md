@@ -28,7 +28,9 @@
 
 此外，当前已经开始收敛共享运行层：
 
-- `skills/migrated/shared_runtime/`：共享 typed state 片段、graph compile helper 与 agent protocol
+- canonical source: `.imo/runtime/shared/`
+- root compatibility surface: `skills/migrated/shared_runtime/`
+- responsibility: shared typed state 片段、graph compile helper 与 agent protocol
 
 ## 评估标准
 
@@ -93,7 +95,7 @@
 - 规则侧现在已经有两个最小运行时样例：一个偏质量闭环，一个偏长时 harness。
 - 这让后续 shared runtime 收敛有了更稳定的对照面。
 - 下一步的收益点开始从“补 demo”转向“抽共用层”。
-- 当前已新增 `skills/migrated/shared_runtime/`，说明收敛阶段已经启动。
+- 当前已形成 `.imo/runtime/shared/` canonical source + `skills/migrated/shared_runtime/` 兼容投影，说明收敛阶段已经启动。
 
 ### 2. 下一步更适合做 shared runtime，而不是继续追加第三个规则样例
 

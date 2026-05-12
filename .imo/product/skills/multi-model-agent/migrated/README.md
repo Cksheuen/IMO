@@ -5,7 +5,7 @@
 在新环境中先安装共享基础依赖或本目录入口依赖：
 
 ```bash
-./.venv/bin/pip install -r skills/migrated/requirements.txt
+./.venv/bin/pip install -r .imo/runtime/requirements.txt
 ./.venv/bin/pip install -r skills/multi-model-agent/migrated/requirements.txt
 ```
 
