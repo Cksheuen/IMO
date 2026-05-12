@@ -1,1 +1,1 @@
--r ../../migrated/requirements.txt
+../../../.imo/product/skills/orchestrate/migrated/requirements.txt

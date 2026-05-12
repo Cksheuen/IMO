@@ -1,1 +1,1 @@
--r ../../migrated/requirements.txt
+../../../.imo/product/skills/multi-model-agent/migrated/requirements.txt
