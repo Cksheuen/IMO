@@ -13,7 +13,8 @@ This subtree holds IMO product-side source surfaces.
 | Surface | Current status | Notes |
 | --- | --- | --- |
 | `scripts/` | active pilot | `scripts/CONTRACT.md`, `audit_managed_ownership.py`, canonical `.imo/product/scripts/imo.sh`, and canonical `.imo/product/scripts/check-langchain-runtime-deps.py` now define the current product-side script pilot. |
-| `skills/` | active pilot | `skills/CONTRACT.md` plus `cc-to-framework-migration/` and `architecture-health/` now define the first migrated skill families under `.imo/product/skills`. |
+| `skills/` | active pilot | `skills/CONTRACT.md` plus `cc-to-framework-migration/`, `architecture-health/`, and `pkg-dive/` now define the current migrated skill families under `.imo/product/skills`. Market-sourced families such as `pencil-*` stay excluded from this repo-owned surface by default. |
+
 
 ## Deferred Companion Surfaces
 

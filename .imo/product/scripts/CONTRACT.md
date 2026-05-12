@@ -17,3 +17,10 @@
 - Root `scripts/task-audit.py` now acts only as a compatibility wrapper that forwards into the canonical `.imo/product/scripts/` implementation.
 - Root `scripts/task-bootstrap.sh` now acts only as a compatibility wrapper that forwards into the canonical `.imo/product/scripts/` implementation.
 - Root `scripts/audit_runtime_links_core.py` now acts only as a compatibility wrapper that re-exports the canonical `.imo/product/scripts/` module surface.
+
+## Validation Rule
+
+- Script migration is not complete with only `bash -n`, `py_compile`, import checks, or `--help` output.
+- Each migrated script family must include at least one recorded runnable behavior check that exercises the real script path after migration.
+- Prefer validating through the root compatibility entrypoint when one exists; canonical-path validation is additional evidence, not a substitute for all user-facing execution.
+- Static/syntax checks remain useful, but they are supporting evidence only and must not be the sole acceptance signal.
