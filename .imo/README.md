@@ -23,6 +23,7 @@ This directory is the source-of-truth workspace for the IMO framework.
 - IMO does not project Trellis-owned Claude/Codex host files in this repo state.
 - `scripts/imo.sh audit [claude|codex|all]` verifies that IMO manifests do not claim host outputs still owned by Trellis.
 - Skills, commands, and broader product migration remain deferred until the first output loop is stable.
+- Future host-output handoff is planned in `adapters/HOST_OUTPUT_CUTOVER.md`; it requires upstream Trellis ownership removal before any adapter manifest entries are reopened.
 
 ## Runtime State
 
