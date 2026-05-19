@@ -12,10 +12,13 @@ Source of truth lives under `.imo/`.
 
 Usage:
   scripts/imo.sh audit [claude|codex|all]
+  scripts/imo.sh verify
 
 Notes:
   - `audit` is read-only and checks whether IMO reintroduces Trellis-owned
     Claude/Codex host-surface management.
+  - `verify` runs the current read-only IMO guardrail, wrapper, and runtime
+    compatibility checks.
   - This narrow entrypoint only covers the Trellis host-ownership boundary.
     It does not define the full IMO framework surface.
   - `sync` / `generate` are intentionally not exposed in this repo because
@@ -35,6 +38,9 @@ case "${1}" in
     ;;
   audit)
     exec python3 "$REPO_ROOT/.imo/product/scripts/audit_managed_ownership.py" "${@:2}"
+    ;;
+  verify)
+    exec python3 "$REPO_ROOT/.imo/product/scripts/verify.py" "${@:2}"
     ;;
   *)
     print_placeholder >&2

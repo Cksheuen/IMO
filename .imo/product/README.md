@@ -12,8 +12,8 @@ This subtree holds IMO product-side source surfaces.
 
 | Surface | Current status | Notes |
 | --- | --- | --- |
-| `scripts/` | active pilot | `scripts/CONTRACT.md`, `audit_managed_ownership.py`, canonical `.imo/product/scripts/imo.sh`, and canonical `.imo/product/scripts/check-langchain-runtime-deps.py` now define the current product-side script pilot. |
-| `skills/` | active pilot | `skills/CONTRACT.md` plus `cc-to-framework-migration/`, `architecture-health/`, `pkg-dive/`, and `locate/` now define the current migrated skill families under `.imo/product/skills`. Market-sourced families such as `pencil-*` stay excluded from this repo-owned surface by default. |
+| `scripts/` | active | `scripts/CONTRACT.md` lists the canonical script implementations and the `scripts/imo.sh verify` aggregate check. Root `scripts/` entries are compatibility wrappers. |
+| `skills/` | active | `skills/CONTRACT.md` lists the migrated canonical skill families under `.imo/product/skills`. Root `skills/` entries are compatibility projections. Market-sourced families such as `pencil-*` stay excluded from this repo-owned surface by default. |
 
 
 ## Deferred Companion Surfaces
@@ -32,7 +32,11 @@ These surfaces are part of the overall migration story, but their future landing
 
 ## Planning Reference
 
-Detailed planning for the current migration baseline lives in:
+Current durable roadmap:
+
+- `.imo/ROADMAP.md`
+
+Historical planning for the migration baseline lives in:
 
 - `.trellis/tasks/05-11-imo-product-source-migration-plan/prd.md`
 - `.trellis/tasks/05-11-imo-product-source-migration-plan/research/surface-inventory.md`
