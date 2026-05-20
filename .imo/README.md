@@ -19,6 +19,7 @@ This directory is the source-of-truth workspace for the IMO framework.
 
 - `ARCHITECTURE.md`: long-term plane architecture and implementation plan.
 - `BOUNDARY.md`: ownership, integration, learning, and maintenance guardrails.
+- `ORCHESTRATION.md`: observable worker progress protocol for delegated work.
 - `product/`: reusable framework assets that will eventually replace legacy root sources.
 - `adapters/`: host-specific template boundaries for Claude Code and Codex outputs.
 - `learning/`: shared learning-plane contracts and promotion policy.
@@ -44,6 +45,8 @@ This directory is the source-of-truth workspace for the IMO framework.
   - `.imo/product/skills/modules.json`
   - `.imo/learning/policy.json`
   - `.imo/providers/registry.json`
+- Delegated implementation now has a repo-local observability protocol in
+  `.imo/ORCHESTRATION.md`.
 - Adapter command/skill projection and host-output manifest takeover remain deferred.
 - Future host-output handoff is planned in `adapters/HOST_OUTPUT_CUTOVER.md`; it requires upstream Trellis ownership removal before any adapter manifest entries are reopened.
 - The current architecture direction is three-plane stabilization: Trellis task

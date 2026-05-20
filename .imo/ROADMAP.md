@@ -34,6 +34,8 @@ durable repo-facing summary.
 - `.imo/learning/policy.json` records machine-readable learning policy gates.
 - `.imo/providers/registry.json` records machine-readable provider contract and
   health metadata.
+- `.imo/ORCHESTRATION.md` records the worker observability gate for future
+  delegated implementation.
 
 ### Guarded
 
@@ -80,6 +82,14 @@ durable repo-facing summary.
   change.
 - Treat any overlap with `.trellis/.template-hashes.json` as an unfinished
   ownership handoff, not as a byte-level drift issue.
+
+### 1.5. Keep Delegation Observable
+
+- Follow `.imo/ORCHESTRATION.md` before starting worker-based implementation.
+- Treat a running worker without status artifact, final summary, or diff as only
+  launched, not productive.
+- Close or restart workers that produce no observable artifact within the
+  configured timeout.
 
 ### 2. Add A Unified Verification Entry
 
