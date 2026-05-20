@@ -19,8 +19,10 @@ Notes:
     Claude/Codex host-surface management.
   - `verify` runs the current read-only IMO guardrail, wrapper, and runtime
     compatibility checks.
-  - This narrow entrypoint only covers the Trellis host-ownership boundary.
-    It does not define the full IMO framework surface.
+  - IMO does not proxy Trellis by default. Use Trellis directly for Trellis
+    task flow, and use IMO directly for IMO-owned capabilities and learning.
+  - External frameworks, plugins, and skills stay outside `.imo/product/*` by
+    default. Optional provider integration is an advanced path.
   - `sync` / `generate` are intentionally not exposed in this repo because
     Trellis remains the active owner of that host projection layer.
 EOF

@@ -24,6 +24,10 @@ durable repo-facing summary.
 - `.imo/runtime/` owns shared runtime helpers and shared runtime dependencies.
 - Root `skills/migrated/shared_runtime/*` remains only as a compatibility
   projection to `.imo/runtime/shared/*`.
+- `.imo/ARCHITECTURE.md` records the long-term three-plane architecture.
+- `.imo/learning/CONTRACT.md` records the shared learning-plane contract.
+- `.imo/product/skills/MODULE_CLASSIFICATION.md` records the current skill module
+  ownership classification.
 
 ### Guarded
 
@@ -32,6 +36,18 @@ durable repo-facing summary.
   remain empty for Trellis-owned host targets.
 - `bash scripts/imo.sh audit all` is the current guardrail that detects manifest
   overlap with Trellis-tracked host outputs.
+- `.imo/BOUNDARY.md` defines the owned-core and external-provider boundary.
+- `.imo/providers/` defines optional provider integration contracts.
+
+### Architecture Direction
+
+- Trellis remains the task plane.
+- IMO owns the capability plane and learning plane.
+- Trellis and IMO are independent in normal use; IMO does not proxy Trellis by
+  default.
+- External providers are optional integration points, not the main architecture.
+- Shared learning digests prevent public agents from adapting to the user in
+  isolated and conflicting ways.
 
 ### Blocked
 
@@ -64,9 +80,42 @@ durable repo-facing summary.
 - Keep that verification read-only.
 - Prefer root compatibility entrypoints for user-facing smokes.
 
-### 3. Host Output Cutover
+### 3. Stabilize The Three-Plane Architecture
 
-Follow `.imo/adapters/HOST_OUTPUT_CUTOVER.md`:
+Follow `.imo/ARCHITECTURE.md`, `.imo/BOUNDARY.md`, and
+`.imo/learning/CONTRACT.md`:
+
+1. Keep Trellis task management independent.
+2. Keep IMO-owned skills/rules/metrics/runtime under the IMO capability plane.
+3. Add learning-plane signal, candidate, digest, and promotion contracts before
+   automated self-iteration.
+4. Keep provider discovery/invocation optional and read-only first.
+5. Convert skill module classification into machine-readable metadata before
+   expanding migrations.
+
+### 4. Learning Plane Implementation
+
+Implement only after the contracts above are stable:
+
+1. `imo learning list`
+2. raw signal write path
+3. candidate aggregation
+4. active digest generation
+5. user-visible disable/reject/reset controls
+6. Hermes-like candidates-only self-iteration loop
+
+### 5. Optional Provider Discovery
+
+- Add read-only provider discovery and health checks only after the learning and
+  module classification contracts are stable.
+- Provider failures must degrade cleanly and must not break IMO native
+  capabilities or Trellis native task flow.
+- Provider invocation remains out of scope until side-effect metadata is stable.
+
+### 6. Host Output Cutover
+
+Follow `.imo/adapters/HOST_OUTPUT_CUTOVER.md`, but keep this after the
+three-plane architecture stabilizes:
 
 1. Wave 1: Claude + Codex agent family.
 2. Wave 2: Claude + Codex hooks.
@@ -74,7 +123,7 @@ Follow `.imo/adapters/HOST_OUTPUT_CUTOVER.md`:
 
 Each wave is dual-platform atomic and upstream-first.
 
-### 4. Adapter Skill And Command Projection
+### 7. Adapter Skill And Command Projection
 
 Open a separate task before projecting commands or skills into host adapter
 surfaces. Those surfaces are not part of the current active host-output cutover
@@ -87,3 +136,10 @@ roadmap.
   Trellis still owns the targets.
 - Do not treat root compatibility wrappers as long-term canonical logic.
 - Do not broaden a product/runtime migration task into host-output cutover work.
+- Do not vendor external providers into `.imo/product/*` just because they are
+  discoverable or useful to IMO.
+- Do not proxy Trellis or add Trellis callbacks as a default requirement for the
+  plane architecture.
+- Do not let Hermes-like self-iteration directly mutate active digests, hard
+  rules, skill source, or provider source.
+- Do not move project-private facts into global learning state.

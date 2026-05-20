@@ -7,6 +7,12 @@ This subtree holds IMO product-side source surfaces.
 - `.imo/product/` is for framework-owned source assets.
 - Product-owned source should move here before any host-surface cutover is considered.
 - Host-facing `.claude/` / `.codex/` outputs remain outside this subtree and stay Trellis-owned in the current repo state.
+- External frameworks, downloaded plugins, and market skills do not belong here
+  by default. They stay provider-owned unless a future task explicitly adopts
+  them into IMO product ownership.
+- Current skill module ownership is tracked in `skills/MODULE_CLASSIFICATION.md`;
+  a future task should convert that planning table into machine-readable module
+  metadata checked by `imo verify`.
 
 ## Current Product Surfaces
 
