@@ -25,6 +25,8 @@ durable repo-facing summary.
 - Root `skills/migrated/shared_runtime/*` remains only as a compatibility
   projection to `.imo/runtime/shared/*`.
 - `.imo/ARCHITECTURE.md` records the long-term three-plane architecture.
+- `.imo/PREDICTION_LOOP.md` records the prediction -> optimization -> prediction
+  loop and the implementation gates that came out of it.
 - `.imo/learning/CONTRACT.md` records the shared learning-plane contract.
 - `.imo/product/skills/MODULE_CLASSIFICATION.md` records the current skill module
   ownership classification.
@@ -92,6 +94,7 @@ Follow `.imo/ARCHITECTURE.md`, `.imo/BOUNDARY.md`, and
 4. Keep provider discovery/invocation optional and read-only first.
 5. Convert skill module classification into machine-readable metadata before
    expanding migrations.
+6. Follow the gates in `.imo/PREDICTION_LOOP.md` before adding write behavior.
 
 ### 4. Learning Plane Implementation
 

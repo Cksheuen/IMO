@@ -20,6 +20,8 @@ IMO Learning Plane
 External providers and host outputs are integration planes around those primary
 planes, not the center of the architecture.
 
+Prediction and optimization history is recorded in `PREDICTION_LOOP.md`.
+
 ## Plane Responsibilities
 
 ### Trellis Task Plane
@@ -130,6 +132,8 @@ They are not the default path.
 - Classify current `.imo/product/skills/*` modules.
 - Add machine-readable module metadata.
 - Teach `imo verify` to check classification consistency.
+- Add dependency-pattern checks so `native` modules do not silently grow
+  provider-backed behavior.
 
 ### Phase 2: Learning Plane Protocol
 
@@ -137,6 +141,8 @@ They are not the default path.
 - Add local and global learning storage boundaries.
 - Add user-visible inspect/disable/reject/reset controls before automated
   promotion.
+- Add learning write, digest read, and promotion gates before any public agent
+  consumes active digests by default.
 
 ### Phase 3: Public Agent Learning Integration
 
@@ -150,6 +156,8 @@ They are not the default path.
 - Add read-only discovery and health checks.
 - Do not invoke providers until side-effect metadata is explicit.
 - Missing or broken providers must degrade cleanly.
+- Treat noisy or missing optional providers as health signals, not IMO core
+  failures.
 
 ### Phase 5: Optional Callback / Invocation
 
@@ -181,6 +189,9 @@ They are not the default path.
 | Host ownership conflict | ownership audit, dry-run diff, adapter manifests gated |
 | Runtime log growth | rotation, summaries, debug-only full payloads |
 | Privacy leakage | project/global scope split, opt-out, user-visible review |
+| Controls remain prose-only | staged `imo verify` enforcement backlog |
+| CLI sprawl | common commands and advanced provider/adapter commands documented separately |
+| Digest quality ambiguity | digest rubric and privacy classification before active promotion |
 
 ## Non-Goals
 
@@ -189,3 +200,7 @@ They are not the default path.
 - Do not patch Trellis internals.
 - Do not vendor external provider source into IMO without an adoption task.
 - Do not let self-iteration directly mutate active rules or skills.
+- Do not ship learning, provider, or host-output write behavior before the
+  matching gate in `PREDICTION_LOOP.md` is satisfied.
+- Re-run the prediction loop before shipping learning writes, provider
+  invocation, or host adapter writes.

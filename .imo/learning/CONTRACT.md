@@ -57,6 +57,39 @@ must never be committed.
 | Active digest | Short behavior guidance read by public agents | IMO learning workflow | Required |
 | Hard rule / skill update | Long-lived rule, skill, or source change | Explicit task/review | Required |
 
+## Required Fields
+
+Raw signals should include:
+
+```yaml
+id: signal-id
+created_at: timestamp
+source_agent: agent-or-skill-id
+scope: session|task|project|global
+privacy: public|project-private|sensitive
+confidence: low|medium|high
+ttl: duration-or-null
+summary: short text
+evidence_ref: optional pointer
+```
+
+Active digest items should include:
+
+```yaml
+id: digest-item-id
+digest_version: version
+scope: project|global
+last_updated: timestamp
+status: active|disabled
+priority: normal|high
+rollback_id: rollback reference
+summary: short instruction
+source_candidates:
+  - candidate-id
+```
+
+These fields are required before public agents consume the digest by default.
+
 ## Public Agent Contract
 
 Public agents may:
@@ -86,6 +119,7 @@ Public agents include:
 
 Promotion must preserve traceability:
 
+- every raw signal has source, scope, confidence, TTL, and privacy metadata
 - every candidate references source signals
 - every active digest item has an id
 - every hard rule/skill update references a task or review decision
@@ -106,10 +140,45 @@ current explicit user instruction
 - Raw signals should have low default weight.
 - Temporary preferences should expire unless repeated or confirmed.
 - Global learning must avoid project-private details.
+- Ambiguous privacy scope defaults to project-local.
+- Dedupe should run before candidate generation.
+- Digest generation should enforce max length and scope filtering.
 - Hermes-like self-iteration may propose candidates but must not directly change
   active rules or skill source.
 - Conflicting candidates must remain unresolved until reviewed or enough
   evidence separates them.
+
+## Digest Quality Rubric
+
+An active digest item should be:
+
+- scoped: explicitly session, task, project, or global
+- current: not contradicted by newer user instructions
+- evidence-backed: linked to signals, candidates, or review decision
+- actionable: tells an agent what to do differently
+- compact: short enough for repeated context injection
+- reversible: disable and rollback path exists
+- non-secret: global items contain no project-private facts
+
+Digest items that fail the rubric should remain candidates.
+
+## Privacy Classification
+
+Global learning may store stable user-level patterns:
+
+- communication preferences
+- workflow preferences
+- tool-use preferences that are not project-specific
+
+Global learning must not store:
+
+- project paths
+- sensitive project names
+- business logic or implementation facts
+- customer/domain data
+- credentials, tokens, or environment-specific secrets
+
+When classification is unclear, keep the item project-local.
 
 ## Required User Controls
 

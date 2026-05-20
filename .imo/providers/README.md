@@ -72,6 +72,19 @@ Provider integration must degrade cleanly:
 Provider failures must not break IMO native capabilities or Trellis native task
 flow.
 
+## Health Severity
+
+Provider health should distinguish optional absence from real failure:
+
+| Severity | Meaning |
+| --- | --- |
+| `not_installed` | Provider is optional and not present. |
+| `unavailable` | Provider is expected by current config but cannot be used. |
+| `degraded` | Provider is present but some capabilities are unavailable. |
+| `ok` | Provider discovery is healthy. |
+
+`not_installed` must not fail IMO native verification.
+
 ## Current Scope
 
 This directory is contract-only. It does not yet implement provider discovery,

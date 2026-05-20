@@ -13,6 +13,28 @@ machine-readable module metadata and have `imo verify` check drift.
 | `provider-backed` | IMO owns strategy/policy, but execution depends on an external provider or host environment. |
 | `extension-candidate` | Useful capability, but not necessarily IMO core. May become an external extension later. |
 
+## Future Metadata Fields
+
+Each module should eventually declare:
+
+```yaml
+name: module-name
+classification: native|provider-backed|extension-candidate
+owner: imo|external|mixed
+entrypoints:
+  - skill
+side_effects:
+  - reads_project_files
+external_dependencies:
+  - optional-provider-id
+learning_access:
+  read_digest: true|false
+  write_signals: true|false
+```
+
+`imo verify` should fail when the metadata classification and the module's
+documented dependencies conflict.
+
 ## Native
 
 | Module | Reason |

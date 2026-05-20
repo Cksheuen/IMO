@@ -109,6 +109,10 @@ Host-visible files are generated or projected outputs.
 ## Maintenance Guardrails
 
 - Learning items must be inspectable, disableable, and reversible.
+- Learning writes must carry source, scope, confidence, TTL, and privacy
+  metadata before automated promotion is allowed.
+- Active learning digests must carry id, version, scope, `last_updated`, and a
+  maximum length before public agents read them by default.
 - Provider discovery must be read-only before any invocation is added.
 - Provider failures must degrade to "capability unavailable" rather than
   breaking IMO core.
@@ -116,3 +120,6 @@ Host-visible files are generated or projected outputs.
   prose over time.
 - Runtime logs and learning signals must rotate or summarize before they grow
   without bound.
+- Trellis independence is a standing regression test: Trellis task flow must not
+  require IMO, and IMO native verification must not require Trellis provider
+  integration.
