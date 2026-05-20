@@ -188,13 +188,21 @@ When classification is unclear, keep the item project-local.
 The policy uses `project_private` as the machine-readable id for the
 `project-private` privacy class.
 
-## Required User Controls
+## User Controls
 
-Future CLI support should include:
+Current read-only CLI support:
 
 ```text
 imo learning list
 imo learning inspect <id>
+```
+
+These commands read `.imo/.runtime/learning/digest.json` when present. They must
+not create runtime files or mutate learning state.
+
+Future write/control CLI support should include:
+
+```text
 imo learning disable <id>
 imo learning reject <id>
 imo learning promote <id>

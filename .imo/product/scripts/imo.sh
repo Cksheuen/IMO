@@ -12,11 +12,15 @@ Source of truth lives under `.imo/`.
 
 Usage:
   scripts/imo.sh audit [claude|codex|all]
+  scripts/imo.sh learning list
+  scripts/imo.sh learning inspect <id>
   scripts/imo.sh verify
 
 Common commands:
   - `audit` is read-only and checks whether IMO reintroduces Trellis-owned
     Claude/Codex host-surface management.
+  - `learning list` and `learning inspect` read active learning digest state
+    without creating or mutating learning data.
   - `verify` runs the current read-only IMO guardrail, wrapper, and runtime
     compatibility checks, including module, learning, and provider contracts.
 
@@ -48,6 +52,9 @@ case "${1}" in
     ;;
   audit)
     exec python3 "$REPO_ROOT/.imo/product/scripts/audit_managed_ownership.py" "${@:2}"
+    ;;
+  learning)
+    exec python3 "$REPO_ROOT/.imo/product/scripts/learning.py" "${@:2}"
     ;;
   verify)
     exec python3 "$REPO_ROOT/.imo/product/scripts/verify.py" "${@:2}"

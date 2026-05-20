@@ -46,6 +46,8 @@ durable repo-facing summary.
   overlap with Trellis-tracked host outputs.
 - `bash scripts/imo.sh verify` now validates module metadata, learning policy,
   and provider registry contracts before compile/import smoke checks.
+- `scripts/imo.sh learning list` and `scripts/imo.sh learning inspect <id>` are
+  read-only learning digest commands.
 - `.imo/BOUNDARY.md` defines the owned-core and external-provider boundary.
 - `.imo/providers/` defines optional provider integration contracts.
 
@@ -115,7 +117,8 @@ Follow `.imo/ARCHITECTURE.md`, `.imo/BOUNDARY.md`, and
 
 Implement only after the contracts above are stable:
 
-1. `imo learning list`
+1. `imo learning list` and `imo learning inspect <id>` are present as read-only
+   commands.
 2. raw signal write path
 3. candidate aggregation
 4. active digest generation

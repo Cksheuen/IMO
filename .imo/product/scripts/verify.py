@@ -68,6 +68,11 @@ def main() -> int:
             python_env,
         ),
         (
+            "learning read-only list",
+            ["bash", "scripts/imo.sh", "learning", "list"],
+            None,
+        ),
+        (
             "python script compile",
             [
                 sys.executable,
@@ -79,6 +84,7 @@ def main() -> int:
                 ".imo/product/scripts/check-langchain-runtime-deps.py",
                 ".imo/product/scripts/check_module_metadata.py",
                 ".imo/product/scripts/check_provider_contracts.py",
+                ".imo/product/scripts/learning.py",
                 ".imo/product/scripts/task-audit.py",
                 ".imo/product/scripts/verify.py",
                 "scripts/audit_runtime_links_core.py",

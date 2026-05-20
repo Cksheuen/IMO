@@ -38,6 +38,8 @@ This directory is the source-of-truth workspace for the IMO framework.
   surfaces.
 - IMO does not project Trellis-owned Claude/Codex host files in this repo state.
 - `scripts/imo.sh audit [claude|codex|all]` verifies that IMO manifests do not claim host outputs still owned by Trellis.
+- `scripts/imo.sh learning list` and `scripts/imo.sh learning inspect <id>`
+  read active learning digest state without mutating learning data.
 - `scripts/imo.sh verify` runs the current aggregate read-only IMO verification
   suite, including module metadata, learning policy, and provider registry
   contracts.

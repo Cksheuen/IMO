@@ -15,6 +15,7 @@
 - `.imo/product/scripts/check_module_metadata.py` validates machine-readable IMO skill module metadata without mutating source.
 - `.imo/product/scripts/check_learning_contracts.py` validates learning-plane policy contracts without writing learning state.
 - `.imo/product/scripts/check_provider_contracts.py` validates optional provider registry contracts without discovering or invoking providers.
+- `.imo/product/scripts/learning.py` exposes read-only learning digest commands and must not create or mutate learning state.
 - In the current repo state, `audit_managed_ownership.py` is the only script wired to the Trellis host-ownership boundary; it is a read-only guardrail against reintroducing Trellis-owned host-surface management into IMO manifests.
 - Root `scripts/imo.sh` now acts only as a compatibility wrapper that forwards into `.imo/product/scripts/imo.sh`; it is not a statement that IMO as a framework is limited to guardrail behavior.
 - Root `scripts/check-langchain-runtime-deps.py` now acts only as a compatibility wrapper that forwards into the canonical `.imo/product/scripts/` implementation.
@@ -30,3 +31,5 @@
 - Static/syntax checks remain useful, but they are supporting evidence only and must not be the sole acceptance signal.
 - `scripts/imo.sh verify` is the current repo-local aggregate check. It must stay read-only and must not project or mutate host outputs.
 - `scripts/imo.sh verify` includes the module metadata, learning contract, and provider registry checkers before compile/import smoke checks.
+- `scripts/imo.sh learning list` reads `.imo/.runtime/learning/digest.json` when present and reports a clean empty state when it is absent.
+- `scripts/imo.sh learning inspect <id>` prints one digest item by id and exits non-zero when the item does not exist.
