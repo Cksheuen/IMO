@@ -2,8 +2,9 @@
 
 This file records the intended ownership class for current IMO skill modules.
 
-The classification is a planning contract. A future task should convert it into
-machine-readable module metadata and have `imo verify` check drift.
+The machine-readable source is `modules.json`. This Markdown file is the
+human-facing explanation for that metadata. `imo verify` checks the metadata
+contract through `.imo/product/scripts/check_module_metadata.py`.
 
 ## Classification Types
 
@@ -13,27 +14,29 @@ machine-readable module metadata and have `imo verify` check drift.
 | `provider-backed` | IMO owns strategy/policy, but execution depends on an external provider or host environment. |
 | `extension-candidate` | Useful capability, but not necessarily IMO core. May become an external extension later. |
 
-## Future Metadata Fields
+## Metadata Fields
 
-Each module should eventually declare:
+Each module declares:
 
-```yaml
-name: module-name
-classification: native|provider-backed|extension-candidate
-owner: imo|external|mixed
-entrypoints:
-  - skill
-side_effects:
-  - reads_project_files
-external_dependencies:
-  - optional-provider-id
-learning_access:
-  read_digest: true|false
-  write_signals: true|false
+```json
+{
+  "id": "module-id",
+  "name": "module-name",
+  "classification": "native|provider-backed|extension-candidate",
+  "owner_surface": ".imo/product/skills/module-id",
+  "lifecycle": "adopted|adopted-policy|adopted-candidate",
+  "default_enabled": true,
+  "allowed_integration_modes": ["direct"],
+  "external_dependencies": [],
+  "learning_access": {
+    "read_digest": true,
+    "write_signals": true
+  }
+}
 ```
 
-`imo verify` should fail when the metadata classification and the module's
-documented dependencies conflict.
+`imo verify` fails when the metadata classification, declared dependencies, and
+source layout conflict.
 
 ## Native
 

@@ -23,6 +23,7 @@ Durable protocol and policy:
 ```text
 .imo/learning/
   CONTRACT.md
+  policy.json
   schemas/
   policies/
 ```
@@ -49,6 +50,10 @@ Runtime state must be inspectable and rebuildable where possible. Global state
 must never be committed.
 
 ## Learning Levels
+
+The machine-readable policy is `.imo/learning/policy.json`. The aggregate
+verification command validates it through
+`.imo/product/scripts/check_learning_contracts.py`.
 
 | Level | Description | Writer | Promotion gate |
 | --- | --- | --- | --- |
@@ -179,6 +184,9 @@ Global learning must not store:
 - credentials, tokens, or environment-specific secrets
 
 When classification is unclear, keep the item project-local.
+
+The policy uses `project_private` as the machine-readable id for the
+`project-private` privacy class.
 
 ## Required User Controls
 

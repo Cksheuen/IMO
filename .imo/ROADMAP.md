@@ -30,6 +30,10 @@ durable repo-facing summary.
 - `.imo/learning/CONTRACT.md` records the shared learning-plane contract.
 - `.imo/product/skills/MODULE_CLASSIFICATION.md` records the current skill module
   ownership classification.
+- `.imo/product/skills/modules.json` records machine-readable module metadata.
+- `.imo/learning/policy.json` records machine-readable learning policy gates.
+- `.imo/providers/registry.json` records machine-readable provider contract and
+  health metadata.
 
 ### Guarded
 
@@ -38,6 +42,8 @@ durable repo-facing summary.
   remain empty for Trellis-owned host targets.
 - `bash scripts/imo.sh audit all` is the current guardrail that detects manifest
   overlap with Trellis-tracked host outputs.
+- `bash scripts/imo.sh verify` now validates module metadata, learning policy,
+  and provider registry contracts before compile/import smoke checks.
 - `.imo/BOUNDARY.md` defines the owned-core and external-provider boundary.
 - `.imo/providers/` defines optional provider integration contracts.
 
@@ -92,9 +98,8 @@ Follow `.imo/ARCHITECTURE.md`, `.imo/BOUNDARY.md`, and
 3. Add learning-plane signal, candidate, digest, and promotion contracts before
    automated self-iteration.
 4. Keep provider discovery/invocation optional and read-only first.
-5. Convert skill module classification into machine-readable metadata before
-   expanding migrations.
-6. Follow the gates in `.imo/PREDICTION_LOOP.md` before adding write behavior.
+5. Keep machine-readable module metadata passing before expanding migrations.
+6. Keep learning and provider policy gates passing before adding write behavior.
 
 ### 4. Learning Plane Implementation
 
@@ -109,8 +114,8 @@ Implement only after the contracts above are stable:
 
 ### 5. Optional Provider Discovery
 
-- Add read-only provider discovery and health checks only after the learning and
-  module classification contracts are stable.
+- Add executable read-only provider discovery and health checks only after the
+  registry contract remains stable.
 - Provider failures must degrade cleanly and must not break IMO native
   capabilities or Trellis native task flow.
 - Provider invocation remains out of scope until side-effect metadata is stable.

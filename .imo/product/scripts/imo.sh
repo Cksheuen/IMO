@@ -6,7 +6,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 print_placeholder() {
 cat <<'EOF'
-imo: repo-local host ownership guardrail
+imo: repo-local IMO command surface
 
 Source of truth lives under `.imo/`.
 
@@ -14,15 +14,23 @@ Usage:
   scripts/imo.sh audit [claude|codex|all]
   scripts/imo.sh verify
 
-Notes:
+Common commands:
   - `audit` is read-only and checks whether IMO reintroduces Trellis-owned
     Claude/Codex host-surface management.
   - `verify` runs the current read-only IMO guardrail, wrapper, and runtime
-    compatibility checks.
+    compatibility checks, including module, learning, and provider contracts.
+
+Architecture:
   - IMO does not proxy Trellis by default. Use Trellis directly for Trellis
     task flow, and use IMO directly for IMO-owned capabilities and learning.
   - External frameworks, plugins, and skills stay outside `.imo/product/*` by
-    default. Optional provider integration is an advanced path.
+    default.
+
+Advanced concepts:
+  - Provider discovery/invocation is optional and disabled by default until a
+    task adds explicit ownership and side-effect metadata.
+  - Host adapter projection remains blocked while Trellis owns the target host
+    output surfaces.
   - `sync` / `generate` are intentionally not exposed in this repo because
     Trellis remains the active owner of that host projection layer.
 EOF

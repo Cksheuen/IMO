@@ -32,6 +32,10 @@ Trellis work through IMO.
 
 Provider discovery must be read-only.
 
+The machine-readable provider registry is `registry.json`. It is validated by
+`.imo/product/scripts/check_provider_contracts.py` and is intentionally limited
+to discovery, health, and default-disabled invocation metadata.
+
 Expected discovery inputs may include:
 
 - known project-local directories, such as `.trellis/` or `.agents/skills/`
@@ -45,6 +49,10 @@ Discovery output is a capability inventory, not generated source files.
 ## Invocation Model
 
 Provider invocation is an advanced mode.
+
+The current registry keeps invocation disabled by default for every provider.
+Enabling invocation requires a future task with explicit side-effect and
+ownership metadata.
 
 It requires a capability contract that states:
 

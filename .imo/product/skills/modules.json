@@ -1,0 +1,282 @@
+{
+  "schema_version": 1,
+  "classifications": [
+    "native",
+    "provider-backed",
+    "extension-candidate"
+  ],
+  "allowed_integration_modes": [
+    "direct",
+    "optional-provider",
+    "extension"
+  ],
+  "modules": [
+    {
+      "id": "brainstorm",
+      "name": "brainstorm",
+      "classification": "native",
+      "owner_surface": ".imo/product/skills/brainstorm",
+      "lifecycle": "adopted",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct"],
+      "external_dependencies": [],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "architecture-health",
+      "name": "architecture-health",
+      "classification": "native",
+      "owner_surface": ".imo/product/skills/architecture-health",
+      "lifecycle": "adopted",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct"],
+      "external_dependencies": [],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "eat",
+      "name": "eat",
+      "classification": "native",
+      "owner_surface": ".imo/product/skills/eat",
+      "lifecycle": "adopted",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct"],
+      "external_dependencies": [],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "freshness",
+      "name": "freshness",
+      "classification": "native",
+      "owner_surface": ".imo/product/skills/freshness",
+      "lifecycle": "adopted",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct"],
+      "external_dependencies": [],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "promote-notes",
+      "name": "promote-notes",
+      "classification": "native",
+      "owner_surface": ".imo/product/skills/promote-notes",
+      "lifecycle": "adopted",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct"],
+      "external_dependencies": [],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "lesson-review",
+      "name": "lesson-review",
+      "classification": "native",
+      "owner_surface": ".imo/product/skills/lesson-review",
+      "lifecycle": "adopted",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct"],
+      "external_dependencies": [],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "codex-feedback-review",
+      "name": "codex-feedback-review",
+      "classification": "native",
+      "owner_surface": ".imo/product/skills/codex-feedback-review",
+      "lifecycle": "adopted",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct"],
+      "external_dependencies": [],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "locate",
+      "name": "locate",
+      "classification": "native",
+      "owner_surface": ".imo/product/skills/locate",
+      "lifecycle": "adopted",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct"],
+      "external_dependencies": [],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "shit",
+      "name": "shit",
+      "classification": "native",
+      "owner_surface": ".imo/product/skills/shit",
+      "lifecycle": "adopted",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct"],
+      "external_dependencies": [],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "cc-to-framework-migration",
+      "name": "cc-to-framework-migration",
+      "classification": "native",
+      "owner_surface": ".imo/product/skills/cc-to-framework-migration",
+      "lifecycle": "adopted",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct"],
+      "external_dependencies": [],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "codex-cc-sync-check",
+      "name": "codex-cc-sync-check",
+      "classification": "provider-backed",
+      "owner_surface": ".imo/product/skills/codex-cc-sync-check",
+      "lifecycle": "adopted-policy",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct", "optional-provider"],
+      "external_dependencies": ["claude-codex-global-config"],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "metrics-daily",
+      "name": "metrics-daily",
+      "classification": "provider-backed",
+      "owner_surface": ".imo/product/skills/metrics-daily",
+      "lifecycle": "adopted-policy",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct", "optional-provider"],
+      "external_dependencies": ["claude-metrics-runtime"],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "metrics-weekly",
+      "name": "metrics-weekly",
+      "classification": "provider-backed",
+      "owner_surface": ".imo/product/skills/metrics-weekly",
+      "lifecycle": "adopted-policy",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct", "optional-provider"],
+      "external_dependencies": ["claude-metrics-runtime"],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "dual-review-loop",
+      "name": "dual-review-loop",
+      "classification": "provider-backed",
+      "owner_surface": ".imo/product/skills/dual-review-loop",
+      "lifecycle": "adopted-policy",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct", "optional-provider"],
+      "external_dependencies": ["claude-code", "codex"],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "multi-model-agent",
+      "name": "multi-model-agent",
+      "classification": "provider-backed",
+      "owner_surface": ".imo/product/skills/multi-model-agent",
+      "lifecycle": "adopted-policy",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct", "optional-provider"],
+      "external_dependencies": ["litellm", "model-provider-credentials"],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "orchestrate",
+      "name": "orchestrate",
+      "classification": "provider-backed",
+      "owner_surface": ".imo/product/skills/orchestrate",
+      "lifecycle": "adopted-policy",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct", "optional-provider"],
+      "external_dependencies": ["host-agent-execution", "git-worktree"],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "promotion-mode",
+      "name": "promotion-mode",
+      "classification": "provider-backed",
+      "owner_surface": ".imo/product/skills/promotion-mode",
+      "lifecycle": "adopted-policy",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct", "optional-provider"],
+      "external_dependencies": ["global-promotion-config"],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "pkg-dive",
+      "name": "pkg-dive",
+      "classification": "extension-candidate",
+      "owner_surface": ".imo/product/skills/pkg-dive",
+      "lifecycle": "adopted-candidate",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct", "extension"],
+      "external_dependencies": ["node-package-source"],
+      "learning_access": {
+        "read_digest": false,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "functional-test-chain",
+      "name": "functional-test-chain",
+      "classification": "extension-candidate",
+      "owner_surface": ".imo/product/skills/functional-test-chain",
+      "lifecycle": "adopted-candidate",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct", "extension"],
+      "external_dependencies": [],
+      "learning_access": {
+        "read_digest": false,
+        "write_signals": true
+      }
+    }
+  ]
+}
+

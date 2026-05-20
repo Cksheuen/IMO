@@ -12,6 +12,9 @@
 - `.imo/product/scripts/task-bootstrap.sh` is now the canonical task-bootstrap implementation.
 - `.imo/product/scripts/audit_runtime_links_core.py` is now the canonical runtime-link analysis helper.
 - `.imo/product/scripts/verify.py` is now the canonical read-only IMO verification suite.
+- `.imo/product/scripts/check_module_metadata.py` validates machine-readable IMO skill module metadata without mutating source.
+- `.imo/product/scripts/check_learning_contracts.py` validates learning-plane policy contracts without writing learning state.
+- `.imo/product/scripts/check_provider_contracts.py` validates optional provider registry contracts without discovering or invoking providers.
 - In the current repo state, `audit_managed_ownership.py` is the only script wired to the Trellis host-ownership boundary; it is a read-only guardrail against reintroducing Trellis-owned host-surface management into IMO manifests.
 - Root `scripts/imo.sh` now acts only as a compatibility wrapper that forwards into `.imo/product/scripts/imo.sh`; it is not a statement that IMO as a framework is limited to guardrail behavior.
 - Root `scripts/check-langchain-runtime-deps.py` now acts only as a compatibility wrapper that forwards into the canonical `.imo/product/scripts/` implementation.
@@ -26,3 +29,4 @@
 - Prefer validating through the root compatibility entrypoint when one exists; canonical-path validation is additional evidence, not a substitute for all user-facing execution.
 - Static/syntax checks remain useful, but they are supporting evidence only and must not be the sole acceptance signal.
 - `scripts/imo.sh verify` is the current repo-local aggregate check. It must stay read-only and must not project or mutate host outputs.
+- `scripts/imo.sh verify` includes the module metadata, learning contract, and provider registry checkers before compile/import smoke checks.

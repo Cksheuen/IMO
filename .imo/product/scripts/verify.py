@@ -53,6 +53,21 @@ def main() -> int:
             None,
         ),
         (
+            "module metadata contract",
+            [sys.executable, ".imo/product/scripts/check_module_metadata.py"],
+            python_env,
+        ),
+        (
+            "learning contract policy",
+            [sys.executable, ".imo/product/scripts/check_learning_contracts.py"],
+            python_env,
+        ),
+        (
+            "provider contract registry",
+            [sys.executable, ".imo/product/scripts/check_provider_contracts.py"],
+            python_env,
+        ),
+        (
             "python script compile",
             [
                 sys.executable,
@@ -60,7 +75,10 @@ def main() -> int:
                 "py_compile",
                 ".imo/product/scripts/audit_managed_ownership.py",
                 ".imo/product/scripts/audit_runtime_links_core.py",
+                ".imo/product/scripts/check_learning_contracts.py",
                 ".imo/product/scripts/check-langchain-runtime-deps.py",
+                ".imo/product/scripts/check_module_metadata.py",
+                ".imo/product/scripts/check_provider_contracts.py",
                 ".imo/product/scripts/task-audit.py",
                 ".imo/product/scripts/verify.py",
                 "scripts/audit_runtime_links_core.py",
@@ -103,4 +121,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

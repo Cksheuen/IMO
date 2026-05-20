@@ -37,11 +37,18 @@ This directory is the source-of-truth workspace for the IMO framework.
   surfaces.
 - IMO does not project Trellis-owned Claude/Codex host files in this repo state.
 - `scripts/imo.sh audit [claude|codex|all]` verifies that IMO manifests do not claim host outputs still owned by Trellis.
-- `scripts/imo.sh verify` runs the current aggregate read-only IMO verification suite.
+- `scripts/imo.sh verify` runs the current aggregate read-only IMO verification
+  suite, including module metadata, learning policy, and provider registry
+  contracts.
+- Machine-readable contract gates now exist for:
+  - `.imo/product/skills/modules.json`
+  - `.imo/learning/policy.json`
+  - `.imo/providers/registry.json`
 - Adapter command/skill projection and host-output manifest takeover remain deferred.
 - Future host-output handoff is planned in `adapters/HOST_OUTPUT_CUTOVER.md`; it requires upstream Trellis ownership removal before any adapter manifest entries are reopened.
-- The next architecture direction is three-plane stabilization: Trellis task
-  plane, IMO capability plane, and IMO learning plane.
+- The current architecture direction is three-plane stabilization: Trellis task
+  plane, IMO capability plane, and IMO learning plane, with read-only contract
+  gates before write behavior.
 
 ## Runtime State
 

@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "defaults": {
+    "discovery_read_only": true,
+    "invocation_enabled": false,
+    "external_source_policy": "do-not-vendor-by-default"
+  },
+  "categories": [
+    "task-provider",
+    "plugin-provider",
+    "skill-provider",
+    "runtime-provider",
+    "imo-native-provider"
+  ],
+  "health_states": [
+    "not_installed",
+    "unavailable",
+    "degraded",
+    "ok"
+  ],
+  "providers": [
+    {
+      "id": "trellis",
+      "name": "Trellis",
+      "category": "task-provider",
+      "ownership": {
+        "owned_by_imo": false,
+        "source_policy": "external",
+        "normal_use": "direct"
+      },
+      "discovery": {
+        "read_only": true,
+        "inputs": [".trellis/"]
+      },
+      "invocation": {
+        "default_enabled": false,
+        "requires_explicit_task": true
+      },
+      "health": {
+        "default_status": "not_installed",
+        "missing_is_failure": false
+      }
+    },
+    {
+      "id": "claude-code-plugins",
+      "name": "Claude Code Plugins",
+      "category": "plugin-provider",
+      "ownership": {
+        "owned_by_imo": false,
+        "source_policy": "external",
+        "normal_use": "direct"
+      },
+      "discovery": {
+        "read_only": true,
+        "inputs": ["~/.claude/plugins/"]
+      },
+      "invocation": {
+        "default_enabled": false,
+        "requires_explicit_task": true
+      },
+      "health": {
+        "default_status": "not_installed",
+        "missing_is_failure": false
+      }
+    },
+    {
+      "id": "codex-skills",
+      "name": "Codex Skills",
+      "category": "skill-provider",
+      "ownership": {
+        "owned_by_imo": false,
+        "source_policy": "external",
+        "normal_use": "direct"
+      },
+      "discovery": {
+        "read_only": true,
+        "inputs": ["~/.codex/skills/"]
+      },
+      "invocation": {
+        "default_enabled": false,
+        "requires_explicit_task": true
+      },
+      "health": {
+        "default_status": "not_installed",
+        "missing_is_failure": false
+      }
+    },
+    {
+      "id": "market-skills",
+      "name": "Downloaded Or Market Skills",
+      "category": "skill-provider",
+      "ownership": {
+        "owned_by_imo": false,
+        "source_policy": "external",
+        "normal_use": "direct"
+      },
+      "discovery": {
+        "read_only": true,
+        "inputs": ["~/.claude/skills/", "~/.codex/skills/"]
+      },
+      "invocation": {
+        "default_enabled": false,
+        "requires_explicit_task": true
+      },
+      "health": {
+        "default_status": "not_installed",
+        "missing_is_failure": false
+      }
+    },
+    {
+      "id": "litellm",
+      "name": "LiteLLM",
+      "category": "runtime-provider",
+      "ownership": {
+        "owned_by_imo": false,
+        "source_policy": "external",
+        "normal_use": "direct"
+      },
+      "discovery": {
+        "read_only": true,
+        "inputs": ["environment", "local-config"]
+      },
+      "invocation": {
+        "default_enabled": false,
+        "requires_explicit_task": true
+      },
+      "health": {
+        "default_status": "not_installed",
+        "missing_is_failure": false
+      }
+    },
+    {
+      "id": "imo-native",
+      "name": "IMO Native Capabilities",
+      "category": "imo-native-provider",
+      "ownership": {
+        "owned_by_imo": true,
+        "source_policy": "owned-core",
+        "normal_use": "direct"
+      },
+      "discovery": {
+        "read_only": true,
+        "inputs": [".imo/product/", ".imo/runtime/", ".imo/learning/"]
+      },
+      "invocation": {
+        "default_enabled": false,
+        "requires_explicit_task": true
+      },
+      "health": {
+        "default_status": "ok",
+        "missing_is_failure": true
+      }
+    }
+  ]
+}
+
