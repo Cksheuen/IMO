@@ -18,6 +18,8 @@ durable repo-facing summary.
   - `audit_managed_ownership.py`
 - Root `scripts/` entries are compatibility wrappers for the migrated script
   surface.
+- `./imo` is the preferred repo-root direct-run entrypoint and forwards into
+  `.imo/product/scripts/imo.sh`.
 - `.imo/product/skills/` owns the migrated framework skill families listed in
   `.imo/product/skills/CONTRACT.md`.
 - Root `skills/` entries for migrated families are compatibility projections.
@@ -44,9 +46,10 @@ durable repo-facing summary.
   remain empty for Trellis-owned host targets.
 - `bash scripts/imo.sh audit all` is the current guardrail that detects manifest
   overlap with Trellis-tracked host outputs.
-- `bash scripts/imo.sh verify` now validates module metadata, learning policy,
+- `./imo audit all` is the preferred direct-run form of the same guardrail.
+- `./imo verify` now validates module metadata, learning policy,
   and provider registry contracts before compile/import smoke checks.
-- `scripts/imo.sh learning list` and `scripts/imo.sh learning inspect <id>` are
+- `./imo learning list` and `./imo learning inspect <id>` are
   read-only learning digest commands.
 - `.imo/BOUNDARY.md` defines the owned-core and external-provider boundary.
 - `.imo/providers/` defines optional provider integration contracts.
@@ -93,9 +96,13 @@ durable repo-facing summary.
 - Close or restart workers that produce no observable artifact within the
   configured timeout.
 
-### 2. Add A Unified Verification Entry
+### 2. Keep The Direct-Run Entry Green
 
-- `scripts/imo.sh verify` runs the current IMO guardrail, wrapper smoke checks,
+- `./imo --help`, `./imo audit all`, `./imo learning list`, and `./imo verify`
+  are the current repo-root acceptance commands.
+- `scripts/imo.sh verify` remains a compatibility form of the same aggregate
+  check.
+- The aggregate verification runs the current IMO guardrail, wrapper smoke checks,
   compile checks, and runtime compatibility imports.
 - Keep that verification read-only.
 - Prefer root compatibility entrypoints for user-facing smokes.

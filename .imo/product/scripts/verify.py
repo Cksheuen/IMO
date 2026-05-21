@@ -43,6 +43,16 @@ def main() -> int:
             None,
         ),
         (
+            "direct root entry help",
+            ["./imo", "--help"],
+            None,
+        ),
+        (
+            "direct root entry syntax",
+            ["bash", "-n", "imo"],
+            None,
+        ),
+        (
             "shell wrapper syntax",
             ["bash", "-n", "scripts/imo.sh"],
             None,

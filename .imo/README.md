@@ -15,6 +15,21 @@ This directory is the source-of-truth workspace for the IMO framework.
 - Shared learning belongs to the IMO learning plane so public agents do not
   adapt to the user in isolated and conflicting ways.
 
+## Direct Run
+
+The current repo-local IMO command surface is:
+
+```bash
+./imo --help
+./imo audit all
+./imo learning list
+./imo verify
+```
+
+`./imo` is the preferred repo-root user entrypoint. It forwards to the
+canonical implementation at `.imo/product/scripts/imo.sh`. `scripts/imo.sh`
+remains only as a compatibility wrapper for existing local calls.
+
 ## Layout
 
 - `ARCHITECTURE.md`: long-term plane architecture and implementation plan.
@@ -32,15 +47,16 @@ This directory is the source-of-truth workspace for the IMO framework.
 
 - Product scripts, product skills, and shared runtime helpers now have canonical
   source surfaces under `.imo/`.
+- The repo root has a direct `./imo` entrypoint for IMO-owned command surfaces.
 - Root `scripts/`, root `skills/`, and `skills/migrated/shared_runtime/` keep
   compatibility projections for migrated surfaces.
 - The repo has a read-only ownership audit guardrail for Trellis-owned host
   surfaces.
 - IMO does not project Trellis-owned Claude/Codex host files in this repo state.
-- `scripts/imo.sh audit [claude|codex|all]` verifies that IMO manifests do not claim host outputs still owned by Trellis.
-- `scripts/imo.sh learning list` and `scripts/imo.sh learning inspect <id>`
+- `./imo audit [claude|codex|all]` verifies that IMO manifests do not claim host outputs still owned by Trellis.
+- `./imo learning list` and `./imo learning inspect <id>`
   read active learning digest state without mutating learning data.
-- `scripts/imo.sh verify` runs the current aggregate read-only IMO verification
+- `./imo verify` runs the current aggregate read-only IMO verification
   suite, including module metadata, learning policy, and provider registry
   contracts.
 - Machine-readable contract gates now exist for:

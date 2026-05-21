@@ -11,10 +11,13 @@ imo: repo-local IMO command surface
 Source of truth lives under `.imo/`.
 
 Usage:
-  scripts/imo.sh audit [claude|codex|all]
-  scripts/imo.sh learning list
-  scripts/imo.sh learning inspect <id>
-  scripts/imo.sh verify
+  ./imo audit [claude|codex|all]
+  ./imo learning list
+  ./imo learning inspect <id>
+  ./imo verify
+
+Compatibility:
+  scripts/imo.sh forwards to the same canonical implementation.
 
 Common commands:
   - `audit` is read-only and checks whether IMO reintroduces Trellis-owned

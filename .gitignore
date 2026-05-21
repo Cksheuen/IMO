@@ -8,6 +8,7 @@
 
 # 保留的共享源码
 !.gitignore
+!imo
 !.imo/
 !.imo/**
 !skills/
