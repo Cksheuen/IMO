@@ -118,6 +118,8 @@ Host-visible files are generated or projected outputs.
   breaking IMO core.
 - Module classification must be machine-checkable; do not rely only on README
   prose over time.
+- Product rules must be machine-checkable; do not let behavioral rules remain
+  prose-only without metadata and verification.
 - Runtime logs and learning signals must rotate or summarize before they grow
   without bound.
 - Trellis independence is a standing regression test: Trellis task flow must not

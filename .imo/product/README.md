@@ -19,6 +19,7 @@ This subtree holds IMO product-side source surfaces.
 | Surface | Current status | Notes |
 | --- | --- | --- |
 | `scripts/` | active | `scripts/CONTRACT.md` lists the canonical script implementations and the `scripts/imo.sh verify` aggregate check. Root `scripts/` entries are compatibility wrappers. |
+| `rules/` | active | `rules/CONTRACT.md` lists IMO-owned behavioral rules. Rule metadata is checked by `check_rule_contracts.py`. |
 | `skills/` | active | `skills/CONTRACT.md` lists the migrated canonical skill families under `.imo/product/skills`. Root `skills/` entries are compatibility projections. Market-sourced families such as `pencil-*` stay excluded from this repo-owned surface by default. |
 
 

@@ -32,6 +32,8 @@ durable repo-facing summary.
 - `.imo/learning/CONTRACT.md` records the shared learning-plane contract.
 - `.imo/product/skills/MODULE_CLASSIFICATION.md` records the current skill module
   ownership classification.
+- `.imo/product/rules/` records IMO-owned behavioral rules.
+- `.imo/product/rules/rules.json` records machine-readable rule metadata.
 - `.imo/product/skills/modules.json` records machine-readable module metadata.
 - `.imo/learning/policy.json` records machine-readable learning policy gates.
 - `.imo/providers/registry.json` records machine-readable provider contract and
@@ -51,8 +53,8 @@ durable repo-facing summary.
   overlap with Trellis-tracked host outputs.
 - `./imo audit all` is the preferred direct-run form of the same guardrail.
 - `./imo verify` now validates module metadata, learning policy,
-  provider registry contracts, and root compatibility surfaces before
-  compile/import smoke checks.
+  rule contracts, provider registry contracts, and root compatibility surfaces
+  before compile/import smoke checks.
 - `./imo learning list` and `./imo learning inspect <id>` are
   read-only learning digest commands.
 - `./imo codex context` is available as a repo-local experimental context hook
@@ -140,7 +142,8 @@ Follow `.imo/ARCHITECTURE.md`, `.imo/BOUNDARY.md`, and
    automated self-iteration.
 4. Keep provider discovery/invocation optional and read-only first.
 5. Keep machine-readable module metadata passing before expanding migrations.
-6. Keep learning and provider policy gates passing before adding write behavior.
+6. Keep machine-readable rule metadata passing before expanding product rules.
+7. Keep learning and provider policy gates passing before adding write behavior.
 
 ### 5. Learning Plane Implementation
 

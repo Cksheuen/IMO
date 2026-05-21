@@ -26,7 +26,8 @@ Common commands:
   - `learning list` and `learning inspect` read active learning digest state
     without creating or mutating learning data.
   - `verify` runs the current read-only IMO guardrail, wrapper, and runtime
-    compatibility checks, including module, learning, and provider contracts.
+    compatibility checks, including rule, module, learning, and provider
+    contracts.
   - `codex context` emits a small repo-local IMO context block for experimental
     Codex hook injection.
 

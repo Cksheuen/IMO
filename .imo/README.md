@@ -47,7 +47,7 @@ remains only as a compatibility wrapper for existing local calls.
 
 ## Current Status
 
-- Product scripts, product skills, and shared runtime helpers now have canonical
+- Product scripts, product rules, product skills, and shared runtime helpers now have canonical
   source surfaces under `.imo/`.
 - The repo root has a direct `./imo` entrypoint for IMO-owned command surfaces.
 - Root `scripts/`, root `skills/`, and `skills/migrated/shared_runtime/` keep
@@ -64,9 +64,10 @@ remains only as a compatibility wrapper for existing local calls.
   experimental Codex hook injection. It is informational and does not replace
   Trellis workflow state.
 - `./imo verify` runs the current aggregate read-only IMO verification
-  suite, including module metadata, learning policy, and provider registry
-  contracts, plus root compatibility-surface checks.
+  suite, including rule contracts, module metadata, learning policy, and
+  provider registry contracts, plus root compatibility-surface checks.
 - Machine-readable contract gates now exist for:
+  - `.imo/product/rules/rules.json`
   - `.imo/product/skills/modules.json`
   - `.imo/learning/policy.json`
   - `.imo/providers/registry.json`

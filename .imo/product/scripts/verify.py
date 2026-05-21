@@ -68,6 +68,11 @@ def main() -> int:
             python_env,
         ),
         (
+            "rule contracts",
+            [sys.executable, ".imo/product/scripts/check_rule_contracts.py"],
+            python_env,
+        ),
+        (
             "learning contract policy",
             [sys.executable, ".imo/product/scripts/check_learning_contracts.py"],
             python_env,
@@ -105,6 +110,7 @@ def main() -> int:
                 ".imo/product/scripts/check-langchain-runtime-deps.py",
                 ".imo/product/scripts/check_module_metadata.py",
                 ".imo/product/scripts/check_provider_contracts.py",
+                ".imo/product/scripts/check_rule_contracts.py",
                 ".imo/product/scripts/check_root_surfaces.py",
                 ".imo/product/scripts/learning.py",
                 ".imo/product/scripts/task-audit.py",

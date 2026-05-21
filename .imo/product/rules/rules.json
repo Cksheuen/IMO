@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "rules": [
+    {
+      "id": "chameleon",
+      "name": "Chameleon",
+      "status": "active",
+      "owner_surface": ".imo/product/rules/chameleon.md",
+      "trigger": "Developing new or changed modules inside a mature project with established local conventions.",
+      "context_summary": "For mature-project module work, inspect neighboring files and existing tests first; local evidence overrides generic model defaults, including heavy defensive programming, premature abstraction, and broad rewrites unless the user, local specs, or real risk require them.",
+      "priority_order": [
+        "explicit_user_instruction",
+        "repository_hard_rules_or_specs",
+        "local_neighboring_patterns",
+        "active_imo_learning_digest",
+        "generic_agent_training_defaults"
+      ],
+      "overrides_generic_habits": [
+        "heavy_defensive_programming_without_local_boundary_need",
+        "premature_abstraction",
+        "broad_rewrites",
+        "duplicated_helper_layers",
+        "verbose_obvious_comments",
+        "unsupported_fallback_paths"
+      ],
+      "required_sections": [
+        "Summary",
+        "Trigger",
+        "Priority",
+        "Required Local Evidence",
+        "Habits To Suppress",
+        "Implementation Behavior",
+        "Allowed Exceptions",
+        "Review Questions",
+        "Non-Goals"
+      ],
+      "default_enabled": true,
+      "integration_modes": [
+        "context-guidance",
+        "manual-review"
+      ],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    }
+  ]
+}

@@ -15,6 +15,7 @@
 - `.imo/product/scripts/verify.py` is now the canonical read-only IMO verification suite.
 - `.imo/product/scripts/codex_context.py` emits repo-local IMO context for experimental Codex hook injection without mutating host files.
 - `.imo/product/scripts/check_module_metadata.py` validates machine-readable IMO skill module metadata without mutating source.
+- `.imo/product/scripts/check_rule_contracts.py` validates IMO product rule metadata and rule-document sections without mutating source.
 - `.imo/product/scripts/check_learning_contracts.py` validates learning-plane policy contracts without writing learning state.
 - `.imo/product/scripts/check_provider_contracts.py` validates optional provider registry contracts without discovering or invoking providers.
 - `.imo/product/scripts/check_root_surfaces.py` validates root `scripts/`, root `skills/`, and `.gitignore` compatibility-surface declarations without mutating source.
@@ -36,6 +37,7 @@
 - Static/syntax checks remain useful, but they are supporting evidence only and must not be the sole acceptance signal.
 - `./imo verify` is the primary repo-local aggregate check. It must stay read-only and must not project or mutate host outputs.
 - `./imo verify` includes the module metadata, learning contract, and provider registry checkers before compile/import smoke checks.
+- `./imo verify` includes the rule contract checker so product rules cannot stay prose-only or lose required sections.
 - `./imo verify` includes the root compatibility-surface checker so root `scripts/` and `skills/` cannot drift back into ambiguous source-of-truth surfaces.
 - `./imo learning list` reads `.imo/.runtime/learning/digest.json` when present and reports a clean empty state when it is absent.
 - `./imo learning inspect <id>` prints one digest item by id and exits non-zero when the item does not exist.
