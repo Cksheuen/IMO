@@ -51,6 +51,8 @@ durable repo-facing summary.
   and provider registry contracts before compile/import smoke checks.
 - `./imo learning list` and `./imo learning inspect <id>` are
   read-only learning digest commands.
+- `./imo codex context` is available as a repo-local experimental context hook
+  for Codex; it does not replace Trellis workflow injection.
 - `.imo/BOUNDARY.md` defines the owned-core and external-provider boundary.
 - `.imo/providers/` defines optional provider integration contracts.
 
@@ -100,6 +102,8 @@ durable repo-facing summary.
 
 - `./imo --help`, `./imo audit all`, `./imo learning list`, and `./imo verify`
   are the current repo-root acceptance commands.
+- `./imo codex context` may be used for local Codex context-injection
+  experiments, but it must stay informational and non-mutating.
 - `scripts/imo.sh verify` remains a compatibility form of the same aggregate
   check.
 - The aggregate verification runs the current IMO guardrail, wrapper smoke checks,

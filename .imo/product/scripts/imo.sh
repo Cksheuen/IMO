@@ -14,6 +14,7 @@ Usage:
   ./imo audit [claude|codex|all]
   ./imo learning list
   ./imo learning inspect <id>
+  ./imo codex context
   ./imo verify
 
 Compatibility:
@@ -26,6 +27,8 @@ Common commands:
     without creating or mutating learning data.
   - `verify` runs the current read-only IMO guardrail, wrapper, and runtime
     compatibility checks, including module, learning, and provider contracts.
+  - `codex context` emits a small repo-local IMO context block for experimental
+    Codex hook injection.
 
 Architecture:
   - IMO does not proxy Trellis by default. Use Trellis directly for Trellis
@@ -58,6 +61,18 @@ case "${1}" in
     ;;
   learning)
     exec python3 "$REPO_ROOT/.imo/product/scripts/learning.py" "${@:2}"
+    ;;
+  codex)
+    case "${2:-}" in
+      context)
+        exec python3 "$REPO_ROOT/.imo/product/scripts/codex_context.py" "${@:3}"
+        ;;
+      *)
+        print_placeholder >&2
+        printf '\nUnsupported imo codex command: %s\n' "${2:-}" >&2
+        exit 64
+        ;;
+    esac
     ;;
   verify)
     exec python3 "$REPO_ROOT/.imo/product/scripts/verify.py" "${@:2}"

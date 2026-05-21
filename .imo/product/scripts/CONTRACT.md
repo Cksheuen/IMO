@@ -13,6 +13,7 @@
 - `.imo/product/scripts/task-bootstrap.sh` is now the canonical task-bootstrap implementation.
 - `.imo/product/scripts/audit_runtime_links_core.py` is now the canonical runtime-link analysis helper.
 - `.imo/product/scripts/verify.py` is now the canonical read-only IMO verification suite.
+- `.imo/product/scripts/codex_context.py` emits repo-local IMO context for experimental Codex hook injection without mutating host files.
 - `.imo/product/scripts/check_module_metadata.py` validates machine-readable IMO skill module metadata without mutating source.
 - `.imo/product/scripts/check_learning_contracts.py` validates learning-plane policy contracts without writing learning state.
 - `.imo/product/scripts/check_provider_contracts.py` validates optional provider registry contracts without discovering or invoking providers.
@@ -36,4 +37,5 @@
 - `./imo verify` includes the module metadata, learning contract, and provider registry checkers before compile/import smoke checks.
 - `./imo learning list` reads `.imo/.runtime/learning/digest.json` when present and reports a clean empty state when it is absent.
 - `./imo learning inspect <id>` prints one digest item by id and exits non-zero when the item does not exist.
+- `./imo codex context` emits hook JSON containing a short `<imo-context>` block. It tells Codex to prefer current repo `.imo/` and `./imo` for IMO-related questions, but remains informational only and must not override user instructions, parent-agent instructions, or Trellis workflow state.
 - `scripts/imo.sh ...` must keep behaving as a compatibility form of the same commands.
