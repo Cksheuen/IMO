@@ -78,6 +78,11 @@ def main() -> int:
             python_env,
         ),
         (
+            "root compatibility surfaces",
+            [sys.executable, ".imo/product/scripts/check_root_surfaces.py"],
+            python_env,
+        ),
+        (
             "learning read-only list",
             ["bash", "scripts/imo.sh", "learning", "list"],
             None,
@@ -100,6 +105,7 @@ def main() -> int:
                 ".imo/product/scripts/check-langchain-runtime-deps.py",
                 ".imo/product/scripts/check_module_metadata.py",
                 ".imo/product/scripts/check_provider_contracts.py",
+                ".imo/product/scripts/check_root_surfaces.py",
                 ".imo/product/scripts/learning.py",
                 ".imo/product/scripts/task-audit.py",
                 ".imo/product/scripts/verify.py",

@@ -36,6 +36,7 @@ remains only as a compatibility wrapper for existing local calls.
 - `ARCHITECTURE.md`: long-term plane architecture and implementation plan.
 - `BOUNDARY.md`: ownership, integration, learning, and maintenance guardrails.
 - `ORCHESTRATION.md`: observable worker progress protocol for delegated work.
+- `RUNBOOK.md`: final direct-run acceptance sequence.
 - `product/`: reusable framework assets that will eventually replace legacy root sources.
 - `adapters/`: host-specific template boundaries for Claude Code and Codex outputs.
 - `learning/`: shared learning-plane contracts and promotion policy.
@@ -51,6 +52,8 @@ remains only as a compatibility wrapper for existing local calls.
 - The repo root has a direct `./imo` entrypoint for IMO-owned command surfaces.
 - Root `scripts/`, root `skills/`, and `skills/migrated/shared_runtime/` keep
   compatibility projections for migrated surfaces.
+- Root compatibility and external-provider surfaces are declared in
+  `.imo/providers/root_surfaces.json` and checked by `./imo verify`.
 - The repo has a read-only ownership audit guardrail for Trellis-owned host
   surfaces.
 - IMO does not project Trellis-owned Claude/Codex host files in this repo state.
@@ -62,7 +65,7 @@ remains only as a compatibility wrapper for existing local calls.
   Trellis workflow state.
 - `./imo verify` runs the current aggregate read-only IMO verification
   suite, including module metadata, learning policy, and provider registry
-  contracts.
+  contracts, plus root compatibility-surface checks.
 - Machine-readable contract gates now exist for:
   - `.imo/product/skills/modules.json`
   - `.imo/learning/policy.json`

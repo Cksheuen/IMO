@@ -36,8 +36,11 @@ durable repo-facing summary.
 - `.imo/learning/policy.json` records machine-readable learning policy gates.
 - `.imo/providers/registry.json` records machine-readable provider contract and
   health metadata.
+- `.imo/providers/root_surfaces.json` records machine-readable root
+  compatibility and external-provider surface declarations.
 - `.imo/ORCHESTRATION.md` records the worker observability gate for future
   delegated implementation.
+- `.imo/RUNBOOK.md` records the final direct-run acceptance sequence.
 
 ### Guarded
 
@@ -48,11 +51,14 @@ durable repo-facing summary.
   overlap with Trellis-tracked host outputs.
 - `./imo audit all` is the preferred direct-run form of the same guardrail.
 - `./imo verify` now validates module metadata, learning policy,
-  and provider registry contracts before compile/import smoke checks.
+  provider registry contracts, and root compatibility surfaces before
+  compile/import smoke checks.
 - `./imo learning list` and `./imo learning inspect <id>` are
   read-only learning digest commands.
 - `./imo codex context` is available as a repo-local experimental context hook
   for Codex; it does not replace Trellis workflow injection.
+- Root `scripts/`, root `skills/`, and `.gitignore` whitelist decisions are now
+  covered by `.imo/providers/root_surfaces.json`.
 - `.imo/BOUNDARY.md` defines the owned-core and external-provider boundary.
 - `.imo/providers/` defines optional provider integration contracts.
 
@@ -104,6 +110,8 @@ durable repo-facing summary.
   are the current repo-root acceptance commands.
 - `./imo codex context` may be used for local Codex context-injection
   experiments, but it must stay informational and non-mutating.
+- Keep `.imo/providers/root_surfaces.json` current whenever a root script,
+  root skill, or root whitelist rule changes.
 - `scripts/imo.sh verify` remains a compatibility form of the same aggregate
   check.
 - The aggregate verification runs the current IMO guardrail, wrapper smoke checks,
@@ -111,7 +119,17 @@ durable repo-facing summary.
 - Keep that verification read-only.
 - Prefer root compatibility entrypoints for user-facing smokes.
 
-### 3. Stabilize The Three-Plane Architecture
+### 3. Root Compatibility Surface Closure
+
+- Root `scripts/` entries must remain thin compatibility wrappers.
+- Root `skills/` entries must remain `.imo/product/skills` projections,
+  `.imo/runtime` projections, or declared external-provider surfaces.
+- `skills/pencil-design`, `skills/impeccable`, and `skills/xmind` are external
+  provider surfaces unless a future adoption task changes ownership.
+- `.gitignore` may whitelist root `scripts/**` and `skills/**` only under this
+  audited compatibility rationale.
+
+### 4. Stabilize The Three-Plane Architecture
 
 Follow `.imo/ARCHITECTURE.md`, `.imo/BOUNDARY.md`, and
 `.imo/learning/CONTRACT.md`:
@@ -124,7 +142,7 @@ Follow `.imo/ARCHITECTURE.md`, `.imo/BOUNDARY.md`, and
 5. Keep machine-readable module metadata passing before expanding migrations.
 6. Keep learning and provider policy gates passing before adding write behavior.
 
-### 4. Learning Plane Implementation
+### 5. Learning Plane Implementation
 
 Implement only after the contracts above are stable:
 
@@ -136,7 +154,7 @@ Implement only after the contracts above are stable:
 5. user-visible disable/reject/reset controls
 6. Hermes-like candidates-only self-iteration loop
 
-### 5. Optional Provider Discovery
+### 6. Optional Provider Discovery
 
 - Add executable read-only provider discovery and health checks only after the
   registry contract remains stable.
@@ -144,7 +162,7 @@ Implement only after the contracts above are stable:
   capabilities or Trellis native task flow.
 - Provider invocation remains out of scope until side-effect metadata is stable.
 
-### 6. Host Output Cutover
+### 7. Host Output Cutover
 
 Follow `.imo/adapters/HOST_OUTPUT_CUTOVER.md`, but keep this after the
 three-plane architecture stabilizes:
@@ -155,7 +173,7 @@ three-plane architecture stabilizes:
 
 Each wave is dual-platform atomic and upstream-first.
 
-### 7. Adapter Skill And Command Projection
+### 8. Adapter Skill And Command Projection
 
 Open a separate task before projecting commands or skills into host adapter
 surfaces. Those surfaces are not part of the current active host-output cutover

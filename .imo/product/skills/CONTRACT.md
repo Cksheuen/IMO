@@ -32,6 +32,9 @@
 - Only framework-owned skill families belong under `product/skills/`.
 - If a capability is expected to be delivered from a public market, it should stay external by default instead of being vendored into repo-owned `.imo/product/skills/*`.
 - Current standing example: `pencil-*` families are treated as market-sourced and excluded from repo-owned migration unless a future task explicitly overrides that decision.
+- `skills/pencil-design`, `skills/impeccable`, and `skills/xmind` are declared
+  external provider surfaces in `.imo/providers/root_surfaces.json`; they are
+  not IMO-owned product skill source.
 - Downloaded skills, plugin-provided skills, and framework-provided skills are
   external provider capabilities by default. IMO may discover and call them
   through `.imo/providers/` contracts without copying their source into this

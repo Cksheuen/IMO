@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "root_scripts": [
+    {
+      "path": "scripts/audit_runtime_links_core.py",
+      "kind": "python-compat-import",
+      "target": ".imo/product/scripts/audit_runtime_links_core.py"
+    },
+    {
+      "path": "scripts/check-langchain-runtime-deps.py",
+      "kind": "python-compat-runpy",
+      "target": ".imo/product/scripts/check-langchain-runtime-deps.py"
+    },
+    {
+      "path": "scripts/imo.sh",
+      "kind": "shell-compat-exec",
+      "target": ".imo/product/scripts/imo.sh"
+    },
+    {
+      "path": "scripts/task-audit.py",
+      "kind": "python-compat-import",
+      "target": ".imo/product/scripts/task-audit.py"
+    },
+    {
+      "path": "scripts/task-bootstrap.sh",
+      "kind": "shell-compat-exec",
+      "target": ".imo/product/scripts/task-bootstrap.sh"
+    }
+  ],
+  "skill_surfaces": {
+    "product_projection_root": "skills",
+    "product_source_root": ".imo/product/skills",
+    "runtime_projection_root": "skills/migrated",
+    "runtime_source_root": ".imo/runtime",
+    "external": [
+      {
+        "path": "skills/pencil-design",
+        "provider": "market-skills",
+        "reason": "market-sourced design skill kept outside `.imo/product/skills` unless a future adoption task changes ownership"
+      },
+      {
+        "path": "skills/impeccable",
+        "provider": "market-skills",
+        "reason": "vendor skill symlink; optional external provider and not IMO owned core"
+      },
+      {
+        "path": "skills/xmind",
+        "provider": "market-skills",
+        "reason": "external skill symlink; optional provider and not IMO owned core"
+      }
+    ]
+  },
+  "gitignore_contract": {
+    "allowed_root_whitelist": [
+      "!imo",
+      "!.imo/",
+      "!.imo/**",
+      "!scripts/",
+      "!scripts/**",
+      "!skills/",
+      "!skills/**"
+    ],
+    "reason": "Root scripts and skills remain tracked only as audited compatibility surfaces, projections, or declared external provider placeholders."
+  }
+}

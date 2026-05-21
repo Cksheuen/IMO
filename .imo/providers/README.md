@@ -36,6 +36,11 @@ The machine-readable provider registry is `registry.json`. It is validated by
 `.imo/product/scripts/check_provider_contracts.py` and is intentionally limited
 to discovery, health, and default-disabled invocation metadata.
 
+Repo-root compatibility and external-provider surfaces are declared in
+`root_surfaces.json`. It is validated by
+`.imo/product/scripts/check_root_surfaces.py` and is intentionally limited to
+read-only classification of existing tracked root surfaces.
+
 Expected discovery inputs may include:
 
 - known project-local directories, such as `.trellis/` or `.agents/skills/`
@@ -95,8 +100,10 @@ Provider health should distinguish optional absence from real failure:
 
 ## Current Scope
 
-This directory is contract-only. It does not yet implement provider discovery,
-callback handling, or invocation.
+This directory is mostly contract-only. It now includes a read-only
+`root_surfaces.json` declaration so root compatibility surfaces cannot drift
+back into ambiguous source-of-truth status. It does not yet implement provider
+discovery, callback handling, or invocation.
 
 The first implementation step should be read-only discovery and health
 reporting. Provider execution should remain out of scope until discovery and
