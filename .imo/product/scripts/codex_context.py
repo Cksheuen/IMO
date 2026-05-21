@@ -8,6 +8,11 @@ import os
 from pathlib import Path
 import sys
 
+try:
+    import project_profile
+except Exception:  # pragma: no cover - hook must degrade cleanly
+    project_profile = None
+
 
 ROOT = Path(__file__).resolve().parents[3]
 RULES_PATH = ROOT / ".imo/product/rules/rules.json"
@@ -95,6 +100,15 @@ def _active_digest_context() -> list[str]:
     return lines
 
 
+def _project_profile_context() -> list[str]:
+    if project_profile is None:
+        return []
+    try:
+        return project_profile.context_lines()
+    except Exception:
+        return ["- status: invalid (project profile context could not be read)."]
+
+
 def _build_context(data: dict) -> str:
     cwd = data.get("cwd")
     cwd_line = f"Cwd: {cwd}" if isinstance(cwd, str) and cwd else f"Cwd: {ROOT}"
@@ -105,12 +119,21 @@ def _build_context(data: dict) -> str:
         "Entrypoint: `./imo`",
         cwd_line,
         "Preference: for IMO-related questions in this repo, inspect current `.imo/` sources and use `./imo` before global `~/.claude` assets.",
-        "Direct commands: `./imo audit all`, `./imo learning list`, `./imo verify`",
+        "Direct commands: `./imo audit all`, `./imo profile status`, `./imo learning list`, `./imo verify`",
         "Boundary: Trellis remains the task plane; IMO does not proxy Trellis or claim Trellis-owned host outputs by default.",
     ]
     rule_context = _active_rule_context()
     if rule_context:
         lines.extend(["Active IMO rules:"] + rule_context)
+    profile_context = _project_profile_context()
+    if profile_context:
+        lines.extend(
+            [
+                "Project profile:",
+                "Priority: current user instruction > repo/task rules > current local evidence > project profile > active digest.",
+            ]
+            + profile_context
+        )
     digest_context = _active_digest_context()
     if digest_context:
         lines.extend(

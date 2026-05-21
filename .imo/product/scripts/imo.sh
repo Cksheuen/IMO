@@ -19,6 +19,10 @@ Usage:
   ./imo learning candidate build
   ./imo learning candidate list
   ./imo learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
+  ./imo profile refresh
+  ./imo profile status
+  ./imo profile inspect
+  ./imo profile clear
   ./imo codex context
   ./imo verify
 
@@ -36,6 +40,9 @@ Common commands:
     under `.imo/.runtime/learning/` without mutating active digest state.
   - `learning digest promote/disable/reset` manages reviewed active digest
     entries and requires rollback metadata for promotion.
+  - `profile refresh/status/inspect/clear` manages local project convention
+    snapshots under `.imo/.runtime/project-profile/`; prompt-time context reads
+    the cache and never refreshes it.
   - `verify` runs the current read-only IMO guardrail, wrapper, and runtime
     compatibility checks, including rule, module, learning, and provider
     contracts.
@@ -73,6 +80,9 @@ case "${1}" in
     ;;
   learning)
     exec python3 "$REPO_ROOT/.imo/product/scripts/learning.py" "${@:2}"
+    ;;
+  profile)
+    exec python3 "$REPO_ROOT/.imo/product/scripts/project_profile.py" "${@:2}"
     ;;
   codex)
     case "${2:-}" in

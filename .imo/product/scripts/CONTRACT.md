@@ -14,8 +14,10 @@
 - `.imo/product/scripts/audit_runtime_links_core.py` is now the canonical runtime-link analysis helper.
 - `.imo/product/scripts/verify.py` is now the canonical read-only IMO verification suite.
 - `.imo/product/scripts/codex_context.py` emits repo-local IMO context for experimental Codex hook injection without mutating host files.
+- `.imo/product/scripts/project_profile.py` manages local project convention snapshots under `.imo/.runtime/project-profile/`.
 - `.imo/product/scripts/check_module_metadata.py` validates machine-readable IMO skill module metadata without mutating source.
 - `.imo/product/scripts/check_rule_contracts.py` validates IMO product rule metadata and rule-document sections without mutating source.
+- `.imo/product/scripts/check_project_profile_contracts.py` validates the stable project-profile contract and schema without mutating runtime state.
 - `.imo/product/scripts/check_learning_contracts.py` validates learning-plane policy contracts without writing learning state.
 - `.imo/product/scripts/check_provider_contracts.py` validates optional provider registry contracts without discovering or invoking providers.
 - `.imo/product/scripts/check_root_surfaces.py` validates root `scripts/`, root `skills/`, and `.gitignore` compatibility-surface declarations without mutating source.
@@ -36,10 +38,13 @@
 - `verify` may smoke `./imo --help`, but must not call `./imo verify` internally because that would recursively invoke itself.
 - Static/syntax checks remain useful, but they are supporting evidence only and must not be the sole acceptance signal.
 - `./imo verify` is the primary repo-local aggregate check. It must stay read-only and must not project or mutate host outputs.
-- `./imo verify` includes the module metadata, learning contract, and provider registry checkers before compile/import smoke checks.
+- `./imo verify` includes the module metadata, learning contract, project-profile contract, and provider registry checkers before compile/import smoke checks.
 - `./imo verify` includes the rule contract checker so product rules cannot stay prose-only or lose required sections.
 - `./imo verify` includes the root compatibility-surface checker so root `scripts/` and `skills/` cannot drift back into ambiguous source-of-truth surfaces.
 - `./imo learning list` reads `.imo/.runtime/learning/digest.json` when present and reports a clean empty state when it is absent.
 - `./imo learning inspect <id>` prints one digest item by id and exits non-zero when the item does not exist.
+- `./imo profile status` and `./imo profile inspect` must not create runtime state when a profile is absent.
+- `./imo profile refresh` is the explicit low-frequency command that writes `.imo/.runtime/project-profile/`.
+- `./imo profile clear` removes local project-profile runtime state only.
 - `./imo codex context` emits hook JSON containing a short `<imo-context>` block. It tells Codex to prefer current repo `.imo/` and `./imo` for IMO-related questions, but remains informational only and must not override user instructions, parent-agent instructions, or Trellis workflow state.
 - `scripts/imo.sh ...` must keep behaving as a compatibility form of the same commands.

@@ -490,6 +490,132 @@ def _run_learning_context_smoke() -> bool:
             shutil.rmtree(backup_dir, ignore_errors=True)
 
 
+def _run_project_profile_smoke() -> bool:
+    print("[imo verify] project profile behavior")
+    runtime_dir = ROOT / ".imo/.runtime/project-profile"
+    backup_dir: Path | None = None
+
+    try:
+        if runtime_dir.exists():
+            backup_dir = Path(tempfile.mkdtemp(prefix="imo-profile-backup-"))
+            shutil.copytree(runtime_dir, backup_dir / "project-profile", dirs_exist_ok=True)
+            shutil.rmtree(runtime_dir)
+
+        status_missing = subprocess.run(
+            ["./imo", "profile", "status"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if status_missing.returncode != 0 or "status\tmissing" not in status_missing.stdout:
+            print("[imo verify] failed: profile missing-state status", file=sys.stderr)
+            return False
+        if runtime_dir.exists():
+            print("[imo verify] failed: profile status created runtime state", file=sys.stderr)
+            return False
+
+        inspect_missing = subprocess.run(
+            ["./imo", "profile", "inspect"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if inspect_missing.returncode != 0 or "no profile found" not in inspect_missing.stdout:
+            print("[imo verify] failed: profile missing-state inspect", file=sys.stderr)
+            return False
+        if runtime_dir.exists():
+            print("[imo verify] failed: profile inspect created runtime state", file=sys.stderr)
+            return False
+
+        refreshed = subprocess.run(
+            ["./imo", "profile", "refresh"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if refreshed.returncode != 0:
+            print("[imo verify] failed: profile refresh", file=sys.stderr)
+            if refreshed.stderr:
+                print(refreshed.stderr, file=sys.stderr)
+            return False
+        for expected in ("current.json", "summary.md", "manifest.json"):
+            if not (runtime_dir / expected).is_file():
+                print(f"[imo verify] failed: profile refresh missing {expected}", file=sys.stderr)
+                return False
+
+        status_current = subprocess.run(
+            ["./imo", "profile", "status"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if status_current.returncode != 0 or "status\tcurrent" not in status_current.stdout:
+            print("[imo verify] failed: profile current status", file=sys.stderr)
+            return False
+
+        inspected = subprocess.run(
+            ["./imo", "profile", "inspect"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if inspected.returncode != 0 or "IMO Project Profile" not in inspected.stdout:
+            print("[imo verify] failed: profile inspect after refresh", file=sys.stderr)
+            return False
+
+        context = subprocess.run(
+            ["./imo", "codex", "context", "--empty"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if context.returncode != 0:
+            print("[imo verify] failed: codex context with profile", file=sys.stderr)
+            return False
+        if "Project profile:" not in context.stdout or "profile is guidance" not in context.stdout:
+            print("[imo verify] failed: profile summary missing from context", file=sys.stderr)
+            return False
+
+        cleared = subprocess.run(
+            ["./imo", "profile", "clear"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if cleared.returncode != 0 or runtime_dir.exists():
+            print("[imo verify] failed: profile clear", file=sys.stderr)
+            return False
+
+        print("[imo verify] ok: project profile behavior")
+        return True
+    except Exception as exc:
+        print(f"[imo verify] failed: project profile behavior: {exc}", file=sys.stderr)
+        return False
+    finally:
+        if runtime_dir.exists():
+            shutil.rmtree(runtime_dir)
+        if backup_dir is not None:
+            backup_profile = backup_dir / "project-profile"
+            if backup_profile.exists():
+                runtime_dir.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(backup_profile, runtime_dir, dirs_exist_ok=True)
+            shutil.rmtree(backup_dir, ignore_errors=True)
+
+
 def main() -> int:
     python_env = _python_env()
     checks = [
@@ -539,6 +665,11 @@ def main() -> int:
             python_env,
         ),
         (
+            "project profile contracts",
+            [sys.executable, ".imo/product/scripts/check_project_profile_contracts.py"],
+            python_env,
+        ),
+        (
             "provider contract registry",
             [sys.executable, ".imo/product/scripts/check_provider_contracts.py"],
             python_env,
@@ -570,10 +701,12 @@ def main() -> int:
                 ".imo/product/scripts/check_learning_contracts.py",
                 ".imo/product/scripts/check-langchain-runtime-deps.py",
                 ".imo/product/scripts/check_module_metadata.py",
+                ".imo/product/scripts/check_project_profile_contracts.py",
                 ".imo/product/scripts/check_provider_contracts.py",
                 ".imo/product/scripts/check_rule_contracts.py",
                 ".imo/product/scripts/check_root_surfaces.py",
                 ".imo/product/scripts/learning.py",
+                ".imo/product/scripts/project_profile.py",
                 ".imo/product/scripts/task-audit.py",
                 ".imo/product/scripts/verify.py",
                 "scripts/audit_runtime_links_core.py",
@@ -613,6 +746,8 @@ def main() -> int:
     if not _run_learning_digest_smoke():
         failures += 1
     if not _run_learning_context_smoke():
+        failures += 1
+    if not _run_project_profile_smoke():
         failures += 1
 
     if failures:

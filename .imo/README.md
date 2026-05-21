@@ -22,6 +22,8 @@ The current repo-local IMO command surface is:
 ```bash
 ./imo --help
 ./imo audit all
+./imo profile status
+./imo profile refresh
 ./imo learning list
 ./imo learning signal list
 ./imo learning candidate list
@@ -70,14 +72,19 @@ remains only as a compatibility wrapper for existing local calls.
   lessons without mutating active digest state.
 - `./imo learning digest promote/disable/reset` manages reviewed active digest
   entries with rollback metadata.
+- `./imo profile refresh/status/inspect/clear` manages a local project
+  convention snapshot under `.imo/.runtime/project-profile/`. Context hooks may
+  read the bounded summary but never refresh it automatically.
 - `./imo codex context` emits a short repo-local IMO context block for
   experimental Codex hook injection, including active learning digest entries
   when present. It is informational and does not replace Trellis workflow state.
 - `./imo verify` runs the current aggregate read-only IMO verification
-  suite, including rule contracts, module metadata, learning policy, and
-  provider registry contracts, plus root compatibility-surface checks.
+  suite, including rule contracts, module metadata, project-profile contracts,
+  learning policy, and provider registry contracts, plus root
+  compatibility-surface checks.
 - Machine-readable contract gates now exist for:
   - `.imo/product/rules/rules.json`
+  - `.imo/runtime/project-profile/schema.json`
   - `.imo/product/skills/modules.json`
   - `.imo/learning/policy.json`
   - `.imo/providers/registry.json`

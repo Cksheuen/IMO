@@ -120,6 +120,8 @@ Host-visible files are generated or projected outputs.
   prose over time.
 - Product rules must be machine-checkable; do not let behavioral rules remain
   prose-only without metadata and verification.
+- Project-profile refresh is low frequency and explicit; prompt-time context may
+  read a bounded cached summary but must not scan the repository.
 - Runtime logs and learning signals must rotate or summarize before they grow
   without bound.
 - Trellis independence is a standing regression test: Trellis task flow must not

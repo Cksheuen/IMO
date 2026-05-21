@@ -34,6 +34,8 @@ durable repo-facing summary.
   ownership classification.
 - `.imo/product/rules/` records IMO-owned behavioral rules.
 - `.imo/product/rules/rules.json` records machine-readable rule metadata.
+- `.imo/runtime/project-profile/` records the stable contract and schema for
+  local project convention snapshots.
 - `.imo/product/skills/modules.json` records machine-readable module metadata.
 - `.imo/learning/policy.json` records machine-readable learning policy gates.
 - `.imo/providers/registry.json` records machine-readable provider contract and
@@ -53,8 +55,8 @@ durable repo-facing summary.
   overlap with Trellis-tracked host outputs.
 - `./imo audit all` is the preferred direct-run form of the same guardrail.
 - `./imo verify` now validates module metadata, learning policy,
-  rule contracts, provider registry contracts, and root compatibility surfaces
-  before compile/import smoke checks.
+  rule contracts, project-profile contracts, provider registry contracts, and
+  root compatibility surfaces before compile/import smoke checks.
 - `./imo learning list` and `./imo learning inspect <id>` are
   read-only learning digest commands.
 - `./imo learning signal list` is a read-only raw signal command, and
@@ -64,6 +66,8 @@ durable repo-facing summary.
   candidate lesson aggregation without active digest mutation.
 - `./imo learning digest promote/disable/reset` is present for reviewed active
   digest control with rollback metadata.
+- `./imo profile refresh/status/inspect/clear` is present for explicit
+  low-frequency project convention profiling.
 - `./imo codex context` reads active learning digest entries and injects only
   valid active items with an explicit priority guard.
 - `./imo codex context` is available as a repo-local experimental context hook
