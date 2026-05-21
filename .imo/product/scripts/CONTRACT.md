@@ -13,6 +13,8 @@
 - `.imo/product/scripts/task-bootstrap.sh` is now the canonical task-bootstrap implementation.
 - `.imo/product/scripts/audit_runtime_links_core.py` is now the canonical runtime-link analysis helper.
 - `.imo/product/scripts/verify.py` is now the canonical read-only IMO verification suite.
+- `.imo/product/scripts/defensive_audit.py` is now the canonical read-only
+  advisory report for defensive-programming guardrails and cleanup candidates.
 - `.imo/product/scripts/codex_context.py` emits repo-local IMO context for experimental Codex hook injection without mutating host files.
 - `.imo/product/scripts/project_profile.py` manages local project convention snapshots under `.imo/.runtime/project-profile/`.
 - `.imo/product/scripts/check_module_metadata.py` validates machine-readable IMO skill module metadata without mutating source.
@@ -34,10 +36,14 @@
 - Script migration is not complete with only `bash -n`, `py_compile`, import checks, or `--help` output.
 - Each migrated script family must include at least one recorded runnable behavior check that exercises the real script path after migration.
 - Prefer validating through the root compatibility entrypoint when one exists; canonical-path validation is additional evidence, not a substitute for all user-facing execution.
-- `./imo --help`, `./imo audit all`, `./imo learning list`, and `./imo verify` are the direct-run acceptance surface for this repo.
+- `./imo --help`, `./imo audit all`, `./imo defensive audit`,
+  `./imo learning list`, and `./imo verify` are the direct-run acceptance
+  surface for this repo.
 - `verify` may smoke `./imo --help`, but must not call `./imo verify` internally because that would recursively invoke itself.
 - Static/syntax checks remain useful, but they are supporting evidence only and must not be the sole acceptance signal.
 - `./imo verify` is the primary repo-local aggregate check. It must stay read-only and must not project or mutate host outputs.
+- `./imo defensive audit` is advisory: findings do not fail the command, and
+  source cleanup requires a separate explicit task.
 - `./imo verify` includes the module metadata, learning contract, project-profile contract, and provider registry checkers before compile/import smoke checks.
 - `./imo verify` includes the rule contract checker so product rules cannot stay prose-only or lose required sections.
 - `./imo verify` includes the root compatibility-surface checker so root `scripts/` and `skills/` cannot drift back into ambiguous source-of-truth surfaces.

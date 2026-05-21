@@ -31,6 +31,54 @@ def _python_env() -> dict[str, str]:
     return env
 
 
+def _run_defensive_audit_smoke() -> bool:
+    print("[imo verify] defensive programming audit")
+    human = subprocess.run(
+        ["./imo", "defensive", "audit"],
+        cwd=ROOT,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if human.returncode != 0 or "IMO Defensive Programming Audit" not in human.stdout:
+        print("[imo verify] failed: defensive audit human report", file=sys.stderr)
+        if human.stderr:
+            print(human.stderr, file=sys.stderr)
+        return False
+
+    as_json = subprocess.run(
+        ["./imo", "defensive", "audit", "--json"],
+        cwd=ROOT,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if as_json.returncode != 0:
+        print("[imo verify] failed: defensive audit json report", file=sys.stderr)
+        if as_json.stderr:
+            print(as_json.stderr, file=sys.stderr)
+        return False
+    try:
+        report = __import__("json").loads(as_json.stdout)
+    except ValueError as exc:
+        print(f"[imo verify] failed: defensive audit json parse: {exc}", file=sys.stderr)
+        return False
+    summary = report.get("summary", {})
+    categories = summary.get("by_category", {}) if isinstance(summary, dict) else {}
+    expected = {"keep", "simplify", "replace-with-contract", "remove"}
+    if report.get("schema_version") != 1 or not expected.issubset(categories):
+        print("[imo verify] failed: defensive audit contract shape", file=sys.stderr)
+        return False
+    if not isinstance(report.get("findings"), list) or not report["findings"]:
+        print("[imo verify] failed: defensive audit expected findings", file=sys.stderr)
+        return False
+
+    print("[imo verify] ok: defensive programming audit")
+    return True
+
+
 def _run_learning_signal_smoke() -> bool:
     print("[imo verify] learning raw signal behavior")
     runtime_dir = ROOT / ".imo/.runtime/learning"
@@ -698,6 +746,7 @@ def main() -> int:
                 ".imo/product/scripts/audit_managed_ownership.py",
                 ".imo/product/scripts/audit_runtime_links_core.py",
                 ".imo/product/scripts/codex_context.py",
+                ".imo/product/scripts/defensive_audit.py",
                 ".imo/product/scripts/check_learning_contracts.py",
                 ".imo/product/scripts/check-langchain-runtime-deps.py",
                 ".imo/product/scripts/check_module_metadata.py",
@@ -740,6 +789,8 @@ def main() -> int:
         if not _run(label, command, env=env):
             failures += 1
     if not _run_learning_signal_smoke():
+        failures += 1
+    if not _run_defensive_audit_smoke():
         failures += 1
     if not _run_learning_candidate_smoke():
         failures += 1

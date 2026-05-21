@@ -22,6 +22,7 @@ The current repo-local IMO command surface is:
 ```bash
 ./imo --help
 ./imo audit all
+./imo defensive audit
 ./imo profile status
 ./imo profile refresh
 ./imo learning list
@@ -63,6 +64,9 @@ remains only as a compatibility wrapper for existing local calls.
   surfaces.
 - IMO does not project Trellis-owned Claude/Codex host files in this repo state.
 - `./imo audit [claude|codex|all]` verifies that IMO manifests do not claim host outputs still owned by Trellis.
+- `./imo defensive audit` reports necessary guardrails, simplification
+  candidates, prose-to-contract candidates, and blanket fallback anti-patterns
+  without mutating source or runtime state.
 - `./imo learning list` and `./imo learning inspect <id>`
   read active learning digest state without mutating learning data.
 - `./imo learning signal list` reads raw signal state without mutating learning
@@ -88,6 +92,8 @@ remains only as a compatibility wrapper for existing local calls.
   - `.imo/product/skills/modules.json`
   - `.imo/learning/policy.json`
   - `.imo/providers/registry.json`
+- `./imo defensive audit --json` provides a stable advisory report shape for
+  defensive-programming review.
 - Delegated implementation now has a repo-local observability protocol in
   `.imo/ORCHESTRATION.md`.
 - Adapter command/skill projection and host-output manifest takeover remain deferred.

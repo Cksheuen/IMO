@@ -23,6 +23,7 @@ Run from the repository root:
 ```bash
 ./imo --help
 ./imo audit all
+./imo defensive audit
 ./imo profile status
 ./imo learning list
 ./imo learning signal list
@@ -37,6 +38,8 @@ Expected result:
 
 - every command exits `0`
 - `./imo audit all` reports zero overlap with Trellis-owned host outputs
+- `./imo defensive audit` exits `0`, prints an advisory defensive-programming
+  report, and does not mutate source or runtime state
 - `./imo learning list` handles missing runtime digest state as a clean empty
   state
 - `./imo profile status` handles missing project-profile runtime state as a
@@ -51,7 +54,8 @@ Expected result:
   `<imo-context>` and injects active learning digest entries and project-profile
   summaries when present
 - `./imo verify` includes module, learning, project-profile, provider, root
-  compatibility, Codex context, compile, and compatibility import checks
+  compatibility, Codex context, defensive audit, compile, and compatibility
+  import checks
 - `bash scripts/imo.sh verify` remains a compatibility form of the aggregate
   check
 

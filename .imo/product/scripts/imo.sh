@@ -12,6 +12,7 @@ Source of truth lives under `.imo/`.
 
 Usage:
   ./imo audit [claude|codex|all]
+  ./imo defensive audit [--json]
   ./imo learning list
   ./imo learning inspect <id>
   ./imo learning signal list
@@ -32,6 +33,8 @@ Compatibility:
 Common commands:
   - `audit` is read-only and checks whether IMO reintroduces Trellis-owned
     Claude/Codex host-surface management.
+  - `defensive audit` is read-only and separates necessary boundary guardrails
+    from fallback code that should be simplified, contracted, or removed.
   - `learning list` and `learning inspect` read active learning digest state
     without creating or mutating digest data.
   - `learning signal list` reads raw signal state, and `learning signal add`
@@ -77,6 +80,9 @@ case "${1}" in
     ;;
   audit)
     exec python3 "$REPO_ROOT/.imo/product/scripts/audit_managed_ownership.py" "${@:2}"
+    ;;
+  defensive)
+    exec python3 "$REPO_ROOT/.imo/product/scripts/defensive_audit.py" "${@:2}"
     ;;
   learning)
     exec python3 "$REPO_ROOT/.imo/product/scripts/learning.py" "${@:2}"

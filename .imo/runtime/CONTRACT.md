@@ -6,6 +6,7 @@
 
 - In-repo content here defines stable bootstrap expectations, protocol boundaries, and future runtime schemas.
 - Shared runtime helpers and typed protocol fragments belong under `.imo/runtime/shared/`.
+- Defensive audit behavior contracts belong under `.imo/runtime/defensive-audit/`.
 - Project convention profile contracts belong under `.imo/runtime/project-profile/`; generated profile state belongs under `.imo/.runtime/project-profile/`.
 - Shared runtime dependency entrypoints belong under `.imo/runtime/requirements.txt`.
 - High-churn runtime state never lives here; it belongs under `.imo/.runtime/`.

@@ -16,6 +16,7 @@ durable repo-facing summary.
   - `task-bootstrap.sh`
   - `audit_runtime_links_core.py`
   - `audit_managed_ownership.py`
+  - `defensive_audit.py`
 - Root `scripts/` entries are compatibility wrappers for the migrated script
   surface.
 - `./imo` is the preferred repo-root direct-run entrypoint and forwards into
@@ -36,6 +37,8 @@ durable repo-facing summary.
 - `.imo/product/rules/rules.json` records machine-readable rule metadata.
 - `.imo/runtime/project-profile/` records the stable contract and schema for
   local project convention snapshots.
+- `.imo/runtime/defensive-audit/` records the stable advisory-report contract
+  for defensive-programming audits.
 - `.imo/product/skills/modules.json` records machine-readable module metadata.
 - `.imo/learning/policy.json` records machine-readable learning policy gates.
 - `.imo/providers/registry.json` records machine-readable provider contract and
@@ -54,6 +57,9 @@ durable repo-facing summary.
 - `bash scripts/imo.sh audit all` is the current guardrail that detects manifest
   overlap with Trellis-tracked host outputs.
 - `./imo audit all` is the preferred direct-run form of the same guardrail.
+- `./imo defensive audit` is the current advisory report that separates
+  necessary boundary guardrails from simplification, contract, and removal
+  candidates.
 - `./imo verify` now validates module metadata, learning policy,
   rule contracts, project-profile contracts, provider registry contracts, and
   root compatibility surfaces before compile/import smoke checks.
@@ -121,8 +127,9 @@ durable repo-facing summary.
 
 ### 2. Keep The Direct-Run Entry Green
 
-- `./imo --help`, `./imo audit all`, `./imo learning list`, and `./imo verify`
-  are the current repo-root acceptance commands.
+- `./imo --help`, `./imo audit all`, `./imo defensive audit`,
+  `./imo learning list`, and `./imo verify` are the current repo-root
+  acceptance commands.
 - `./imo codex context` may be used for local Codex context-injection
   experiments, but it must stay informational and non-mutating.
 - Keep `.imo/providers/root_surfaces.json` current whenever a root script,
