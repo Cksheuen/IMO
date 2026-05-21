@@ -24,6 +24,8 @@ Run from the repository root:
 ./imo --help
 ./imo audit all
 ./imo learning list
+./imo learning signal list
+./imo learning candidate list
 ./imo codex context --empty
 ./imo verify
 bash scripts/imo.sh verify
@@ -36,8 +38,14 @@ Expected result:
 - `./imo audit all` reports zero overlap with Trellis-owned host outputs
 - `./imo learning list` handles missing runtime digest state as a clean empty
   state
+- `./imo learning signal list` handles missing runtime signal state as a clean
+  empty state
+- `./imo learning candidate list` handles missing runtime candidate state as a
+  clean empty state
+- `./imo verify` checks digest promotion requires review metadata and can
+  disable/reset project-scoped digest state
 - `./imo codex context --empty` emits valid hook JSON containing
-  `<imo-context>`
+  `<imo-context>` and injects active learning digest entries when present
 - `./imo verify` includes module, learning, provider, root compatibility,
   Codex context, compile, and compatibility import checks
 - `bash scripts/imo.sh verify` remains a compatibility form of the aggregate

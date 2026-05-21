@@ -57,6 +57,15 @@ durable repo-facing summary.
   before compile/import smoke checks.
 - `./imo learning list` and `./imo learning inspect <id>` are
   read-only learning digest commands.
+- `./imo learning signal list` is a read-only raw signal command, and
+  `./imo learning signal add --summary <text>` appends raw signals to
+  project-local runtime state only.
+- `./imo learning candidate build/list/inspect/reject` is present for
+  candidate lesson aggregation without active digest mutation.
+- `./imo learning digest promote/disable/reset` is present for reviewed active
+  digest control with rollback metadata.
+- `./imo codex context` reads active learning digest entries and injects only
+  valid active items with an explicit priority guard.
 - `./imo codex context` is available as a repo-local experimental context hook
   for Codex; it does not replace Trellis workflow injection.
 - Root `scripts/`, root `skills/`, and `.gitignore` whitelist decisions are now

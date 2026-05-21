@@ -25,6 +25,9 @@ Durable protocol and policy:
   CONTRACT.md
   policy.json
   schemas/
+    signal.schema.json
+    candidate.schema.json
+    digest.schema.json
   policies/
 ```
 
@@ -200,14 +203,43 @@ imo learning inspect <id>
 These commands read `.imo/.runtime/learning/digest.json` when present. They must
 not create runtime files or mutate learning state.
 
+Current raw signal CLI support:
+
+```text
+imo learning signal list
+imo learning signal add --summary <text>
+```
+
+`signal list` reads `.imo/.runtime/learning/signals.jsonl` when present and
+must not create runtime files. `signal add` appends a raw signal only; it must
+not create candidates, active digests, hard rules, skill changes, provider
+changes, or host-output changes.
+
+Current candidate CLI support:
+
+```text
+imo learning candidate build
+imo learning candidate list
+imo learning candidate inspect <id>
+imo learning candidate reject <id> --reason <text>
+```
+
+Candidate commands read raw signals and write
+`.imo/.runtime/learning/candidates.jsonl` only. They must not mutate active
+digest state.
+
 Future write/control CLI support should include:
 
 ```text
-imo learning disable <id>
-imo learning reject <id>
-imo learning promote <id>
-imo learning reset --scope project|global
+imo learning digest disable <id> --reason <text>
+imo learning candidate reject <id> --reason <text>
+imo learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
+imo learning digest reset --scope project|global
 ```
 
 These controls must exist before automated learning promotion becomes the
 default path.
+
+The current digest control implementation supports these commands, but it still
+requires explicit review metadata and does not promote hard rules or skill
+source.

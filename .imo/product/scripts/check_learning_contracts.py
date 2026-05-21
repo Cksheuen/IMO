@@ -11,6 +11,8 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[3]
 POLICY_PATH = ROOT / ".imo/learning/policy.json"
+SCHEMA_DIR = ROOT / ".imo/learning/schemas"
+REQUIRED_SCHEMA_FILES = ["signal.schema.json", "candidate.schema.json", "digest.schema.json"]
 REQUIRED_LEVELS = ["raw_signal", "candidate", "active_digest", "hard_rule_or_skill_update"]
 REQUIRED_PRIVACY = {"public", "project_private", "sensitive"}
 REQUIRED_SCOPES = {"session", "task", "project", "global"}
@@ -43,6 +45,40 @@ def main() -> int:
     if not isinstance(policy, dict):
         errors.append("policy root must be an object")
         policy = {}
+
+    for schema_file in REQUIRED_SCHEMA_FILES:
+        schema_path = SCHEMA_DIR / schema_file
+        try:
+            schema = _load_json(schema_path)
+        except OSError as exc:
+            errors.append(f"failed to read {schema_path}: {exc}")
+            continue
+        except json.JSONDecodeError as exc:
+            errors.append(f"invalid json in {schema_path}: {exc}")
+            continue
+        if not isinstance(schema, dict):
+            errors.append(f"{schema_path} root must be an object")
+            continue
+        if schema.get("type") != "object":
+            errors.append(f"{schema_path} must declare type=object")
+        if not schema.get("properties"):
+            errors.append(f"{schema_path} must declare properties")
+        if schema_file == "signal.schema.json":
+            required = set(schema.get("required", []))
+            expected = {
+                "id",
+                "created_at",
+                "source_agent",
+                "scope",
+                "privacy",
+                "confidence",
+                "ttl",
+                "summary",
+            }
+            if expected - required:
+                errors.append(
+                    f"{schema_path} missing required signal fields: {', '.join(sorted(expected - required))}"
+                )
 
     levels = policy.get("levels")
     if not isinstance(levels, list):
@@ -148,4 +184,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

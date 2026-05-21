@@ -14,6 +14,11 @@ Usage:
   ./imo audit [claude|codex|all]
   ./imo learning list
   ./imo learning inspect <id>
+  ./imo learning signal list
+  ./imo learning signal add --summary <text>
+  ./imo learning candidate build
+  ./imo learning candidate list
+  ./imo learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
   ./imo codex context
   ./imo verify
 
@@ -24,7 +29,13 @@ Common commands:
   - `audit` is read-only and checks whether IMO reintroduces Trellis-owned
     Claude/Codex host-surface management.
   - `learning list` and `learning inspect` read active learning digest state
-    without creating or mutating learning data.
+    without creating or mutating digest data.
+  - `learning signal list` reads raw signal state, and `learning signal add`
+    writes raw signals only under `.imo/.runtime/learning/`.
+  - `learning candidate build/list/inspect/reject` manages candidate lessons
+    under `.imo/.runtime/learning/` without mutating active digest state.
+  - `learning digest promote/disable/reset` manages reviewed active digest
+    entries and requires rollback metadata for promotion.
   - `verify` runs the current read-only IMO guardrail, wrapper, and runtime
     compatibility checks, including rule, module, learning, and provider
     contracts.

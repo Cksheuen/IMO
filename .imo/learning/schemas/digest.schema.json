@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://imo.local/schemas/learning/digest.schema.json",
+  "title": "IMO Learning Active Digest",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/digest_item"
+      }
+    },
+    "digest_items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/digest_item"
+      }
+    }
+  },
+  "$defs": {
+    "digest_item": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "digest_version",
+        "scope",
+        "last_updated",
+        "status",
+        "priority",
+        "rollback_id",
+        "summary",
+        "source_candidates"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "string",
+          "enum": ["project", "global"]
+        },
+        "last_updated": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "disabled"]
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["normal", "high"]
+        },
+        "rollback_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_candidates": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      }
+    }
+  }
+}

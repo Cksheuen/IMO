@@ -5,8 +5,10 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
+import tempfile
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -27,6 +29,465 @@ def _python_env() -> dict[str, str]:
     env = os.environ.copy()
     env["PYTHONPYCACHEPREFIX"] = str(PYCACHE_PREFIX)
     return env
+
+
+def _run_learning_signal_smoke() -> bool:
+    print("[imo verify] learning raw signal behavior")
+    runtime_dir = ROOT / ".imo/.runtime/learning"
+    signals_path = runtime_dir / "signals.jsonl"
+    backup_dir: Path | None = None
+
+    try:
+        if runtime_dir.exists():
+            backup_dir = Path(tempfile.mkdtemp(prefix="imo-learning-backup-"))
+            shutil.copytree(runtime_dir, backup_dir / "learning", dirs_exist_ok=True)
+            shutil.rmtree(runtime_dir)
+
+        list_missing = subprocess.run(
+            ["./imo", "learning", "signal", "list"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if list_missing.returncode != 0 or "no raw signals found" not in list_missing.stdout:
+            print("[imo verify] failed: learning signal missing-state list", file=sys.stderr)
+            return False
+        if runtime_dir.exists():
+            print("[imo verify] failed: signal list created runtime state", file=sys.stderr)
+            return False
+
+        add = subprocess.run(
+            [
+                "./imo",
+                "learning",
+                "signal",
+                "add",
+                "--summary",
+                "verify raw signal smoke",
+                "--source-agent",
+                "imo-verify",
+                "--scope",
+                "project",
+                "--privacy",
+                "project_private",
+                "--confidence",
+                "low",
+                "--evidence-ref",
+                "verify:learning-signal-smoke",
+            ],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if add.returncode != 0 or not signals_path.exists():
+            print("[imo verify] failed: learning signal add", file=sys.stderr)
+            if add.stderr:
+                print(add.stderr, file=sys.stderr)
+            return False
+
+        raw_lines = signals_path.read_text(encoding="utf-8").strip().splitlines()
+        if len(raw_lines) != 1:
+            print("[imo verify] failed: expected one raw signal line", file=sys.stderr)
+            return False
+        signal = __import__("json").loads(raw_lines[0])
+        expected = {
+            "source_agent": "imo-verify",
+            "scope": "project",
+            "privacy": "project_private",
+            "confidence": "low",
+            "summary": "verify raw signal smoke",
+            "evidence_ref": "verify:learning-signal-smoke",
+        }
+        for key, value in expected.items():
+            if signal.get(key) != value:
+                print(f"[imo verify] failed: signal {key} mismatch", file=sys.stderr)
+                return False
+
+        listed = subprocess.run(
+            ["./imo", "learning", "signal", "list"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if listed.returncode != 0 or "verify raw signal smoke" not in listed.stdout:
+            print("[imo verify] failed: learning signal list after add", file=sys.stderr)
+            return False
+
+        invalid = subprocess.run(
+            ["./imo", "learning", "signal", "add", "--summary", "bad", "--scope", "planet"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if invalid.returncode == 0 or "--scope must be one of" not in invalid.stderr:
+            print("[imo verify] failed: invalid signal scope was not rejected", file=sys.stderr)
+            return False
+
+        print("[imo verify] ok: learning raw signal behavior")
+        return True
+    except Exception as exc:
+        print(f"[imo verify] failed: learning raw signal behavior: {exc}", file=sys.stderr)
+        return False
+    finally:
+        if runtime_dir.exists():
+            shutil.rmtree(runtime_dir)
+        if backup_dir is not None:
+            backup_learning = backup_dir / "learning"
+            if backup_learning.exists():
+                runtime_dir.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(backup_learning, runtime_dir, dirs_exist_ok=True)
+            shutil.rmtree(backup_dir, ignore_errors=True)
+
+
+def _run_learning_candidate_smoke() -> bool:
+    print("[imo verify] learning candidate behavior")
+    runtime_dir = ROOT / ".imo/.runtime/learning"
+    backup_dir: Path | None = None
+
+    try:
+        if runtime_dir.exists():
+            backup_dir = Path(tempfile.mkdtemp(prefix="imo-learning-backup-"))
+            shutil.copytree(runtime_dir, backup_dir / "learning", dirs_exist_ok=True)
+            shutil.rmtree(runtime_dir)
+
+        for summary in ("candidate smoke", "candidate smoke"):
+            add = subprocess.run(
+                [
+                    "./imo",
+                    "learning",
+                    "signal",
+                    "add",
+                    "--summary",
+                    summary,
+                    "--source-agent",
+                    "imo-verify",
+                    "--scope",
+                    "project",
+                    "--privacy",
+                    "project_private",
+                    "--confidence",
+                    "medium",
+                ],
+                cwd=ROOT,
+                check=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            if add.returncode != 0:
+                print("[imo verify] failed: setup signal for candidate smoke", file=sys.stderr)
+                return False
+
+        build = subprocess.run(
+            ["./imo", "learning", "candidate", "build"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if build.returncode != 0 or "1 created" not in build.stdout:
+            print("[imo verify] failed: candidate build", file=sys.stderr)
+            return False
+
+        listed = subprocess.run(
+            ["./imo", "learning", "candidate", "list"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if listed.returncode != 0 or "candidate smoke" not in listed.stdout:
+            print("[imo verify] failed: candidate list", file=sys.stderr)
+            return False
+
+        candidate_lines = [line for line in listed.stdout.splitlines() if line.startswith("candidate-")]
+        if len(candidate_lines) != 1:
+            print("[imo verify] failed: expected one candidate line", file=sys.stderr)
+            return False
+        candidate_id = candidate_lines[0].split("\t", 1)[0]
+
+        inspected = subprocess.run(
+            ["./imo", "learning", "candidate", "inspect", candidate_id],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if inspected.returncode != 0 or '"source_signal_refs"' not in inspected.stdout:
+            print("[imo verify] failed: candidate inspect", file=sys.stderr)
+            return False
+
+        rejected = subprocess.run(
+            ["./imo", "learning", "candidate", "reject", candidate_id, "--reason", "verify rejection"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if rejected.returncode != 0:
+            print("[imo verify] failed: candidate reject", file=sys.stderr)
+            return False
+
+        rejected_inspect = subprocess.run(
+            ["./imo", "learning", "candidate", "inspect", candidate_id],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if rejected_inspect.returncode != 0 or '"status": "rejected"' not in rejected_inspect.stdout:
+            print("[imo verify] failed: rejected candidate status", file=sys.stderr)
+            return False
+
+        digest_path = runtime_dir / "digest.json"
+        if digest_path.exists():
+            print("[imo verify] failed: candidate commands mutated active digest", file=sys.stderr)
+            return False
+
+        print("[imo verify] ok: learning candidate behavior")
+        return True
+    except Exception as exc:
+        print(f"[imo verify] failed: learning candidate behavior: {exc}", file=sys.stderr)
+        return False
+    finally:
+        if runtime_dir.exists():
+            shutil.rmtree(runtime_dir)
+        if backup_dir is not None:
+            backup_learning = backup_dir / "learning"
+            if backup_learning.exists():
+                runtime_dir.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(backup_learning, runtime_dir, dirs_exist_ok=True)
+            shutil.rmtree(backup_dir, ignore_errors=True)
+
+
+def _run_learning_digest_smoke() -> bool:
+    print("[imo verify] learning digest controls")
+    runtime_dir = ROOT / ".imo/.runtime/learning"
+    backup_dir: Path | None = None
+
+    try:
+        if runtime_dir.exists():
+            backup_dir = Path(tempfile.mkdtemp(prefix="imo-learning-backup-"))
+            shutil.copytree(runtime_dir, backup_dir / "learning", dirs_exist_ok=True)
+            shutil.rmtree(runtime_dir)
+
+        add = subprocess.run(
+            ["./imo", "learning", "signal", "add", "--summary", "digest smoke", "--source-agent", "imo-verify"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if add.returncode != 0:
+            print("[imo verify] failed: setup signal for digest smoke", file=sys.stderr)
+            return False
+
+        build = subprocess.run(
+            ["./imo", "learning", "candidate", "build"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if build.returncode != 0:
+            print("[imo verify] failed: setup candidate for digest smoke", file=sys.stderr)
+            return False
+
+        listed = subprocess.run(
+            ["./imo", "learning", "candidate", "list"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        candidate_lines = [line for line in listed.stdout.splitlines() if line.startswith("candidate-")]
+        if len(candidate_lines) != 1:
+            print("[imo verify] failed: expected one digest smoke candidate", file=sys.stderr)
+            return False
+        candidate_id = candidate_lines[0].split("\t", 1)[0]
+
+        refused = subprocess.run(
+            ["./imo", "learning", "digest", "promote", candidate_id, "--rollback-id", "rollback-only"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if refused.returncode == 0 or "--review-ref is required" not in refused.stderr:
+            print("[imo verify] failed: digest promote allowed missing review", file=sys.stderr)
+            return False
+
+        promoted = subprocess.run(
+            [
+                "./imo",
+                "learning",
+                "digest",
+                "promote",
+                candidate_id,
+                "--review-ref",
+                "verify:review",
+                "--rollback-id",
+                "verify:rollback",
+            ],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if promoted.returncode != 0:
+            print("[imo verify] failed: digest promote", file=sys.stderr)
+            return False
+        digest_id = promoted.stdout.strip()
+
+        digest_list = subprocess.run(
+            ["./imo", "learning", "list"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if digest_list.returncode != 0 or "digest smoke" not in digest_list.stdout:
+            print("[imo verify] failed: digest list after promote", file=sys.stderr)
+            return False
+
+        disabled = subprocess.run(
+            ["./imo", "learning", "digest", "disable", digest_id, "--reason", "verify disable"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if disabled.returncode != 0:
+            print("[imo verify] failed: digest disable", file=sys.stderr)
+            return False
+
+        reset = subprocess.run(
+            ["./imo", "learning", "digest", "reset", "--scope", "project"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if reset.returncode != 0 or "1 project item" not in reset.stdout:
+            print("[imo verify] failed: digest reset", file=sys.stderr)
+            return False
+
+        print("[imo verify] ok: learning digest controls")
+        return True
+    except Exception as exc:
+        print(f"[imo verify] failed: learning digest controls: {exc}", file=sys.stderr)
+        return False
+    finally:
+        if runtime_dir.exists():
+            shutil.rmtree(runtime_dir)
+        if backup_dir is not None:
+            backup_learning = backup_dir / "learning"
+            if backup_learning.exists():
+                runtime_dir.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(backup_learning, runtime_dir, dirs_exist_ok=True)
+            shutil.rmtree(backup_dir, ignore_errors=True)
+
+
+def _run_learning_context_smoke() -> bool:
+    print("[imo verify] learning context injection")
+    runtime_dir = ROOT / ".imo/.runtime/learning"
+    digest_path = runtime_dir / "digest.json"
+    backup_dir: Path | None = None
+
+    try:
+        if runtime_dir.exists():
+            backup_dir = Path(tempfile.mkdtemp(prefix="imo-learning-backup-"))
+            shutil.copytree(runtime_dir, backup_dir / "learning", dirs_exist_ok=True)
+            shutil.rmtree(runtime_dir)
+
+        runtime_dir.mkdir(parents=True, exist_ok=True)
+        digest_path.write_text(
+            """{
+  "items": [
+    {
+      "digest_version": "1",
+      "id": "digest-active",
+      "last_updated": "2026-05-21T00:00:00Z",
+      "priority": "high",
+      "rollback_id": "verify:rollback",
+      "scope": "project",
+      "source_candidates": ["candidate-active"],
+      "status": "active",
+      "summary": "Prefer reviewed digest behavior only after project rules"
+    },
+    {
+      "digest_version": "1",
+      "id": "digest-disabled",
+      "last_updated": "2026-05-21T00:00:00Z",
+      "priority": "normal",
+      "rollback_id": "verify:rollback-disabled",
+      "scope": "project",
+      "source_candidates": ["candidate-disabled"],
+      "status": "disabled",
+      "summary": "This disabled digest must not be injected"
+    }
+  ]
+}
+""",
+            encoding="utf-8",
+        )
+
+        context = subprocess.run(
+            ["./imo", "codex", "context", "--empty"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if context.returncode != 0:
+            print("[imo verify] failed: codex context with digest", file=sys.stderr)
+            return False
+        if "Prefer reviewed digest behavior only after project rules" not in context.stdout:
+            print("[imo verify] failed: active digest missing from context", file=sys.stderr)
+            return False
+        if "This disabled digest must not be injected" in context.stdout:
+            print("[imo verify] failed: disabled digest injected into context", file=sys.stderr)
+            return False
+        if "current user instruction > project rules > active digest" not in context.stdout:
+            print("[imo verify] failed: digest priority guard missing", file=sys.stderr)
+            return False
+
+        print("[imo verify] ok: learning context injection")
+        return True
+    except Exception as exc:
+        print(f"[imo verify] failed: learning context injection: {exc}", file=sys.stderr)
+        return False
+    finally:
+        if runtime_dir.exists():
+            shutil.rmtree(runtime_dir)
+        if backup_dir is not None:
+            backup_learning = backup_dir / "learning"
+            if backup_learning.exists():
+                runtime_dir.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(backup_learning, runtime_dir, dirs_exist_ok=True)
+            shutil.rmtree(backup_dir, ignore_errors=True)
 
 
 def main() -> int:
@@ -145,6 +606,14 @@ def main() -> int:
     for label, command, env in checks:
         if not _run(label, command, env=env):
             failures += 1
+    if not _run_learning_signal_smoke():
+        failures += 1
+    if not _run_learning_candidate_smoke():
+        failures += 1
+    if not _run_learning_digest_smoke():
+        failures += 1
+    if not _run_learning_context_smoke():
+        failures += 1
 
     if failures:
         print(f"[imo verify] {failures} check(s) failed", file=sys.stderr)

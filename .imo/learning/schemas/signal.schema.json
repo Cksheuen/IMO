@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://imo.local/schemas/learning/signal.schema.json",
+  "title": "IMO Learning Raw Signal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "created_at",
+    "source_agent",
+    "scope",
+    "privacy",
+    "confidence",
+    "ttl",
+    "summary"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_agent": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["session", "task", "project", "global"]
+    },
+    "privacy": {
+      "type": "string",
+      "enum": ["public", "project_private", "sensitive"]
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+    "ttl": {
+      "type": ["string", "null"]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_ref": {
+      "type": ["string", "null"]
+    }
+  }
+}

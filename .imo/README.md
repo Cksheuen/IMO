@@ -23,6 +23,9 @@ The current repo-local IMO command surface is:
 ./imo --help
 ./imo audit all
 ./imo learning list
+./imo learning signal list
+./imo learning candidate list
+./imo learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
 ./imo codex context
 ./imo verify
 ```
@@ -60,9 +63,16 @@ remains only as a compatibility wrapper for existing local calls.
 - `./imo audit [claude|codex|all]` verifies that IMO manifests do not claim host outputs still owned by Trellis.
 - `./imo learning list` and `./imo learning inspect <id>`
   read active learning digest state without mutating learning data.
+- `./imo learning signal list` reads raw signal state without mutating learning
+  data, and `./imo learning signal add --summary <text>` appends project-local
+  raw signals only.
+- `./imo learning candidate build/list/inspect/reject` manages candidate
+  lessons without mutating active digest state.
+- `./imo learning digest promote/disable/reset` manages reviewed active digest
+  entries with rollback metadata.
 - `./imo codex context` emits a short repo-local IMO context block for
-  experimental Codex hook injection. It is informational and does not replace
-  Trellis workflow state.
+  experimental Codex hook injection, including active learning digest entries
+  when present. It is informational and does not replace Trellis workflow state.
 - `./imo verify` runs the current aggregate read-only IMO verification
   suite, including rule contracts, module metadata, learning policy, and
   provider registry contracts, plus root compatibility-surface checks.

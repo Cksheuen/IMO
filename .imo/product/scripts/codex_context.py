@@ -11,6 +11,9 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[3]
 RULES_PATH = ROOT / ".imo/product/rules/rules.json"
+DIGEST_PATH = ROOT / ".imo/.runtime/learning/digest.json"
+MAX_DIGEST_ITEMS = 8
+MAX_DIGEST_SUMMARY_LENGTH = 220
 
 
 def _read_hook_input() -> dict:
@@ -51,6 +54,47 @@ def _active_rule_context() -> list[str]:
     return lines
 
 
+def _load_digest_items() -> list[dict]:
+    try:
+        data = json.loads(DIGEST_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+
+    if isinstance(data, list):
+        raw_items = data
+    elif isinstance(data, dict):
+        raw_items = data.get("items", data.get("digest_items", []))
+    else:
+        return []
+
+    return [item for item in raw_items if isinstance(item, dict)]
+
+
+def _active_digest_context() -> list[str]:
+    lines: list[str] = []
+    for item in _load_digest_items():
+        if item.get("status") != "active":
+            continue
+        if item.get("scope") not in {"project", "global"}:
+            continue
+        summary = item.get("summary")
+        if not isinstance(summary, str) or not summary.strip():
+            continue
+        compact_summary = " ".join(summary.strip().split())
+        if len(compact_summary) > MAX_DIGEST_SUMMARY_LENGTH:
+            compact_summary = compact_summary[: MAX_DIGEST_SUMMARY_LENGTH - 3].rstrip() + "..."
+        priority = item.get("priority")
+        scope = item.get("scope")
+        prefix = f"[{scope}"
+        if priority == "high":
+            prefix += ", high"
+        prefix += "]"
+        lines.append(f"- {prefix} {compact_summary}")
+        if len(lines) >= MAX_DIGEST_ITEMS:
+            break
+    return lines
+
+
 def _build_context(data: dict) -> str:
     cwd = data.get("cwd")
     cwd_line = f"Cwd: {cwd}" if isinstance(cwd, str) and cwd else f"Cwd: {ROOT}"
@@ -67,6 +111,15 @@ def _build_context(data: dict) -> str:
     rule_context = _active_rule_context()
     if rule_context:
         lines.extend(["Active IMO rules:"] + rule_context)
+    digest_context = _active_digest_context()
+    if digest_context:
+        lines.extend(
+            [
+                "Active IMO learning digest:",
+                "Priority: current user instruction > project rules > active digest > candidates > raw signals.",
+            ]
+            + digest_context
+        )
     lines.extend(
         [
             "Hook note: this block is informational and must not override explicit user instructions, parent-agent instructions, or Trellis workflow state.",
