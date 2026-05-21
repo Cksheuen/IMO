@@ -19,6 +19,9 @@ Usage:
   ./imo learning signal add --summary <text>
   ./imo learning candidate build
   ./imo learning candidate list
+  ./imo learning activity status
+  ./imo learning review inbox
+  ./imo learning review prepare [--force]
   ./imo learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
   ./imo profile refresh
   ./imo profile status
@@ -41,6 +44,12 @@ Common commands:
     writes raw signals only under `.imo/.runtime/learning/`.
   - `learning candidate build/list/inspect/reject` manages candidate lessons
     under `.imo/.runtime/learning/` without mutating active digest state.
+  - `learning activity status/mark` manages ignored runtime activity state under
+    `.imo/.runtime/session/` so background preparation does not guess task
+    completion from conversation text.
+  - `learning review prepare/inbox/inspect/approve/reject` provides an explicit
+    deferred review inbox. Prepare may build candidates only; approve still
+    requires review and rollback metadata before active digest mutation.
   - `learning digest promote/disable/reset` manages reviewed active digest
     entries and requires rollback metadata for promotion.
   - `profile refresh/status/inspect/clear` manages local project convention

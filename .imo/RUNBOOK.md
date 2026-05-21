@@ -28,6 +28,8 @@ Run from the repository root:
 ./imo learning list
 ./imo learning signal list
 ./imo learning candidate list
+./imo learning activity status
+./imo learning review inbox
 ./imo codex context --empty
 ./imo verify
 bash scripts/imo.sh verify
@@ -48,6 +50,10 @@ Expected result:
   empty state
 - `./imo learning candidate list` handles missing runtime candidate state as a
   clean empty state
+- `./imo learning activity status` handles missing session activity state as a
+  clean empty state and does not create `.imo/.runtime/session/`
+- `./imo learning review inbox` handles missing candidate state as a clean empty
+  state and never creates active digest state
 - `./imo verify` checks digest promotion requires review metadata and can
   disable/reset project-scoped digest state
 - `./imo codex context --empty` emits valid hook JSON containing

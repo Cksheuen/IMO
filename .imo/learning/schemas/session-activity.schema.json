@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://imo.local/schemas/learning/session-activity.schema.json",
+  "title": "IMO Learning Session Activity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "updated_at",
+    "session_id",
+    "state",
+    "running_tools",
+    "running_agents",
+    "pending_approval"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state": {
+      "type": "string",
+      "enum": ["active", "post_turn", "quiescent"]
+    },
+    "running_tools": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "running_agents": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pending_approval": {
+      "type": "boolean"
+    }
+  }
+}

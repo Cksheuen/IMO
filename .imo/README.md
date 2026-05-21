@@ -28,6 +28,8 @@ The current repo-local IMO command surface is:
 ./imo learning list
 ./imo learning signal list
 ./imo learning candidate list
+./imo learning activity status
+./imo learning review inbox
 ./imo learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
 ./imo codex context
 ./imo verify
@@ -74,6 +76,14 @@ remains only as a compatibility wrapper for existing local calls.
   raw signals only.
 - `./imo learning candidate build/list/inspect/reject` manages candidate
   lessons without mutating active digest state.
+- `./imo learning activity status/mark` manages ignored runtime activity state
+  under `.imo/.runtime/session/`. Activity state is an operational signal for
+  background candidate preparation, not proof that the user wants a learning
+  conversation.
+- `./imo learning review prepare/inbox/inspect/approve/reject` provides an
+  explicit deferred review inbox. `prepare` may build candidates only and skips
+  active or unknown activity unless forced; `approve` reuses the reviewed digest
+  promotion gate.
 - `./imo learning digest promote/disable/reset` manages reviewed active digest
   entries with rollback metadata.
 - `./imo profile refresh/status/inspect/clear` manages a local project

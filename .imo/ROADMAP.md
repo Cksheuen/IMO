@@ -70,6 +70,12 @@ durable repo-facing summary.
   project-local runtime state only.
 - `./imo learning candidate build/list/inspect/reject` is present for
   candidate lesson aggregation without active digest mutation.
+- `./imo learning activity status/mark` is present for runtime activity state
+  used by deferred review preparation. Activity state is not treated as user
+  consent.
+- `./imo learning review prepare/inbox/inspect/approve/reject` is present for
+  pull-based learning review. Background preparation may build candidates only;
+  approval reuses the digest review gate.
 - `./imo learning digest promote/disable/reset` is present for reviewed active
   digest control with rollback metadata.
 - `./imo profile refresh/status/inspect/clear` is present for explicit
@@ -175,7 +181,8 @@ Implement only after the contracts above are stable:
 3. candidate aggregation
 4. active digest generation
 5. user-visible disable/reject/reset controls
-6. Hermes-like candidates-only self-iteration loop
+6. deferred review inbox and activity-gated candidate preparation
+7. Hermes-like candidates-only self-iteration loop
 
 ### 6. Optional Provider Discovery
 

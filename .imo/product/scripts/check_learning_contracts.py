@@ -12,12 +12,18 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[3]
 POLICY_PATH = ROOT / ".imo/learning/policy.json"
 SCHEMA_DIR = ROOT / ".imo/learning/schemas"
-REQUIRED_SCHEMA_FILES = ["signal.schema.json", "candidate.schema.json", "digest.schema.json"]
+REQUIRED_SCHEMA_FILES = [
+    "signal.schema.json",
+    "candidate.schema.json",
+    "digest.schema.json",
+    "session-activity.schema.json",
+]
 REQUIRED_LEVELS = ["raw_signal", "candidate", "active_digest", "hard_rule_or_skill_update"]
 REQUIRED_PRIVACY = {"public", "project_private", "sensitive"}
 REQUIRED_SCOPES = {"session", "task", "project", "global"}
 REQUIRED_GATES = {"candidate_review", "digest_review", "hard_update_task_review"}
 REQUIRED_CONTROLS = {"list", "inspect", "disable", "reject", "promote", "reset"}
+REQUIRED_ACTIVITY_STATES = {"active", "post_turn", "quiescent"}
 
 
 def _load_json(path: Path) -> Any:
@@ -78,6 +84,27 @@ def main() -> int:
             if expected - required:
                 errors.append(
                     f"{schema_path} missing required signal fields: {', '.join(sorted(expected - required))}"
+                )
+        if schema_file == "session-activity.schema.json":
+            required = set(schema.get("required", []))
+            expected = {
+                "schema_version",
+                "updated_at",
+                "session_id",
+                "state",
+                "running_tools",
+                "running_agents",
+                "pending_approval",
+            }
+            if expected - required:
+                errors.append(
+                    f"{schema_path} missing required activity fields: {', '.join(sorted(expected - required))}"
+                )
+            state = schema.get("properties", {}).get("state", {})
+            state_values = set(state.get("enum", [])) if isinstance(state, dict) else set()
+            if REQUIRED_ACTIVITY_STATES - state_values:
+                errors.append(
+                    f"{schema_path} missing activity states: {', '.join(sorted(REQUIRED_ACTIVITY_STATES - state_values))}"
                 )
 
     levels = policy.get("levels")
@@ -168,6 +195,12 @@ def main() -> int:
         errors.append("candidate_only_self_iteration must be true")
     if safety.get("global_learning_requires_public_privacy") is not True:
         errors.append("global_learning_requires_public_privacy must be true")
+    if safety.get("deferred_review_requires_explicit_command") is not True:
+        errors.append("deferred_review_requires_explicit_command must be true")
+    if safety.get("background_prepare_may_promote_digest") is not False:
+        errors.append("background_prepare_may_promote_digest must be false")
+    if safety.get("unknown_activity_allows_background_prepare") is not False:
+        errors.append("unknown_activity_allows_background_prepare must be false")
     controls = set(safety.get("required_user_controls", []))
     if REQUIRED_CONTROLS - controls:
         errors.append(f"missing required user controls: {', '.join(sorted(REQUIRED_CONTROLS - controls))}")

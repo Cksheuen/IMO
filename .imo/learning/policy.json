@@ -97,7 +97,9 @@
     "raw_signal_default_weight": "low",
     "candidate_only_self_iteration": true,
     "global_learning_requires_public_privacy": true,
+    "deferred_review_requires_explicit_command": true,
+    "background_prepare_may_promote_digest": false,
+    "unknown_activity_allows_background_prepare": false,
     "required_user_controls": ["list", "inspect", "disable", "reject", "promote", "reset"]
   }
 }
-

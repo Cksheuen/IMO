@@ -15,14 +15,17 @@ ROOT = Path(__file__).resolve().parents[3]
 SIGNALS_PATH = ROOT / ".imo/.runtime/learning/signals.jsonl"
 CANDIDATES_PATH = ROOT / ".imo/.runtime/learning/candidates.jsonl"
 DIGEST_PATH = ROOT / ".imo/.runtime/learning/digest.json"
+SESSION_ACTIVITY_PATH = ROOT / ".imo/.runtime/session/activity.json"
 DISPLAY_PATH = ".imo/.runtime/learning/digest.json"
 SIGNALS_DISPLAY_PATH = ".imo/.runtime/learning/signals.jsonl"
 CANDIDATES_DISPLAY_PATH = ".imo/.runtime/learning/candidates.jsonl"
+SESSION_ACTIVITY_DISPLAY_PATH = ".imo/.runtime/session/activity.json"
 SCOPES = {"session", "task", "project", "global"}
 PRIVACY_CLASSES = {"public", "project_private", "sensitive"}
 CONFIDENCE_LEVELS = {"low", "medium", "high"}
 CANDIDATE_STATUSES = {"pending", "rejected"}
 DIGEST_PRIORITIES = {"normal", "high"}
+ACTIVITY_STATES = {"active", "post_turn", "quiescent"}
 
 
 def _usage() -> str:
@@ -38,10 +41,18 @@ def _usage() -> str:
   scripts/imo.sh learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
   scripts/imo.sh learning digest disable <id> --reason <text>
   scripts/imo.sh learning digest reset --scope project|global
+  scripts/imo.sh learning activity status
+  scripts/imo.sh learning activity mark --state active|post_turn|quiescent [options]
+  scripts/imo.sh learning review prepare [--force]
+  scripts/imo.sh learning review inbox
+  scripts/imo.sh learning review inspect <candidate-id>
+  scripts/imo.sh learning review approve <candidate-id> --review-ref <ref> --rollback-id <id>
+  scripts/imo.sh learning review reject <candidate-id> --reason <text>
 
-Digest commands are read-only. Signal commands write raw learning signals only.
-Candidate commands write candidates only; they do not mutate active digest state.
-Digest control commands require explicit review metadata.
+List and inspect commands are read-only. Signal commands write raw learning
+signals only. Candidate and review prepare commands write candidates only; they
+do not mutate active digest state. Digest control and review approve commands
+require explicit review metadata.
 
 Signal add options:
   --source-agent <id>  Source agent or skill id. Default: manual
@@ -50,6 +61,13 @@ Signal add options:
   --confidence <level> low | medium | high. Default: low
   --ttl <duration>     Optional duration string, such as 7d or null
   --evidence-ref <ref> Optional evidence pointer
+
+Activity mark options:
+  --session-id <id>         Session id. Default: manual
+  --task-id <id>            Optional task id
+  --running-tools <count>   Non-negative integer. Default: 0
+  --running-agents <count>  Non-negative integer. Default: 0
+  --pending-approval <bool> true | false. Default: false
 """
 
 
@@ -92,6 +110,31 @@ def _write_digest(items: list[dict[str, Any]]) -> None:
     )
 
 
+def _load_activity() -> tuple[dict[str, Any] | None, str | None]:
+    if not SESSION_ACTIVITY_PATH.exists():
+        return None, f"no session activity found at {SESSION_ACTIVITY_DISPLAY_PATH}"
+
+    try:
+        with SESSION_ACTIVITY_PATH.open(encoding="utf-8") as handle:
+            data = json.load(handle)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"invalid json in {SESSION_ACTIVITY_DISPLAY_PATH}: {exc}") from exc
+    except OSError as exc:
+        raise ValueError(f"failed to read {SESSION_ACTIVITY_DISPLAY_PATH}: {exc}") from exc
+
+    if not isinstance(data, dict):
+        raise ValueError(f"{SESSION_ACTIVITY_DISPLAY_PATH} must be a JSON object")
+    return data, None
+
+
+def _write_activity(activity: dict[str, Any]) -> None:
+    SESSION_ACTIVITY_PATH.parent.mkdir(parents=True, exist_ok=True)
+    SESSION_ACTIVITY_PATH.write_text(
+        json.dumps(activity, ensure_ascii=True, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
 def _value(item: dict[str, Any], key: str, default: str = "-") -> str:
     value = item.get(key)
     if value is None or value == "":
@@ -106,6 +149,24 @@ def _require_value(args: list[str], index: int, option: str) -> tuple[str | None
         print(f"[imo learning] missing value for {option}", file=sys.stderr)
         return None, index + 1
     return args[index + 1], index + 2
+
+
+def _parse_bool(value: str) -> bool | None:
+    if value == "true":
+        return True
+    if value == "false":
+        return False
+    return None
+
+
+def _parse_nonnegative_int(value: str) -> int | None:
+    try:
+        parsed = int(value)
+    except ValueError:
+        return None
+    if parsed < 0:
+        return None
+    return parsed
 
 
 def _parse_signal_add(args: list[str]) -> tuple[dict[str, str | None], list[str]]:
@@ -148,6 +209,63 @@ def _parse_signal_add(args: list[str]) -> tuple[dict[str, str | None], list[str]
             index += 1
 
     return values, errors
+
+
+def _parse_activity_mark(args: list[str]) -> tuple[dict[str, str | None], list[str]]:
+    values: dict[str, str | None] = {
+        "state": None,
+        "session_id": "manual",
+        "task_id": None,
+        "running_tools": "0",
+        "running_agents": "0",
+        "pending_approval": "false",
+    }
+    errors: list[str] = []
+    index = 0
+    while index < len(args):
+        option = args[index]
+        if option == "--state":
+            value, index = _require_value(args, index, option)
+            values["state"] = value
+        elif option == "--session-id":
+            value, index = _require_value(args, index, option)
+            values["session_id"] = value
+        elif option == "--task-id":
+            value, index = _require_value(args, index, option)
+            values["task_id"] = value
+        elif option == "--running-tools":
+            value, index = _require_value(args, index, option)
+            values["running_tools"] = value
+        elif option == "--running-agents":
+            value, index = _require_value(args, index, option)
+            values["running_agents"] = value
+        elif option == "--pending-approval":
+            value, index = _require_value(args, index, option)
+            values["pending_approval"] = value
+        else:
+            errors.append(f"unsupported activity mark option: {option}")
+            index += 1
+    return values, errors
+
+
+def _validate_activity_fields(values: dict[str, str | None]) -> list[str]:
+    errors: list[str] = []
+    if values.get("state") not in ACTIVITY_STATES:
+        errors.append(f"--state must be one of: {', '.join(sorted(ACTIVITY_STATES))}")
+    session_id = values.get("session_id")
+    if not isinstance(session_id, str) or not session_id.strip():
+        errors.append("--session-id must not be empty")
+    for key, option in (
+        ("running_tools", "--running-tools"),
+        ("running_agents", "--running-agents"),
+    ):
+        value = values.get(key)
+        if not isinstance(value, str) or _parse_nonnegative_int(value) is None:
+            errors.append(f"{option} must be a non-negative integer")
+    pending_approval = values.get("pending_approval")
+    if not isinstance(pending_approval, str) or _parse_bool(pending_approval) is None:
+        errors.append("--pending-approval must be true or false")
+    return errors
 
 
 def _validate_signal_fields(values: dict[str, str | None]) -> list[str]:
@@ -401,6 +519,139 @@ def _build_candidates() -> int:
         return 1
 
     print(f"[imo learning] candidates built: {created} created, {updated} updated")
+    return 0
+
+
+def _activity_status() -> int:
+    try:
+        activity, empty_reason = _load_activity()
+    except ValueError as exc:
+        print(f"[imo learning] {exc}", file=sys.stderr)
+        return 1
+
+    if activity is None:
+        print(f"[imo learning] {empty_reason}")
+        return 0
+
+    print(json.dumps(activity, ensure_ascii=True, indent=2, sort_keys=True))
+    return 0
+
+
+def _mark_activity(args: list[str]) -> int:
+    values, parse_errors = _parse_activity_mark(args)
+    errors = parse_errors + _validate_activity_fields(values)
+    if errors:
+        for error in errors:
+            print(f"[imo learning] {error}", file=sys.stderr)
+        return 64
+
+    activity = {
+        "schema_version": 1,
+        "updated_at": _now(),
+        "session_id": str(values["session_id"]).strip(),
+        "state": values["state"],
+        "running_tools": _parse_nonnegative_int(str(values["running_tools"])),
+        "running_agents": _parse_nonnegative_int(str(values["running_agents"])),
+        "pending_approval": _parse_bool(str(values["pending_approval"])),
+    }
+    if values.get("task_id"):
+        activity["task_id"] = str(values["task_id"]).strip()
+
+    try:
+        _write_activity(activity)
+    except OSError as exc:
+        print(f"[imo learning] failed to write {SESSION_ACTIVITY_DISPLAY_PATH}: {exc}", file=sys.stderr)
+        return 1
+
+    print(_value(activity, "state"))
+    return 0
+
+
+def _activity_allows_prepare(activity: dict[str, Any] | None) -> tuple[bool, str]:
+    if activity is None:
+        return False, f"missing activity state at {SESSION_ACTIVITY_DISPLAY_PATH}"
+    state = activity.get("state")
+    if state not in {"post_turn", "quiescent"}:
+        return False, f"activity state is {state or 'unknown'}"
+    for key in ("running_tools", "running_agents"):
+        value = activity.get(key, 0)
+        if not isinstance(value, int) or value != 0:
+            return False, f"{key} is {value}"
+    if activity.get("pending_approval") is not False:
+        return False, "pending approval is true"
+    return True, "safe for candidate preparation"
+
+
+def _review_prepare(args: list[str]) -> int:
+    force = False
+    for option in args:
+        if option == "--force":
+            force = True
+        else:
+            print(f"[imo learning] unsupported review prepare option: {option}", file=sys.stderr)
+            return 64
+
+    if not force:
+        try:
+            activity, _ = _load_activity()
+        except ValueError as exc:
+            print(f"[imo learning] {exc}", file=sys.stderr)
+            return 1
+        allowed, reason = _activity_allows_prepare(activity)
+        if not allowed:
+            print(f"[imo learning] review prepare skipped: {reason}")
+            return 0
+
+    return _build_candidates()
+
+
+def _promoted_candidate_ids() -> set[str]:
+    digest_items, _ = _load_digest()
+    promoted: set[str] = set()
+    for item in digest_items:
+        source_candidates = item.get("source_candidates")
+        if isinstance(source_candidates, list):
+            promoted.update(str(candidate_id) for candidate_id in source_candidates)
+    return promoted
+
+
+def _review_inbox() -> int:
+    try:
+        candidates, empty_reason = _load_candidates()
+        promoted = _promoted_candidate_ids()
+    except ValueError as exc:
+        print(f"[imo learning] {exc}", file=sys.stderr)
+        return 1
+
+    if not candidates:
+        print(f"[imo learning] {empty_reason or 'candidate list is empty'}")
+        return 0
+
+    pending = [
+        candidate
+        for candidate in candidates
+        if candidate.get("status") == "pending" and candidate.get("id") not in promoted
+    ]
+    if not pending:
+        print("[imo learning] review inbox is empty")
+        return 0
+
+    print("id\tscope\tprivacy\tconfidence\tsignals\tsummary")
+    for item in sorted(pending, key=lambda candidate: _value(candidate, "summary")):
+        signal_refs = item.get("source_signal_refs", [])
+        signal_count = len(signal_refs) if isinstance(signal_refs, list) else 0
+        print(
+            "\t".join(
+                [
+                    _value(item, "id"),
+                    _value(item, "scope"),
+                    _value(item, "privacy"),
+                    _value(item, "confidence"),
+                    str(signal_count),
+                    _value(item, "summary"),
+                ]
+            )
+        )
     return 0
 
 
@@ -731,6 +982,24 @@ def main(argv: list[str] | None = None) -> int:
         if candidate_command == "inspect" and len(args) == 3:
             return _inspect_candidate(args[2])
         if candidate_command == "reject" and len(args) >= 3:
+            return _reject_candidate(args[2], args[3:])
+    if command == "activity" and len(args) >= 2:
+        activity_command = args[1]
+        if activity_command == "status" and len(args) == 2:
+            return _activity_status()
+        if activity_command == "mark":
+            return _mark_activity(args[2:])
+    if command == "review" and len(args) >= 2:
+        review_command = args[1]
+        if review_command == "prepare":
+            return _review_prepare(args[2:])
+        if review_command in {"inbox", "list"} and len(args) == 2:
+            return _review_inbox()
+        if review_command == "inspect" and len(args) == 3:
+            return _inspect_candidate(args[2])
+        if review_command == "approve" and len(args) >= 3:
+            return _promote_digest(args[2], args[3:])
+        if review_command == "reject" and len(args) >= 3:
             return _reject_candidate(args[2], args[3:])
     if command == "digest" and len(args) >= 2:
         digest_command = args[1]

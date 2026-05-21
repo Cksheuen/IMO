@@ -28,6 +28,7 @@ Durable protocol and policy:
     signal.schema.json
     candidate.schema.json
     digest.schema.json
+    session-activity.schema.json
   policies/
 ```
 
@@ -38,6 +39,9 @@ Project-local runtime state:
   signals.jsonl
   candidates.jsonl
   digest.json
+
+.imo/.runtime/session/
+  activity.json
 ```
 
 Optional global user state:
@@ -155,6 +159,31 @@ current explicit user instruction
   active rules or skill source.
 - Conflicting candidates must remain unresolved until reviewed or enough
   evidence separates them.
+- Runtime activity state is only an operational signal. It must not be treated
+  as user consent to discuss or promote learning.
+- Background or post-turn learning work may prepare candidates only. It must not
+  ask the user questions, mutate active digests, or update hard rules/skills.
+- Missing activity state is not safe for background candidate preparation unless
+  the user explicitly forces the command.
+
+## Deferred Review Boundary
+
+Learning interaction is pull-based:
+
+```text
+active task conversation
+  -> raw signals only
+
+post_turn or quiescent runtime state
+  -> candidate preparation only
+
+explicit review command
+  -> approve / reject / inspect candidates
+```
+
+`active`, `post_turn`, and `quiescent` are runtime states for hooks and CLI
+commands. They are not task-completion proof. Only explicit review commands with
+review and rollback metadata may promote an item into the active digest.
 
 ## Digest Quality Rubric
 
@@ -228,7 +257,34 @@ Candidate commands read raw signals and write
 `.imo/.runtime/learning/candidates.jsonl` only. They must not mutate active
 digest state.
 
-Future write/control CLI support should include:
+Current activity CLI support:
+
+```text
+imo learning activity status
+imo learning activity mark --state active|post_turn|quiescent
+```
+
+`activity status` reads `.imo/.runtime/session/activity.json` when present and
+must not create runtime files. `activity mark` writes session activity state
+only; it must not create candidates, active digests, hard rules, skill changes,
+provider changes, or host-output changes.
+
+Current review CLI support:
+
+```text
+imo learning review prepare [--force]
+imo learning review inbox
+imo learning review inspect <candidate-id>
+imo learning review approve <candidate-id> --review-ref <ref> --rollback-id <id>
+imo learning review reject <candidate-id> --reason <text>
+```
+
+`review prepare` may write candidate state only. Without `--force`, it skips
+when activity state is missing, active, has running tools, has running agents,
+or has pending approval. `review approve` reuses the active digest promotion
+gate and requires review and rollback metadata.
+
+Current digest write/control CLI support:
 
 ```text
 imo learning digest disable <id> --reason <text>
@@ -236,9 +292,6 @@ imo learning candidate reject <id> --reason <text>
 imo learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
 imo learning digest reset --scope project|global
 ```
-
-These controls must exist before automated learning promotion becomes the
-default path.
 
 The current digest control implementation supports these commands, but it still
 requires explicit review metadata and does not promote hard rules or skill
