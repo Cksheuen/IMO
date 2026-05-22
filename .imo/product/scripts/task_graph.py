@@ -14,10 +14,12 @@ from pathlib import Path
 import sys
 from typing import Any
 
+import root_resolver
 
-ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_TRELLIS_TASKS_DIR = ROOT / ".trellis/tasks"
-RUNS_DIR = ROOT / ".imo/.runtime/task-graph/runs"
+SOURCE_ROOT = Path(__file__).resolve().parents[3]
+PROJECT_ROOT = root_resolver.resolve_project_root() or Path.cwd().resolve()
+DEFAULT_TRELLIS_TASKS_DIR = PROJECT_ROOT / ".trellis/tasks"
+RUNS_DIR = PROJECT_ROOT / ".imo/.runtime/task-graph/runs"
 SCHEMA_VERSION = 1
 COMPLETE_STATUSES = {"completed", "complete", "done"}
 INACTIVE_STATUSES = COMPLETE_STATUSES | {"archived", "cancelled", "canceled"}
@@ -160,7 +162,7 @@ def default_tasks_dir() -> Path:
 
 def display_tasks_dir(tasks_dir: Path) -> str:
     try:
-        return tasks_dir.relative_to(ROOT).as_posix()
+        return tasks_dir.relative_to(PROJECT_ROOT).as_posix()
     except ValueError:
         return str(tasks_dir)
 
@@ -220,6 +222,7 @@ def build_graph(tasks_dir: Path | None = None) -> dict[str, Any]:
         "generated_at": utc_now(),
         "source": {
             "trellis_tasks_dir": source_root,
+            "project_root": str(PROJECT_ROOT),
             "missing_trellis_tasks": not tasks_dir.is_dir(),
         },
         "nodes": sorted(nodes, key=lambda item: item["node_id"]),
@@ -286,7 +289,7 @@ def plan_graph(graph: dict[str, Any]) -> dict[str, Any]:
 def resolve_task(graph: dict[str, Any], ref: str) -> dict[str, Any] | None:
     ref = normalize_ref(ref)
     for node in graph.get("nodes", []):
-        task_path = ROOT / node["trellis_ref"] / "task.json"
+        task_path = PROJECT_ROOT / node["trellis_ref"] / "task.json"
         task = load_task_json(task_path, [])
         aliases = {node["node_id"], Path(node["trellis_ref"]).name}
         if task:
@@ -339,7 +342,7 @@ def print_show(graph: dict[str, Any], ref: str, *, include_docs: bool = False) -
         for edge in outgoing:
             print(f"  - {edge['type']}: {edge['from']} -> {edge['to']}")
     if include_docs:
-        prd_path = ROOT / node["trellis_ref"] / "prd.md"
+        prd_path = PROJECT_ROOT / node["trellis_ref"] / "prd.md"
         if prd_path.is_file():
             print("\nprd:")
             text = prd_path.read_text(encoding="utf-8")
@@ -554,7 +557,7 @@ def summarize_orchestrate_state(state: dict[str, Any]) -> dict[str, Any]:
 
 async def run_orchestrate_runtime(state: dict[str, Any]) -> dict[str, Any]:
     try:
-        root_text = str(ROOT)
+        root_text = str(SOURCE_ROOT)
         if root_text not in sys.path:
             sys.path.insert(0, root_text)
         import skills.orchestrate.migrated.orchestrate as orchestrate
@@ -638,7 +641,7 @@ def cmd_run(graph: dict[str, Any], ref: str, *, as_json: bool) -> int:
     if as_json:
         emit_json(summary)
         return 1 if summary["errors"] else 0
-    print(f"task graph run summary: {output_path.relative_to(ROOT)}")
+    print(f"task graph run summary: {output_path.relative_to(PROJECT_ROOT)}")
     print(f"executor_backend: {summary['executor_backend']}")
     print(f"subtasks: {len(final_state.get('subtasks', []))}")
     if summary["errors"]:
@@ -691,7 +694,7 @@ def main(argv: list[str] | None = None) -> int:
             node = resolve_task(graph, args.task)
             if node is None:
                 return emit_json({"error": f"task not found: {args.task}"})
-            prd_path = ROOT / node["trellis_ref"] / "prd.md"
+            prd_path = PROJECT_ROOT / node["trellis_ref"] / "prd.md"
             payload = dict(node)
             payload["prd"] = prd_path.read_text(encoding="utf-8") if prd_path.is_file() else ""
             return emit_json(payload)

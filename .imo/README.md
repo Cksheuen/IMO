@@ -34,6 +34,8 @@ The current repo-local IMO command surface is:
 ./imo learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
 ./imo metrics status
 ./imo metrics summary
+./imo global status
+./imo global install --apply
 ./imo init <target>
 ./imo update <target>
 ./imo uninstall <target>
@@ -61,6 +63,21 @@ imo init /path/to/target-repo
 The package wrapper exposes the `imo` bin from `bin/imo.js` and forwards into
 the same root `./imo` entrypoint. It is an install convenience only; framework
 behavior still lives in the repo-local direct-run assets under `.imo/`.
+
+## Global / Project State
+
+IMO can be installed globally while keeping Trellis-derived state local:
+
+- global state lives under `~/.imo/runtime/` by default and holds shared
+  learning digest state plus global hook shims
+- project state lives under `<project>/.imo/.runtime/` and holds project
+  profile, project-private learning, and task graph run summaries
+- `imo task graph` resolves the current project root from cwd and reads only
+  that project's `.trellis/tasks/`
+- `imo task graph run` writes only
+  `<project>/.imo/.runtime/task-graph/runs/`
+- `imo codex context` may merge project and global learning context, but
+  project digest entries precede global entries
 
 ## Layout
 
@@ -94,6 +111,8 @@ behavior still lives in the repo-local direct-run assets under `.imo/`.
   without mutating source or runtime state.
 - `./imo learning list` and `./imo learning inspect <id>`
   read active learning digest state without mutating learning data.
+- `./imo learning list --scope project|global|merged` reads project, global,
+  or merged active digest state without mutating learning data.
 - `./imo learning signal list` reads raw signal state without mutating learning
   data, and `./imo learning signal add --summary <text>` appends project-local
   raw signals only.
@@ -125,13 +144,16 @@ behavior still lives in the repo-local direct-run assets under `.imo/`.
 - `npm link` from this source repo exposes a global `imo` command for local
   package testing. The linked command is a thin Node bin wrapper over the same
   root `./imo` entrypoint.
+- `./imo global status/install/migrate/uninstall` manages the global IMO shim
+  and shared runtime root. Install and migrate are dry-run unless `--apply` is
+  explicit, and unmanaged shim files are refused unless `--force` is explicit.
 - `./imo profile refresh/status/inspect/clear` manages a local project
   convention snapshot under `.imo/.runtime/project-profile/`. Context hooks may
   read the bounded summary but never refresh it automatically.
 - `./imo task graph`, `./imo task graph show`, `./imo task graph read`, and
-  `./imo task graph plan` inspect Trellis task references through an IMO-owned
-  overlay. These commands are read-only: they do not mutate Trellis task JSON
-  and do not create `.imo/.runtime/task-graph/`.
+  `./imo task graph plan` inspect the current project's Trellis task references
+  through an IMO-owned overlay. These commands are read-only: they do not mutate
+  Trellis task JSON and do not create `.imo/.runtime/task-graph/`.
 - `./imo task graph run <task-id-or-dir>` is explicit and gated by file
   ownership, dependency validation, and writable-file conflict checks before a
   local run summary may be written under `.imo/.runtime/task-graph/runs/`.
@@ -142,7 +164,8 @@ behavior still lives in the repo-local direct-run assets under `.imo/`.
 - `./imo verify` runs the current aggregate read-only IMO verification
   suite, including rule contracts, module metadata, project-profile contracts,
   learning policy, and provider registry contracts, plus root
-  compatibility-surface, package-wrapper, and install lifecycle checks.
+  compatibility-surface, package-wrapper, global/project scope, and install
+  lifecycle checks.
 - Machine-readable contract gates now exist for:
   - `.imo/product/rules/rules.json`
   - `.imo/runtime/project-profile/schema.json`

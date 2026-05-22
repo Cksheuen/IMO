@@ -23,6 +23,12 @@
 - `.imo/product/scripts/defensive_audit.py` is now the canonical read-only
   advisory report for defensive-programming guardrails and cleanup candidates.
 - `.imo/product/scripts/codex_context.py` emits repo-local IMO context for experimental Codex hook injection without mutating host files; when learning events are enabled, it may append a compact digest-injection event to ignored runtime state.
+- `.imo/product/scripts/root_resolver.py` is the shared source/global/project
+  root resolver. Scripts must use it when behavior depends on the current
+  project rather than the IMO source package root.
+- `.imo/product/scripts/global_config.py` manages global IMO shim status,
+  install, migrate, and uninstall. Write operations are dry-run unless
+  `--apply` is explicit.
 - `.imo/product/scripts/project_profile.py` manages local project convention snapshots under `.imo/.runtime/project-profile/`.
 - `.imo/product/scripts/observability_events.py` owns compact unified
   observability event writes under ignored `.imo/.runtime/observability/events/`.
@@ -41,9 +47,10 @@
 - `.imo/product/scripts/learning.py` exposes learning signal, candidate,
   activity, review, and digest commands with explicit write boundaries.
 - `.imo/product/scripts/task_graph.py` exposes the IMO task graph overlay for
-  Trellis task references. `graph`, `show`, `read`, and `plan` are read-only;
-  explicit `run` may write summaries only under `.imo/.runtime/task-graph/runs/`
-  after file-ownership and dependency gates pass.
+  current-project Trellis task references. `graph`, `show`, `read`, and `plan`
+  are read-only; explicit `run` may write summaries only under the current
+  project's `.imo/.runtime/task-graph/runs/` after file-ownership and
+  dependency gates pass.
 - `.imo/product/scripts/check_task_graph_contracts.py` validates the stable task
   graph contract and schema without mutating runtime state.
 - In the current repo state, `audit_managed_ownership.py` is the only script wired to the Trellis host-ownership boundary; it is a read-only guardrail against reintroducing Trellis-owned host-surface management into IMO manifests.
@@ -71,6 +78,9 @@
 - `./imo verify` includes the root compatibility-surface checker so root `scripts/` and `skills/` cannot drift back into ambiguous source-of-truth surfaces.
 - `./imo verify` includes observability contract and smoke checks. Runtime-write
   observability smokes must back up and restore `.imo/.runtime/observability/`.
+- `./imo verify` includes a global/project scope smoke. The smoke must validate
+  merged project/global learning context, global shim writes under a temporary
+  global root, and absence of global task-graph runtime writes.
 - `./imo verify` includes a package-wrapper smoke. The smoke must validate the
   `package.json` bin mapping, run `node bin/imo.js --help` when Node is
   available, and dry-run package packing when npm is available. Direct-run
@@ -80,6 +90,9 @@
   into a temporary target, verify the installed target with recursive install
   smoke disabled, exercise update conflict refusal, and uninstall with cleanup.
 - `./imo learning list` reads `.imo/.runtime/learning/digest.json` when present and reports a clean empty state when it is absent.
+- `./imo learning list --scope project|global|merged` must read only project,
+  only global, or merged digest state respectively. Merged output must not write
+  runtime state.
 - `./imo learning inspect <id>` prints one digest item by id and exits non-zero when the item does not exist.
 - `./imo learning activity status` reads `.imo/.runtime/session/activity.json`
   when present and must not create runtime state.
@@ -105,11 +118,13 @@
 - `./imo profile refresh` is the explicit low-frequency command that writes `.imo/.runtime/project-profile/`.
 - `./imo profile clear` removes local project-profile runtime state only.
 - `./imo task graph`, `./imo task graph show`, `./imo task graph read`, and
-  `./imo task graph plan` read `.trellis/tasks/*` as external source objects and
-  must not create `.imo/.runtime/task-graph/` or mutate Trellis task JSON.
+  `./imo task graph plan` read current-project `.trellis/tasks/*` as external
+  source objects and must not create `.imo/.runtime/task-graph/` or mutate
+  Trellis task JSON.
 - `./imo task graph run <task-id-or-dir>` is explicit, gated, and may write only
-  `.imo/.runtime/task-graph/runs/` summaries after file ownership, dependency,
-  and writable-conflict validation pass.
+  current-project `.imo/.runtime/task-graph/runs/` summaries after file
+  ownership, dependency, and writable-conflict validation pass. It must not
+  write task graph runtime state under the global IMO root.
 - Top-level `./imo graph`, `./imo show`, `./imo read`, and `./imo plan` are
   compatibility aliases for the same task graph reader.
 - `./imo codex context` emits hook JSON containing a short `<imo-context>` block. It tells Codex to prefer current repo `.imo/` and `./imo` for IMO-related questions, but remains informational only and must not override user instructions, parent-agent instructions, or Trellis workflow state. It must not mutate host files, profiles, digests, candidates, raw signals, or Trellis state; compact learning-event append is the only allowed runtime side effect when events are enabled.
@@ -118,3 +133,7 @@
   unchanged managed files may be replaced or removed, user-modified managed
   files are refused unless `--force` is explicit, and installed hashes live
   under target-local `.imo/.runtime/install/managed-hashes.json`.
+- `./imo global install/migrate/uninstall` must preserve the same managed-file
+  safety for global shim files: dry-run by default, refuse unmanaged existing
+  shim files unless `--force` is explicit, and record managed hashes under the
+  selected global root.

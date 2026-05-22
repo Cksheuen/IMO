@@ -29,6 +29,10 @@ Usage:
   ./imo metrics summary [--since <duration>] [--json]
   ./imo metrics timeline --trace <trace-id> [--json]
   ./imo metrics failures [--since <duration>] [--json]
+  ./imo global status
+  ./imo global install [--apply] [--force]
+  ./imo global migrate [--apply] [--force]
+  ./imo global uninstall [--apply] [--force]
   ./imo profile refresh
   ./imo profile status
   ./imo profile inspect
@@ -75,6 +79,9 @@ Common commands:
   - `metrics status/summary/timeline/failures` reads the unified local
     observability stream and bridges existing learning counters without
     mutating observability state.
+  - `global status/install/migrate/uninstall` manages the global IMO shim and
+    shared runtime root. Install and migrate are dry-run unless `--apply` is
+    explicit; project task graph state remains project-local.
   - `profile refresh/status/inspect/clear` manages local project convention
     snapshots under `.imo/.runtime/project-profile/`; prompt-time context reads
     the cache and never refreshes it.
@@ -208,6 +215,9 @@ case "${1}" in
     ;;
   learning)
     run_observed learning python3 "$REPO_ROOT/.imo/product/scripts/learning.py" "${@:2}"
+    ;;
+  global)
+    run_observed global python3 "$REPO_ROOT/.imo/product/scripts/global_config.py" "${@:2}"
     ;;
   metrics)
     exec python3 "$REPO_ROOT/.imo/product/scripts/metrics.py" "${@:2}"

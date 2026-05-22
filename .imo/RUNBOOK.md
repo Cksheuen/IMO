@@ -34,6 +34,10 @@ Run from the repository root:
 ./imo metrics status
 ./imo metrics summary
 ./imo metrics failures
+./imo global status
+IMO_GLOBAL_ROOT=/tmp/imo-global-smoke ./imo global install --apply
+IMO_GLOBAL_ROOT=/tmp/imo-global-smoke ./imo learning list --scope global
+IMO_GLOBAL_ROOT=/tmp/imo-global-smoke ./imo learning list --scope merged
 npm_config_cache=/private/tmp/imo-npm-cache npm pack --dry-run
 node bin/imo.js --help
 ./imo init /tmp/imo-smoke-target
@@ -58,14 +62,18 @@ Expected result:
   report, and does not mutate source or runtime state
 - `./imo learning list` handles missing runtime digest state as a clean empty
   state
+- `./imo learning list --scope project|global|merged` reads the requested
+  project, global, or merged digest state without creating runtime files
 - `./imo profile status` handles missing project-profile runtime state as a
   clean missing state and does not create `.imo/.runtime/project-profile/`
-- `./imo task graph`, `show`, and `plan` inspect `.trellis/tasks/*` as external
-  source objects, do not mutate Trellis task JSON, and do not create
+- `./imo task graph`, `show`, and `plan` inspect current-project
+  `.trellis/tasks/*` as external source objects, do not mutate Trellis task JSON,
+  and do not create
   `.imo/.runtime/task-graph/`
 - `./imo task graph run <task-id-or-dir>` refuses before execution when explicit
   `files_to_modify` ownership or dependency gates are missing; successful runs
-  may write summaries only under `.imo/.runtime/task-graph/runs/`
+  may write summaries only under the current project's
+  `.imo/.runtime/task-graph/runs/`
 - `./imo learning signal list` handles missing runtime signal state as a clean
   empty state
 - `./imo learning candidate list` handles missing runtime candidate state as a
@@ -79,6 +87,11 @@ Expected result:
 - `./imo metrics status`, `./imo metrics summary`, and `./imo metrics failures`
   handle missing observability runtime state as clean empty output and do not
   create `.imo/.runtime/observability/`
+- `./imo global status` is read-only, reports the global IMO root and current
+  project root, and does not modify host settings
+- `./imo global install --apply` writes only managed shim files under the
+  selected global root, refuses unmanaged shim conflicts unless `--force` is
+  explicit, and does not create global task graph runtime
 - `node bin/imo.js --help` reaches the same root `./imo` command surface
 - `npm pack --dry-run` succeeds and includes the package bin, root `imo`, and
   IMO direct-run source assets needed by the local package wrapper
@@ -96,8 +109,9 @@ Expected result:
   `<imo-context>` and injects active learning digest entries and project-profile
   summaries when present
 - `./imo verify` includes module, learning, observability, project-profile,
-  provider, root compatibility, package wrapper, Codex context, defensive audit,
-  learning telemetry, compile, and compatibility import checks
+  provider, root compatibility, package wrapper, global/project scope, Codex
+  context, defensive audit, learning telemetry, compile, and compatibility
+  import checks
 - `bash scripts/imo.sh verify` remains a compatibility form of the aggregate
   check
 

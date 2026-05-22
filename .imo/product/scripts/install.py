@@ -13,9 +13,12 @@ import stat
 import sys
 from typing import Any, Iterable
 
+import root_resolver
+
 
 ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_REL = Path(".imo/.runtime/install/managed-hashes.json")
+PROJECT_MARKER_REL = root_resolver.PROJECT_MARKER_REL
 GITIGNORE_START = "# IMO:START managed direct-run profile"
 GITIGNORE_END = "# IMO:END managed direct-run profile"
 GITIGNORE_PATTERNS = [
@@ -71,6 +74,8 @@ def _block_hash(text: str) -> str:
 
 
 def _should_exclude(path: Path) -> bool:
+    if path == PROJECT_MARKER_REL:
+        return True
     if any(part in EXCLUDED_PARTS for part in path.parts):
         return True
     return path.suffix in EXCLUDED_SUFFIXES
@@ -130,6 +135,24 @@ def _source_metadata(source_root: Path, relative: Path) -> dict[str, Any]:
         "hash": _file_hash(source),
         "executable": bool(mode & stat.S_IXUSR),
     }
+
+
+def _project_marker_metadata(target_root: Path) -> dict[str, Any]:
+    text = root_resolver.project_marker_text(target_root)
+    return {
+        "kind": "project-marker",
+        "hash": _block_hash(text),
+        "project_id": root_resolver.project_marker_payload(target_root)["project_id"],
+    }
+
+
+def _write_project_marker(target_root: Path, *, dry_run: bool) -> dict[str, Any]:
+    metadata = _project_marker_metadata(target_root)
+    if not dry_run:
+        target = target_root / PROJECT_MARKER_REL
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(root_resolver.project_marker_text(target_root), encoding="utf-8")
+    return metadata
 
 
 def _copy_entry(source_root: Path, target_root: Path, relative: Path, *, dry_run: bool) -> dict[str, Any]:
@@ -243,6 +266,7 @@ def _install_or_update(args: argparse.Namespace, *, update: bool) -> int:
     planned_writes: list[Path] = []
     planned_removals: list[Path] = []
     conflicts: list[Path] = []
+    write_project_marker = False
 
     for relative in entries:
         rel_key = _to_posix(relative)
@@ -259,8 +283,22 @@ def _install_or_update(args: argparse.Namespace, *, update: bool) -> int:
             planned_writes.append(relative)
         new_files[rel_key] = new_metadata
 
+    marker_key = _to_posix(PROJECT_MARKER_REL)
+    marker_target = target_root / PROJECT_MARKER_REL
+    marker_metadata = _project_marker_metadata(target_root)
+    marker_old_metadata = old_files.get(marker_key) if isinstance(old_files.get(marker_key), dict) else None
+    if not args.force and not _is_safe_to_write(marker_target, marker_old_metadata, marker_metadata):
+        conflicts.append(PROJECT_MARKER_REL)
+        if marker_old_metadata:
+            new_files[marker_key] = marker_old_metadata
+    else:
+        if _current_hash(marker_target) != marker_metadata["hash"]:
+            write_project_marker = True
+        new_files[marker_key] = marker_metadata
+
     if update:
         source_keys = {_to_posix(relative) for relative in entries}
+        source_keys.add(marker_key)
         for rel_key, metadata in sorted(old_files.items()):
             if rel_key in source_keys:
                 continue
@@ -276,11 +314,6 @@ def _install_or_update(args: argparse.Namespace, *, update: bool) -> int:
                 conflicts.append(Path(rel_key))
                 new_files[rel_key] = metadata
 
-    manifest = {
-        "files": new_files,
-        "gitignore": _ensure_gitignore(target_root, dry_run=args.dry_run),
-    }
-
     if conflicts:
         print(
             f"[imo install] refused to overwrite user-modified file(s): {_relative_list(conflicts)}",
@@ -288,6 +321,11 @@ def _install_or_update(args: argparse.Namespace, *, update: bool) -> int:
         )
         print("[imo install] re-run with --force to overwrite", file=sys.stderr)
         return 1
+
+    manifest = {
+        "files": new_files,
+        "gitignore": _ensure_gitignore(target_root, dry_run=args.dry_run),
+    }
 
     for relative in planned_writes:
         _copy_entry(source_root, target_root, relative, dry_run=args.dry_run)
@@ -297,6 +335,9 @@ def _install_or_update(args: argparse.Namespace, *, update: bool) -> int:
             target = target_root / relative
             if target.is_symlink() or target.is_file():
                 target.unlink()
+
+    if write_project_marker:
+        _write_project_marker(target_root, dry_run=args.dry_run)
 
     if not args.dry_run:
         _save_manifest(target_root, manifest)

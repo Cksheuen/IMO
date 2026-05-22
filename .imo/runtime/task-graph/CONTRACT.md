@@ -36,7 +36,7 @@ External source objects:
 Ignored local runtime state:
 
 ```text
-.imo/.runtime/task-graph/runs/
+<project>/.imo/.runtime/task-graph/runs/
 ```
 
 Graph, show, read, and plan commands are read-only. They must not create
@@ -44,7 +44,8 @@ Graph, show, read, and plan commands are read-only. They must not create
 files. Missing `.trellis/tasks/` is an empty graph, not a crash.
 
 Run summaries may be written only by an explicit run command, and only under
-`.imo/.runtime/task-graph/runs/`.
+the current project's `.imo/.runtime/task-graph/runs/`. Global IMO runtime must
+not store ordinary project task graph runs.
 
 ## Command Contract
 
@@ -149,7 +150,8 @@ gates. A run summary contains:
 | writable files conflict in a candidate set | exclude conflicting nodes from the same batch and report the conflict |
 | `run` lacks explicit file ownership | fail before execution and do not write a run summary |
 | dependency validation fails | fail before execution and do not write a run summary |
-| execution is explicitly started | use real orchestrate execution and write summary under `.imo/.runtime/task-graph/runs/` |
+| execution is explicitly started | use real orchestrate execution and write summary under current-project `.imo/.runtime/task-graph/runs/` |
+| global IMO root is configured | graph commands must not create `~/.imo/runtime/task-graph/` |
 
 ## Good / Base / Bad Cases
 

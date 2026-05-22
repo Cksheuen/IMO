@@ -11,14 +11,19 @@ from typing import Any
 from uuid import uuid4
 
 import learning_events
+import root_resolver
 
 
 ROOT = Path(__file__).resolve().parents[3]
-SIGNALS_PATH = ROOT / ".imo/.runtime/learning/signals.jsonl"
-CANDIDATES_PATH = ROOT / ".imo/.runtime/learning/candidates.jsonl"
-DIGEST_PATH = ROOT / ".imo/.runtime/learning/digest.json"
-SESSION_ACTIVITY_PATH = ROOT / ".imo/.runtime/session/activity.json"
+PROJECT_ROOT = root_resolver.project_root_or_source()
+GLOBAL_ROOT = root_resolver.resolve_global_root()
+SIGNALS_PATH = PROJECT_ROOT / ".imo/.runtime/learning/signals.jsonl"
+CANDIDATES_PATH = PROJECT_ROOT / ".imo/.runtime/learning/candidates.jsonl"
+DIGEST_PATH = PROJECT_ROOT / ".imo/.runtime/learning/digest.json"
+GLOBAL_DIGEST_PATH = root_resolver.global_runtime_root(GLOBAL_ROOT) / "learning/digest.json"
+SESSION_ACTIVITY_PATH = PROJECT_ROOT / ".imo/.runtime/session/activity.json"
 DISPLAY_PATH = ".imo/.runtime/learning/digest.json"
+GLOBAL_DISPLAY_PATH = "~/.imo/runtime/learning/digest.json"
 SIGNALS_DISPLAY_PATH = ".imo/.runtime/learning/signals.jsonl"
 CANDIDATES_DISPLAY_PATH = ".imo/.runtime/learning/candidates.jsonl"
 SESSION_ACTIVITY_DISPLAY_PATH = ".imo/.runtime/session/activity.json"
@@ -32,7 +37,7 @@ ACTIVITY_STATES = {"active", "post_turn", "quiescent"}
 
 def _usage() -> str:
     return """Usage:
-  scripts/imo.sh learning list
+  scripts/imo.sh learning list [--scope project|global|merged]
   scripts/imo.sh learning inspect <id>
   scripts/imo.sh learning signal list
   scripts/imo.sh learning signal add --summary <text> [options]
@@ -75,39 +80,46 @@ Activity mark options:
 
 
 def _load_digest() -> tuple[list[dict[str, Any]], str | None]:
-    if not DIGEST_PATH.exists():
-        return [], f"no active digest found at {DISPLAY_PATH}"
+    return _load_digest_from(DIGEST_PATH, DISPLAY_PATH)
 
+
+def _load_digest_from(path: Path, display_path: str) -> tuple[list[dict[str, Any]], str | None]:
+    if not path.exists():
+        return [], f"no active digest found at {display_path}"
     try:
-        with DIGEST_PATH.open(encoding="utf-8") as handle:
+        with path.open(encoding="utf-8") as handle:
             data = json.load(handle)
     except json.JSONDecodeError as exc:
-        raise ValueError(f"invalid json in {DISPLAY_PATH}: {exc}") from exc
+        raise ValueError(f"invalid json in {display_path}: {exc}") from exc
     except OSError as exc:
-        raise ValueError(f"failed to read {DISPLAY_PATH}: {exc}") from exc
+        raise ValueError(f"failed to read {display_path}: {exc}") from exc
 
     if isinstance(data, list):
         raw_items = data
     elif isinstance(data, dict):
         raw_items = data.get("items", data.get("digest_items", []))
     else:
-        raise ValueError(f"{DISPLAY_PATH} must be a JSON object or list")
+        raise ValueError(f"{display_path} must be a JSON object or list")
 
     if not isinstance(raw_items, list):
-        raise ValueError(f"{DISPLAY_PATH} items must be a list")
+        raise ValueError(f"{display_path} items must be a list")
 
     items: list[dict[str, Any]] = []
     for index, item in enumerate(raw_items):
         if not isinstance(item, dict):
-            raise ValueError(f"{DISPLAY_PATH} item {index} must be an object")
+            raise ValueError(f"{display_path} item {index} must be an object")
         items.append(item)
     return items, None
 
 
 def _write_digest(items: list[dict[str, Any]]) -> None:
-    DIGEST_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _write_digest_to(DIGEST_PATH, items)
+
+
+def _write_digest_to(path: Path, items: list[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     payload = {"items": items}
-    DIGEST_PATH.write_text(
+    path.write_text(
         json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
@@ -805,7 +817,6 @@ def _promote_digest(candidate_id: str, args: list[str], event_type: str = "diges
 
     try:
         candidates, empty_reason = _load_candidates()
-        digest_items, _ = _load_digest()
     except ValueError as exc:
         print(f"[imo learning] {exc}", file=sys.stderr)
         return 1
@@ -821,10 +832,22 @@ def _promote_digest(candidate_id: str, args: list[str], event_type: str = "diges
     if candidate.get("status") != "pending":
         print(f"[imo learning] candidate is not promotable: {candidate_id}", file=sys.stderr)
         return 1
+    target_scope = "global" if candidate.get("scope") == "global" else "project"
+    if target_scope == "global" and candidate.get("privacy") != "public":
+        print("[imo learning] global digest promotion requires public candidate privacy", file=sys.stderr)
+        return 1
 
     source_signal_refs = candidate.get("source_signal_refs")
     if not isinstance(source_signal_refs, list) or not source_signal_refs:
         print(f"[imo learning] candidate lacks source_signal_refs: {candidate_id}", file=sys.stderr)
+        return 1
+
+    digest_path = GLOBAL_DIGEST_PATH if target_scope == "global" else DIGEST_PATH
+    digest_display = GLOBAL_DISPLAY_PATH if target_scope == "global" else DISPLAY_PATH
+    try:
+        digest_items, _ = _load_digest_from(digest_path, digest_display)
+    except ValueError as exc:
+        print(f"[imo learning] {exc}", file=sys.stderr)
         return 1
 
     now = _now()
@@ -850,7 +873,7 @@ def _promote_digest(candidate_id: str, args: list[str], event_type: str = "diges
             {
                 "id": digest_id,
                 "digest_version": "1",
-                "scope": "global" if candidate.get("scope") == "global" else "project",
+                "scope": target_scope,
                 "last_updated": now,
                 "status": "active",
                 "priority": values["priority"],
@@ -863,16 +886,16 @@ def _promote_digest(candidate_id: str, args: list[str], event_type: str = "diges
         )
 
     try:
-        _write_digest(digest_items)
+        _write_digest_to(digest_path, digest_items)
     except OSError as exc:
-        print(f"[imo learning] failed to write {DISPLAY_PATH}: {exc}", file=sys.stderr)
+        print(f"[imo learning] failed to write {digest_display}: {exc}", file=sys.stderr)
         return 1
 
     _record_event(
         event_type,
         candidate_id=candidate_id,
         digest_id=digest_id,
-        scope="global" if candidate.get("scope") == "global" else "project",
+        scope=target_scope,
     )
     print(digest_id)
     return 0
@@ -917,8 +940,10 @@ def _reset_digest(args: list[str]) -> int:
         return 64
 
     scope = args[1]
+    digest_path = GLOBAL_DIGEST_PATH if scope == "global" else DIGEST_PATH
+    digest_display = GLOBAL_DISPLAY_PATH if scope == "global" else DISPLAY_PATH
     try:
-        digest_items, empty_reason = _load_digest()
+        digest_items, empty_reason = _load_digest_from(digest_path, digest_display)
     except ValueError as exc:
         print(f"[imo learning] {exc}", file=sys.stderr)
         return 1
@@ -931,11 +956,11 @@ def _reset_digest(args: list[str]) -> int:
     removed = len(digest_items) - len(remaining)
     try:
         if remaining:
-            _write_digest(remaining)
-        elif DIGEST_PATH.exists():
-            DIGEST_PATH.unlink()
+            _write_digest_to(digest_path, remaining)
+        elif digest_path.exists():
+            digest_path.unlink()
     except OSError as exc:
-        print(f"[imo learning] failed to reset {DISPLAY_PATH}: {exc}", file=sys.stderr)
+        print(f"[imo learning] failed to reset {digest_display}: {exc}", file=sys.stderr)
         return 1
 
     _record_event("digest_reset", scope=scope, removed_count=removed)
@@ -943,9 +968,46 @@ def _reset_digest(args: list[str]) -> int:
     return 0
 
 
-def _list_items() -> int:
+def _load_digest_for_scope(scope: str) -> tuple[list[dict[str, Any]], str | None]:
+    if scope == "project":
+        return _load_digest_from(DIGEST_PATH, DISPLAY_PATH)
+    if scope == "global":
+        return _load_digest_from(GLOBAL_DIGEST_PATH, GLOBAL_DISPLAY_PATH)
+
+    project_items, project_empty = _load_digest_from(DIGEST_PATH, DISPLAY_PATH)
+    global_items, global_empty = _load_digest_from(GLOBAL_DIGEST_PATH, GLOBAL_DISPLAY_PATH)
+    merged: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for source, items in (("project", project_items), ("global", global_items)):
+        for item in items:
+            item_id = item.get("id")
+            key = item_id if isinstance(item_id, str) else json.dumps(item, sort_keys=True)
+            if key in seen:
+                continue
+            seen.add(key)
+            copy = dict(item)
+            copy["_source"] = source
+            merged.append(copy)
+    if not merged:
+        return [], project_empty or global_empty or "active digest is empty"
+    return merged, None
+
+
+def _parse_list_scope(args: list[str]) -> str | None:
+    if not args:
+        return "project"
+    if len(args) == 2 and args[0] == "--scope" and args[1] in {"project", "global", "merged"}:
+        return args[1]
+    return None
+
+
+def _list_items(args: list[str] | None = None) -> int:
+    scope = _parse_list_scope(args or [])
+    if scope is None:
+        print("[imo learning] list supports optional --scope project|global|merged", file=sys.stderr)
+        return 64
     try:
-        items, empty_reason = _load_digest()
+        items, empty_reason = _load_digest_for_scope(scope)
     except ValueError as exc:
         print(f"[imo learning] {exc}", file=sys.stderr)
         return 1
@@ -954,7 +1016,7 @@ def _list_items() -> int:
         print(f"[imo learning] {empty_reason or 'active digest is empty'}")
         return 0
 
-    print("id\tstatus\tscope\tpriority\tsummary")
+    print("id\tstatus\tscope\tpriority\tsource\tsummary")
     for item in items:
         print(
             "\t".join(
@@ -963,6 +1025,7 @@ def _list_items() -> int:
                     _value(item, "status"),
                     _value(item, "scope"),
                     _value(item, "priority"),
+                    _value(item, "_source", scope),
                     _value(item, "summary"),
                 ]
             )
@@ -972,7 +1035,10 @@ def _list_items() -> int:
 
 def _inspect_item(item_id: str) -> int:
     try:
-        items, empty_reason = _load_digest()
+        project_items, project_empty = _load_digest_from(DIGEST_PATH, DISPLAY_PATH)
+        global_items, global_empty = _load_digest_from(GLOBAL_DIGEST_PATH, GLOBAL_DISPLAY_PATH)
+        items = project_items + global_items
+        empty_reason = project_empty or global_empty
     except ValueError as exc:
         print(f"[imo learning] {exc}", file=sys.stderr)
         return 1
@@ -1037,8 +1103,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     command = args[0]
-    if command == "list" and len(args) == 1:
-        return _list_items()
+    if command == "list":
+        return _list_items(args[1:])
     if command == "inspect" and len(args) == 2:
         return _inspect_item(args[1])
     if command == "signal" and len(args) >= 2:

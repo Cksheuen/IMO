@@ -68,9 +68,12 @@ durable repo-facing summary.
 - `./imo verify` now validates module metadata, learning policy,
   rule contracts, observability contracts, project-profile contracts, provider
   registry contracts, root compatibility surfaces, package wrapper behavior,
-  and installer lifecycle behavior before compile/import smoke checks.
+  global/project scope behavior, and installer lifecycle behavior before
+  compile/import smoke checks.
 - `./imo learning list` and `./imo learning inspect <id>` are
   read-only learning digest commands.
+- `./imo learning list --scope project|global|merged` is present for scoped
+  project/global digest inspection.
 - `./imo learning signal list` is a read-only raw signal command, and
   `./imo learning signal add --summary <text>` appends raw signals to
   project-local runtime state only.
@@ -89,6 +92,9 @@ durable repo-facing summary.
 - `./imo metrics status/summary/timeline/failures` is present for local unified
   observability over command lifecycle events, failure rollups, trace timelines,
   and bridged learning counters.
+- `./imo global status/install/migrate/uninstall` is present for global IMO shim
+  management. Write operations are dry-run unless `--apply` is explicit, and
+  unmanaged shim conflicts require explicit `--force`.
 - `./imo profile refresh/status/inspect/clear` is present for explicit
   low-frequency project convention profiling.
 - `./imo init/update/uninstall` is present for repo-local framework lifecycle
@@ -99,6 +105,9 @@ durable repo-facing summary.
 - `npm link` from the source repo exposes `imo` globally for local package
   testing. The Node package is only a command distribution wrapper; Python
   remains runtime implementation, not package installation.
+- `./imo task graph` resolves the current project root and reads that project's
+  `.trellis/tasks/*`. Explicit `task graph run` writes summaries only under the
+  current project's `.imo/.runtime/task-graph/`.
 - `./imo codex context` reads active learning digest entries and injects only
   valid active items with an explicit priority guard.
 - `./imo codex context` is available as a repo-local experimental context hook
@@ -117,6 +126,9 @@ durable repo-facing summary.
 - External providers are optional integration points, not the main architecture.
 - Shared learning digests prevent public agents from adapting to the user in
   isolated and conflicting ways.
+- Global IMO distributes shared learning and hook shims; Trellis task graph
+  overlays remain project-level to avoid cross-project task-id collisions and
+  project-private fact leakage.
 
 ### Blocked
 

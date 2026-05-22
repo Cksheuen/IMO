@@ -35,9 +35,19 @@ def _run_install_smoke() -> bool:
             return False
         data = json.loads(manifest.read_text(encoding="utf-8"))
         files = data.get("files", {})
-        required = {"imo", ".imo/product/scripts/imo.sh", ".imo/product/scripts/install.py", "scripts/imo.sh"}
+        required = {
+            "imo",
+            ".imo/project.json",
+            ".imo/product/scripts/imo.sh",
+            ".imo/product/scripts/install.py",
+            "scripts/imo.sh",
+        }
         if data.get("schema_version") != 1 or not required.issubset(files):
             print("[imo verify] failed: installer manifest shape", file=sys.stderr)
+            return False
+        marker = json.loads((target / ".imo/project.json").read_text(encoding="utf-8"))
+        if marker.get("schema_version") != 1 or marker.get("install_mode") != "project":
+            print("[imo verify] failed: project marker shape", file=sys.stderr)
             return False
 
         nested_env = os.environ.copy()

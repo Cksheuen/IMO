@@ -49,7 +49,8 @@ Project-local runtime state:
 Optional global user state:
 
 ```text
-~/.imo/learning/
+~/.imo/runtime/learning/
+  digest.json
   user-preferences.json
   global-lessons.jsonl
   agent-digests/
@@ -252,11 +253,17 @@ Current read-only CLI support:
 
 ```text
 imo learning list
+imo learning list --scope project|global|merged
 imo learning inspect <id>
 ```
 
 These commands read `.imo/.runtime/learning/digest.json` when present. They must
 not create runtime files or mutate learning state.
+
+The scoped list form reads project digest state from the current project,
+global digest state from `~/.imo/runtime/learning/digest.json` or
+`IMO_GLOBAL_ROOT`, or a merged view where project entries precede global
+entries. It must not create runtime files or mutate learning state.
 
 Current raw signal CLI support:
 

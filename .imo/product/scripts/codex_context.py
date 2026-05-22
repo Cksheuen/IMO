@@ -18,10 +18,10 @@ try:
 except Exception:  # pragma: no cover - telemetry must degrade cleanly
     learning_events = None
 
+import root_resolver
 
-ROOT = Path(__file__).resolve().parents[3]
-RULES_PATH = ROOT / ".imo/product/rules/rules.json"
-DIGEST_PATH = ROOT / ".imo/.runtime/learning/digest.json"
+SOURCE_ROOT = Path(__file__).resolve().parents[3]
+RULES_PATH = SOURCE_ROOT / ".imo/product/rules/rules.json"
 MAX_DIGEST_ITEMS = 8
 MAX_DIGEST_SUMMARY_LENGTH = 220
 
@@ -64,9 +64,9 @@ def _active_rule_context() -> list[str]:
     return lines
 
 
-def _load_digest_items() -> list[dict]:
+def _load_digest_items(path: Path) -> list[dict]:
     try:
-        data = json.loads(DIGEST_PATH.read_text(encoding="utf-8"))
+        data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return []
 
@@ -80,28 +80,40 @@ def _load_digest_items() -> list[dict]:
     return [item for item in raw_items if isinstance(item, dict)]
 
 
-def _active_digest_context() -> list[str]:
+def _active_digest_context(project_root: Path | None) -> list[str]:
     lines: list[str] = []
-    for item in _load_digest_items():
-        if item.get("status") != "active":
-            continue
-        if item.get("scope") not in {"project", "global"}:
-            continue
-        summary = item.get("summary")
-        if not isinstance(summary, str) or not summary.strip():
-            continue
-        compact_summary = " ".join(summary.strip().split())
-        if len(compact_summary) > MAX_DIGEST_SUMMARY_LENGTH:
-            compact_summary = compact_summary[: MAX_DIGEST_SUMMARY_LENGTH - 3].rstrip() + "..."
-        priority = item.get("priority")
-        scope = item.get("scope")
-        prefix = f"[{scope}"
-        if priority == "high":
-            prefix += ", high"
-        prefix += "]"
-        lines.append(f"- {prefix} {compact_summary}")
-        if len(lines) >= MAX_DIGEST_ITEMS:
-            break
+    roots: list[tuple[str, Path]] = []
+    if project_root is not None:
+        roots.append(("project", project_root / ".imo/.runtime/learning/digest.json"))
+    roots.append(("global", root_resolver.global_runtime_root() / "learning/digest.json"))
+
+    seen: set[str] = set()
+    for source, path in roots:
+        for item in _load_digest_items(path):
+            if item.get("status") != "active":
+                continue
+            if item.get("scope") not in {"project", "global"}:
+                continue
+            summary = item.get("summary")
+            if not isinstance(summary, str) or not summary.strip():
+                continue
+            digest_id = item.get("id")
+            if isinstance(digest_id, str) and digest_id in seen:
+                continue
+            if isinstance(digest_id, str):
+                seen.add(digest_id)
+            compact_summary = " ".join(summary.strip().split())
+            if len(compact_summary) > MAX_DIGEST_SUMMARY_LENGTH:
+                compact_summary = compact_summary[: MAX_DIGEST_SUMMARY_LENGTH - 3].rstrip() + "..."
+            priority = item.get("priority")
+            scope = item.get("scope")
+            prefix = f"[{source}:{scope}"
+            if priority == "high":
+                prefix += ", high"
+            prefix += "]"
+            lines.append(f"- {prefix} {compact_summary}")
+            if len(lines) >= MAX_DIGEST_ITEMS:
+                return lines
     return lines
 
 
@@ -116,15 +128,18 @@ def _project_profile_context() -> list[str]:
 
 def _build_context(data: dict) -> str:
     cwd = data.get("cwd")
-    cwd_line = f"Cwd: {cwd}" if isinstance(cwd, str) and cwd else f"Cwd: {ROOT}"
+    project_root = root_resolver.resolve_project_root(cwd) if isinstance(cwd, str) and cwd else root_resolver.resolve_project_root()
+    cwd_line = f"Cwd: {cwd}" if isinstance(cwd, str) and cwd else f"Cwd: {SOURCE_ROOT}"
+    project_line = f"Project root: {project_root}" if project_root is not None else "Project root: not detected"
     lines = [
         "<imo-context>",
-        "Mode: repo-local Codex context experiment",
-        "Source: current repository `.imo/`",
-        "Entrypoint: `./imo`",
+        "Mode: IMO global/project context experiment",
+        "Source: global IMO command with project-local state when a project root is detected",
+        "Entrypoint: `imo` or project `./imo`",
         cwd_line,
-        "Preference: for IMO-related questions in this repo, inspect current `.imo/` sources and use `./imo` before global `~/.claude` assets.",
-        "Direct commands: `./imo audit all`, `./imo profile status`, `./imo learning list`, `./imo metrics status`, `./imo verify`",
+        project_line,
+        "Preference: for IMO-related questions, use current project `.imo/` state for project facts and global IMO state for shared learning only.",
+        "Direct commands: `imo global status`, `imo learning list --scope merged`, `imo task graph`, `imo verify`",
         "Boundary: Trellis remains the task plane; IMO does not proxy Trellis or claim Trellis-owned host outputs by default.",
     ]
     rule_context = _active_rule_context()
@@ -139,12 +154,12 @@ def _build_context(data: dict) -> str:
             ]
             + profile_context
         )
-    digest_context = _active_digest_context()
+    digest_context = _active_digest_context(project_root)
     if digest_context:
         lines.extend(
             [
                 "Active IMO learning digest:",
-                "Priority: current user instruction > project rules > active digest > candidates > raw signals.",
+                "Priority: current user instruction > project rules > active digest; within active digest, project items precede global items > candidates > raw signals.",
             ]
             + digest_context
         )
@@ -165,7 +180,7 @@ def main() -> int:
     context = _build_context(data)
     if learning_events is not None:
         try:
-            injected_count = len(_active_digest_context())
+            injected_count = len(_active_digest_context(root_resolver.resolve_project_root()))
             if injected_count:
                 learning_events.write_event(
                     "context_digest_injected",

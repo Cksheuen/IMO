@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import sys
 
+from .global_project_smokes import _run_global_project_scope_smoke
 from .install_smokes import _run_install_smoke
 from .learning_smokes import (
     _run_learning_candidate_smoke,
@@ -71,6 +72,7 @@ def main() -> int:
         _run_task_graph_smoke,
         _run_project_profile_smoke,
         _run_package_smoke,
+        _run_global_project_scope_smoke,
     ]
     if os.environ.get("IMO_VERIFY_SKIP_INSTALL_SMOKE") != "1":
         smoke_checks.append(_run_install_smoke)
