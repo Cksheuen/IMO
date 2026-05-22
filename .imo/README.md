@@ -37,7 +37,7 @@ The current repo-local IMO command surface is:
 ./imo global status
 ./imo global install --apply
 ./imo init <target>
-./imo update <target>
+./imo update <target> [--strict|--force]
 ./imo uninstall <target>
 ./imo codex context
 ./imo task graph
@@ -140,7 +140,10 @@ IMO can be installed globally while keeping Trellis-derived state local:
   in another repository. They install `.imo/`, root `imo`, root compatibility
   surfaces, `.gitignore` whitelist markers, and managed hashes under
   `.imo/.runtime/install/` without using Python package installation as the
-  framework boundary.
+  framework boundary. `update` refreshes unchanged managed files, preserves
+  user-modified managed files by default, and leaves `.imo/.runtime/**`
+  learning/profile/task graph state untouched. Use `--strict` to refuse on
+  local managed-file edits, or `--force` to overwrite them.
 - `npm link` from this source repo exposes a global `imo` command for local
   package testing. The linked command is a thin Node bin wrapper over the same
   root `./imo` entrypoint.

@@ -266,6 +266,7 @@ def _install_or_update(args: argparse.Namespace, *, update: bool) -> int:
     planned_writes: list[Path] = []
     planned_removals: list[Path] = []
     conflicts: list[Path] = []
+    preserved: list[Path] = []
     write_project_marker = False
 
     for relative in entries:
@@ -274,9 +275,12 @@ def _install_or_update(args: argparse.Namespace, *, update: bool) -> int:
         new_metadata = _source_metadata(source_root, relative)
         old_metadata = old_files.get(rel_key) if isinstance(old_files.get(rel_key), dict) else None
         if not args.force and not _is_safe_to_write(target, old_metadata, new_metadata):
-            conflicts.append(relative)
             if old_metadata:
                 new_files[rel_key] = old_metadata
+            if update and not args.strict:
+                preserved.append(relative)
+            else:
+                conflicts.append(relative)
             continue
         current = _current_hash(target)
         if current != new_metadata["hash"]:
@@ -288,9 +292,12 @@ def _install_or_update(args: argparse.Namespace, *, update: bool) -> int:
     marker_metadata = _project_marker_metadata(target_root)
     marker_old_metadata = old_files.get(marker_key) if isinstance(old_files.get(marker_key), dict) else None
     if not args.force and not _is_safe_to_write(marker_target, marker_old_metadata, marker_metadata):
-        conflicts.append(PROJECT_MARKER_REL)
         if marker_old_metadata:
             new_files[marker_key] = marker_old_metadata
+        if update and not args.strict:
+            preserved.append(PROJECT_MARKER_REL)
+        else:
+            conflicts.append(PROJECT_MARKER_REL)
     else:
         if _current_hash(marker_target) != marker_metadata["hash"]:
             write_project_marker = True
@@ -311,8 +318,11 @@ def _install_or_update(args: argparse.Namespace, *, update: bool) -> int:
             if current == metadata.get("hash"):
                 planned_removals.append(Path(rel_key))
             else:
-                conflicts.append(Path(rel_key))
                 new_files[rel_key] = metadata
+                if not args.strict:
+                    preserved.append(Path(rel_key))
+                else:
+                    conflicts.append(Path(rel_key))
 
     if conflicts:
         print(
@@ -344,7 +354,12 @@ def _install_or_update(args: argparse.Namespace, *, update: bool) -> int:
 
     action = "update" if update else "init"
     print(f"[imo install] {action} complete: {target_root}")
-    print(f"[imo install] files written: {len(planned_writes)}; files removed: {len(planned_removals)}")
+    print(
+        f"[imo install] files written: {len(planned_writes)}; "
+        f"files removed: {len(planned_removals)}; files preserved: {len(preserved)}"
+    )
+    if preserved:
+        print(f"[imo install] preserved user-modified file(s): {_relative_list(preserved)}")
     print(f"[imo install] verify with: {target_root / 'imo'} verify")
     return 0
 
@@ -426,6 +441,8 @@ def build_parser() -> argparse.ArgumentParser:
         sub = subparsers.add_parser(name, help=help_text)
         sub.add_argument("target", nargs="?", default=".", help="Target repository path")
         sub.add_argument("--force", action="store_true", help="Overwrite user-modified managed files")
+        if name == "update":
+            sub.add_argument("--strict", action="store_true", help="Refuse update when user-modified managed files exist")
         sub.add_argument("--dry-run", action="store_true", help="Preview without writing files")
         sub.set_defaults(func=lambda args, update=name == "update": _install_or_update(args, update=update))
 

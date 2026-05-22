@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -9,6 +10,10 @@ import sys
 import tempfile
 
 from .runner import ROOT
+
+
+def _hash_text(text: str) -> str:
+    return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def _run_install_smoke() -> bool:
@@ -67,6 +72,17 @@ def _run_install_smoke() -> bool:
                 print(verified.stderr, file=sys.stderr)
             return False
 
+        runtime_digest = target / ".imo/.runtime/learning/digest.json"
+        runtime_digest.parent.mkdir(parents=True, exist_ok=True)
+        runtime_digest.write_text('{"items":[{"id":"keep","status":"active","scope":"project"}]}\n', encoding="utf-8")
+
+        script_to_refresh = target / "scripts/imo.sh"
+        old_script_text = "#!/usr/bin/env bash\necho old managed script\n"
+        script_to_refresh.write_text(old_script_text, encoding="utf-8")
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        data["files"]["scripts/imo.sh"]["hash"] = _hash_text(old_script_text)
+        manifest.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
         updated = subprocess.run(
             ["./imo", "update", str(target)],
             cwd=ROOT,
@@ -80,10 +96,20 @@ def _run_install_smoke() -> bool:
             if updated.stderr:
                 print(updated.stderr, file=sys.stderr)
             return False
+        if "files preserved: 0" not in updated.stdout:
+            print("[imo verify] failed: installer update did not report preserved count", file=sys.stderr)
+            return False
+        if script_to_refresh.read_text(encoding="utf-8") == old_script_text:
+            print("[imo verify] failed: installer update did not refresh unchanged managed file", file=sys.stderr)
+            return False
+        if not runtime_digest.is_file() or "keep" not in runtime_digest.read_text(encoding="utf-8"):
+            print("[imo verify] failed: installer update changed runtime learning state", file=sys.stderr)
+            return False
 
         readme = target / ".imo/README.md"
-        readme.write_text(readme.read_text(encoding="utf-8") + "\nlocal edit\n", encoding="utf-8")
-        refused = subprocess.run(
+        readme_local_text = readme.read_text(encoding="utf-8") + "\nlocal edit\n"
+        readme.write_text(readme_local_text, encoding="utf-8")
+        preserved = subprocess.run(
             ["./imo", "update", str(target)],
             cwd=ROOT,
             check=False,
@@ -91,8 +117,39 @@ def _run_install_smoke() -> bool:
             stderr=subprocess.PIPE,
             text=True,
         )
+        if preserved.returncode != 0 or "files preserved: 1" not in preserved.stdout:
+            print("[imo verify] failed: installer update preserve-local behavior", file=sys.stderr)
+            if preserved.stderr:
+                print(preserved.stderr, file=sys.stderr)
+            return False
+        if readme.read_text(encoding="utf-8") != readme_local_text:
+            print("[imo verify] failed: installer update overwrote preserved local edit", file=sys.stderr)
+            return False
+
+        refused = subprocess.run(
+            ["./imo", "update", str(target), "--strict"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
         if refused.returncode == 0 or "refused to overwrite" not in refused.stderr:
-            print("[imo verify] failed: installer update conflict guard", file=sys.stderr)
+            print("[imo verify] failed: installer update strict conflict guard", file=sys.stderr)
+            return False
+
+        forced = subprocess.run(
+            ["./imo", "update", str(target), "--force"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if forced.returncode != 0 or readme.read_text(encoding="utf-8") == readme_local_text:
+            print("[imo verify] failed: installer update force overwrite", file=sys.stderr)
+            if forced.stderr:
+                print(forced.stderr, file=sys.stderr)
             return False
 
         removed = subprocess.run(

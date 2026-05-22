@@ -88,7 +88,8 @@
   this package-only smoke.
 - `./imo verify` includes an install lifecycle smoke. The smoke must install
   into a temporary target, verify the installed target with recursive install
-  smoke disabled, exercise update conflict refusal, and uninstall with cleanup.
+  smoke disabled, exercise update preserve-local, strict refusal, force
+  overwrite, runtime preservation, and uninstall with cleanup.
 - `./imo learning list` reads `.imo/.runtime/learning/digest.json` when present and reports a clean empty state when it is absent.
 - `./imo learning list --scope project|global|merged` must read only project,
   only global, or merged digest state respectively. Merged output must not write
@@ -131,8 +132,10 @@
 - `scripts/imo.sh ...` must keep behaving as a compatibility form of the same commands.
 - `./imo init/update/uninstall` must preserve the managed-file contract:
   unchanged managed files may be replaced or removed, user-modified managed
-  files are refused unless `--force` is explicit, and installed hashes live
-  under target-local `.imo/.runtime/install/managed-hashes.json`.
+  files are preserved by default during update, `update --strict` refuses when
+  user-modified managed files exist, `--force` overwrites/removes them, and
+  installed hashes live under target-local
+  `.imo/.runtime/install/managed-hashes.json`.
 - `./imo global install/migrate/uninstall` must preserve the same managed-file
   safety for global shim files: dry-run by default, refuse unmanaged existing
   shim files unless `--force` is explicit, and record managed hashes under the

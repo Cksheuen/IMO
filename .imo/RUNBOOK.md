@@ -99,8 +99,10 @@ Expected result:
   repository: `.imo/`, root `imo`, root compatibility `scripts/` and `skills/`,
   `.gitignore` whitelist markers, and `.imo/.runtime/install/managed-hashes.json`
 - the installed target can run `<target>/imo verify`
-- `./imo update <target>` refreshes unchanged managed files and refuses to
-  clobber user-modified managed files unless `--force` is explicit
+- `./imo update <target>` refreshes unchanged managed files, preserves
+  user-modified managed files by default, and does not touch
+  `.imo/.runtime/**`; `--strict` refuses on local managed-file edits, and
+  `--force` overwrites them
 - `./imo uninstall <target>` removes unchanged managed files and keeps
   user-modified files unless `--force` is explicit
 - `./imo verify` checks digest promotion requires review metadata and can

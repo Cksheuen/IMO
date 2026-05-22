@@ -38,7 +38,7 @@ Usage:
   ./imo profile inspect
   ./imo profile clear
   ./imo init [target] [--force] [--dry-run]
-  ./imo update [target] [--force] [--dry-run]
+  ./imo update [target] [--force] [--strict] [--dry-run]
   ./imo uninstall [target] [--force] [--dry-run]
   ./imo task graph [--json]
   ./imo task graph show <task-id-or-dir> [--json]
@@ -88,7 +88,8 @@ Common commands:
   - `init/update/uninstall` manage the project-local IMO direct-run profile in
     a target repository. They install `.imo/`, root `imo`, root compatibility
     surfaces, and managed hashes without using Python package installation as
-    the framework boundary.
+    the framework boundary. `update` preserves user-modified managed files by
+    default; use `--strict` to refuse on local edits or `--force` to overwrite.
   - `task graph`, `graph`, `show`, `read`, and `plan` inspect Trellis task
     references through the IMO task graph overlay without mutating Trellis task
     JSON or creating task graph runtime state.
