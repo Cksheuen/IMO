@@ -83,6 +83,8 @@ def parse_manifest(root: Path, platform: str) -> list[ManifestTarget]:
 
 def load_trellis_hashes(root: Path, platforms: list[str]) -> dict[str, str]:
     template_hashes_path = root / ".trellis" / ".template-hashes.json"
+    if not template_hashes_path.exists():
+        return {}
     data = load_json(template_hashes_path)
     if not isinstance(data, dict):
         raise AuditError(f"{template_hashes_path}: template hash file must be a JSON object")

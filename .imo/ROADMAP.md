@@ -11,6 +11,7 @@ durable repo-facing summary.
 - `.imo/` is the canonical workspace for future framework-owned assets.
 - `.imo/product/scripts/` owns the current canonical script implementations:
   - `imo.sh`
+  - `install.py`
   - `check-langchain-runtime-deps.py`
   - `task-audit.py`
   - `task-bootstrap.sh`
@@ -21,6 +22,8 @@ durable repo-facing summary.
   surface.
 - `./imo` is the preferred repo-root direct-run entrypoint and forwards into
   `.imo/product/scripts/imo.sh`.
+- `package.json` and `bin/imo.js` provide a Trellis-like local package link
+  wrapper that forwards into the same root `./imo` command surface.
 - `.imo/product/skills/` owns the migrated framework skill families listed in
   `.imo/product/skills/CONTRACT.md`.
 - Root `skills/` entries for migrated families are compatibility projections.
@@ -64,8 +67,8 @@ durable repo-facing summary.
   candidates.
 - `./imo verify` now validates module metadata, learning policy,
   rule contracts, observability contracts, project-profile contracts, provider
-  registry contracts, and root compatibility surfaces before compile/import
-  smoke checks.
+  registry contracts, root compatibility surfaces, package wrapper behavior,
+  and installer lifecycle behavior before compile/import smoke checks.
 - `./imo learning list` and `./imo learning inspect <id>` are
   read-only learning digest commands.
 - `./imo learning signal list` is a read-only raw signal command, and
@@ -88,6 +91,14 @@ durable repo-facing summary.
   and bridged learning counters.
 - `./imo profile refresh/status/inspect/clear` is present for explicit
   low-frequency project convention profiling.
+- `./imo init/update/uninstall` is present for repo-local framework lifecycle
+  installation into target repositories. It follows the Trellis-like model:
+  a lifecycle command installs project-local framework assets and managed
+  hashes; Python scripts remain project runtime assets, not the package
+  installation boundary.
+- `npm link` from the source repo exposes `imo` globally for local package
+  testing. The Node package is only a command distribution wrapper; Python
+  remains runtime implementation, not package installation.
 - `./imo codex context` reads active learning digest entries and injects only
   valid active items with an explicit priority guard.
 - `./imo codex context` is available as a repo-local experimental context hook

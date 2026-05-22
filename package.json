@@ -1,0 +1,25 @@
+{
+  "name": "@local/imo",
+  "version": "0.0.0-local",
+  "private": true,
+  "description": "Repo-local IMO framework CLI package for local link testing.",
+  "bin": {
+    "imo": "./bin/imo.js"
+  },
+  "files": [
+    ".npmignore",
+    ".imo",
+    "bin",
+    "imo",
+    "scripts",
+    "skills",
+    "AGENTS.md"
+  ],
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "scripts": {
+    "verify": "./imo verify",
+    "pack:dry-run": "npm pack --dry-run"
+  }
+}

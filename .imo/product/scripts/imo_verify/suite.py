@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import sys
 
+from .install_smokes import _run_install_smoke
 from .learning_smokes import (
     _run_learning_candidate_smoke,
     _run_learning_context_smoke,
@@ -14,6 +15,7 @@ from .learning_smokes import (
 from .observability_smokes import _run_observability_smoke
 from .orchestrate_smoke import run_orchestrate_runtime_smoke
 from .other_smokes import _run_defensive_audit_smoke, _run_project_profile_smoke
+from .package_smokes import _run_package_smoke
 from .runner import run_check
 from .static_contracts import build_static_checks
 from .task_graph_smokes import _run_task_graph_smoke
@@ -68,7 +70,10 @@ def main() -> int:
         _run_observability_smoke,
         _run_task_graph_smoke,
         _run_project_profile_smoke,
+        _run_package_smoke,
     ]
+    if os.environ.get("IMO_VERIFY_SKIP_INSTALL_SMOKE") != "1":
+        smoke_checks.append(_run_install_smoke)
     for smoke_check in smoke_checks:
         if smoke_check is _run_observability_smoke:
             passed = _with_observability_events_enabled(smoke_check)

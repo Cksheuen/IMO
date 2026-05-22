@@ -34,6 +34,9 @@ The current repo-local IMO command surface is:
 ./imo learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
 ./imo metrics status
 ./imo metrics summary
+./imo init <target>
+./imo update <target>
+./imo uninstall <target>
 ./imo codex context
 ./imo task graph
 ./imo task graph show 05-22-imo-task-graph-references
@@ -44,6 +47,20 @@ The current repo-local IMO command surface is:
 `./imo` is the preferred repo-root user entrypoint. It forwards to the
 canonical implementation at `.imo/product/scripts/imo.sh`. `scripts/imo.sh`
 remains only as a compatibility wrapper for existing local calls.
+
+## Local Package Link
+
+IMO also has a thin Node package wrapper for Trellis-like local link testing:
+
+```bash
+npm link
+imo --help
+imo init /path/to/target-repo
+```
+
+The package wrapper exposes the `imo` bin from `bin/imo.js` and forwards into
+the same root `./imo` entrypoint. It is an install convenience only; framework
+behavior still lives in the repo-local direct-run assets under `.imo/`.
 
 ## Layout
 
@@ -99,6 +116,15 @@ remains only as a compatibility wrapper for existing local calls.
   observability events under `.imo/.runtime/observability/events/`, bridges
   existing learning counters, and treats missing runtime state as a clean empty
   state.
+- `./imo init <target>`, `./imo update <target>`, and
+  `./imo uninstall <target>` manage the project-local IMO direct-run profile
+  in another repository. They install `.imo/`, root `imo`, root compatibility
+  surfaces, `.gitignore` whitelist markers, and managed hashes under
+  `.imo/.runtime/install/` without using Python package installation as the
+  framework boundary.
+- `npm link` from this source repo exposes a global `imo` command for local
+  package testing. The linked command is a thin Node bin wrapper over the same
+  root `./imo` entrypoint.
 - `./imo profile refresh/status/inspect/clear` manages a local project
   convention snapshot under `.imo/.runtime/project-profile/`. Context hooks may
   read the bounded summary but never refresh it automatically.
@@ -116,7 +142,7 @@ remains only as a compatibility wrapper for existing local calls.
 - `./imo verify` runs the current aggregate read-only IMO verification
   suite, including rule contracts, module metadata, project-profile contracts,
   learning policy, and provider registry contracts, plus root
-  compatibility-surface checks.
+  compatibility-surface, package-wrapper, and install lifecycle checks.
 - Machine-readable contract gates now exist for:
   - `.imo/product/rules/rules.json`
   - `.imo/runtime/project-profile/schema.json`

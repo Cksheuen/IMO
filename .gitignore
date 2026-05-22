@@ -10,7 +10,11 @@
 # scripts/ 和 skills/ 仅作为已审计兼容面 / 外部 provider 占位保留；
 # 真正产品源在 .imo/，声明见 .imo/providers/root_surfaces.json。
 !.gitignore
+!.npmignore
+!package.json
 !imo
+!bin/
+!bin/**
 !.imo/
 !.imo/**
 !skills/

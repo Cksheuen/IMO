@@ -33,6 +33,9 @@ Usage:
   ./imo profile status
   ./imo profile inspect
   ./imo profile clear
+  ./imo init [target] [--force] [--dry-run]
+  ./imo update [target] [--force] [--dry-run]
+  ./imo uninstall [target] [--force] [--dry-run]
   ./imo task graph [--json]
   ./imo task graph show <task-id-or-dir> [--json]
   ./imo task graph read <task-id-or-dir> [--json]
@@ -75,6 +78,10 @@ Common commands:
   - `profile refresh/status/inspect/clear` manages local project convention
     snapshots under `.imo/.runtime/project-profile/`; prompt-time context reads
     the cache and never refreshes it.
+  - `init/update/uninstall` manage the project-local IMO direct-run profile in
+    a target repository. They install `.imo/`, root `imo`, root compatibility
+    surfaces, and managed hashes without using Python package installation as
+    the framework boundary.
   - `task graph`, `graph`, `show`, `read`, and `plan` inspect Trellis task
     references through the IMO task graph overlay without mutating Trellis task
     JSON or creating task graph runtime state.
@@ -207,6 +214,9 @@ case "${1}" in
     ;;
   profile)
     run_observed profile python3 "$REPO_ROOT/.imo/product/scripts/project_profile.py" "${@:2}"
+    ;;
+  init|update|uninstall)
+    run_observed "install_${1}" python3 "$REPO_ROOT/.imo/product/scripts/install.py" "$@"
     ;;
   task)
     case "${2:-}" in

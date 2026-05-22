@@ -34,6 +34,12 @@ Run from the repository root:
 ./imo metrics status
 ./imo metrics summary
 ./imo metrics failures
+npm_config_cache=/private/tmp/imo-npm-cache npm pack --dry-run
+node bin/imo.js --help
+./imo init /tmp/imo-smoke-target
+/tmp/imo-smoke-target/imo verify
+./imo update /tmp/imo-smoke-target
+./imo uninstall /tmp/imo-smoke-target --force
 ./imo codex context --empty
 ./imo task graph
 ./imo task graph --json
@@ -73,14 +79,25 @@ Expected result:
 - `./imo metrics status`, `./imo metrics summary`, and `./imo metrics failures`
   handle missing observability runtime state as clean empty output and do not
   create `.imo/.runtime/observability/`
+- `node bin/imo.js --help` reaches the same root `./imo` command surface
+- `npm pack --dry-run` succeeds and includes the package bin, root `imo`, and
+  IMO direct-run source assets needed by the local package wrapper
+- `./imo init <target>` installs the direct-run profile into a target
+  repository: `.imo/`, root `imo`, root compatibility `scripts/` and `skills/`,
+  `.gitignore` whitelist markers, and `.imo/.runtime/install/managed-hashes.json`
+- the installed target can run `<target>/imo verify`
+- `./imo update <target>` refreshes unchanged managed files and refuses to
+  clobber user-modified managed files unless `--force` is explicit
+- `./imo uninstall <target>` removes unchanged managed files and keeps
+  user-modified files unless `--force` is explicit
 - `./imo verify` checks digest promotion requires review metadata and can
   disable/reset project-scoped digest state
 - `./imo codex context --empty` emits valid hook JSON containing
   `<imo-context>` and injects active learning digest entries and project-profile
   summaries when present
 - `./imo verify` includes module, learning, observability, project-profile,
-  provider, root compatibility, Codex context, defensive audit, learning
-  telemetry, compile, and compatibility import checks
+  provider, root compatibility, package wrapper, Codex context, defensive audit,
+  learning telemetry, compile, and compatibility import checks
 - `bash scripts/imo.sh verify` remains a compatibility form of the aggregate
   check
 
@@ -98,6 +115,10 @@ Known environment note: the Python runtime may print a LibreSSL warning from
   - explicitly declared external provider surfaces
 - `.gitignore` may keep `scripts/**` and `skills/**` whitelisted only because
   those roots are audited compatibility or external-provider surfaces.
+- Installed target `.gitignore` files receive an IMO managed block containing
+  only the direct-run profile whitelist patterns.
+- Root `package.json` exposes only a thin local package link wrapper; it must
+  not become a second implementation of IMO command behavior.
 
 ## External Skill Boundary
 
@@ -133,8 +154,10 @@ The direct-run closure is complete when:
 
 1. the acceptance commands pass from the repository root
 2. `./imo verify` includes the compatibility-surface checker
-3. `.imo/providers/root_surfaces.json` explains every tracked root
+3. `./imo verify` includes the package-wrapper smoke
+4. `./imo verify` includes the install lifecycle smoke
+5. `.imo/providers/root_surfaces.json` explains every tracked root
    compatibility or external surface
-4. `.imo/adapters/*/manifest.json` remains neutral for Trellis-owned host
+6. `.imo/adapters/*/manifest.json` remains neutral for Trellis-owned host
    outputs
-5. no project source-truth requirement depends on `~/.claude/.gitignore`
+7. no project source-truth requirement depends on `~/.claude/.gitignore`

@@ -1,0 +1,7 @@
+.imo/.runtime/
+.imo/.runtime/**
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
