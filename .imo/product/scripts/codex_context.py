@@ -13,6 +13,11 @@ try:
 except Exception:  # pragma: no cover - hook must degrade cleanly
     project_profile = None
 
+try:
+    import learning_events
+except Exception:  # pragma: no cover - telemetry must degrade cleanly
+    learning_events = None
+
 
 ROOT = Path(__file__).resolve().parents[3]
 RULES_PATH = ROOT / ".imo/product/rules/rules.json"
@@ -157,10 +162,22 @@ def main() -> int:
         return 0
 
     data = _read_hook_input()
+    context = _build_context(data)
+    if learning_events is not None:
+        try:
+            injected_count = len(_active_digest_context())
+            if injected_count:
+                learning_events.write_event(
+                    "context_digest_injected",
+                    "codex-context",
+                    injected_count=injected_count,
+                )
+        except Exception:
+            pass
     output = {
         "hookSpecificOutput": {
             "hookEventName": "UserPromptSubmit",
-            "additionalContext": _build_context(data),
+            "additionalContext": context,
         }
     }
     print(json.dumps(output))

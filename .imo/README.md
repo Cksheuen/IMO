@@ -30,6 +30,7 @@ The current repo-local IMO command surface is:
 ./imo learning candidate list
 ./imo learning activity status
 ./imo learning review inbox
+./imo learning metrics summary
 ./imo learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
 ./imo codex context
 ./imo verify
@@ -84,6 +85,9 @@ remains only as a compatibility wrapper for existing local calls.
   explicit deferred review inbox. `prepare` may build candidates only and skips
   active or unknown activity unless forced; `approve` reuses the reviewed digest
   promotion gate.
+- `./imo learning metrics summary [--json]` reads compact local learning events
+  under `.imo/.runtime/learning/events.jsonl` and reports effectiveness and
+  safety counters without uploading data or changing learning state.
 - `./imo learning digest promote/disable/reset` manages reviewed active digest
   entries with rollback metadata.
 - `./imo profile refresh/status/inspect/clear` manages a local project
@@ -91,7 +95,8 @@ remains only as a compatibility wrapper for existing local calls.
   read the bounded summary but never refresh it automatically.
 - `./imo codex context` emits a short repo-local IMO context block for
   experimental Codex hook injection, including active learning digest entries
-  when present. It is informational and does not replace Trellis workflow state.
+  when present. It is informational and does not replace Trellis workflow state;
+  active digest injection may append compact ignored telemetry.
 - `./imo verify` runs the current aggregate read-only IMO verification
   suite, including rule contracts, module metadata, project-profile contracts,
   learning policy, and provider registry contracts, plus root
@@ -101,6 +106,7 @@ remains only as a compatibility wrapper for existing local calls.
   - `.imo/runtime/project-profile/schema.json`
   - `.imo/product/skills/modules.json`
   - `.imo/learning/policy.json`
+  - `.imo/learning/schemas/event.schema.json`
   - `.imo/providers/registry.json`
 - `./imo defensive audit --json` provides a stable advisory report shape for
   defensive-programming review.

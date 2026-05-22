@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://imo.local/schemas/learning/event.schema.json",
+  "title": "IMO Learning Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "created_at",
+    "event_type",
+    "source"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "signal_created",
+        "activity_marked",
+        "candidate_build_completed",
+        "prepare_skipped",
+        "prepare_completed",
+        "inbox_viewed",
+        "candidate_approved",
+        "candidate_rejected",
+        "digest_promoted",
+        "digest_disabled",
+        "digest_reset",
+        "context_digest_injected"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "signal_id": {
+      "type": "string"
+    },
+    "candidate_id": {
+      "type": "string"
+    },
+    "digest_id": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string"
+    },
+    "privacy": {
+      "type": "string"
+    },
+    "confidence": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "created_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "updated_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pending_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "removed_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "injected_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "forced": {
+      "type": "boolean"
+    }
+  }
+}

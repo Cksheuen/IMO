@@ -15,7 +15,7 @@
 - `.imo/product/scripts/verify.py` is now the canonical read-only IMO verification suite.
 - `.imo/product/scripts/defensive_audit.py` is now the canonical read-only
   advisory report for defensive-programming guardrails and cleanup candidates.
-- `.imo/product/scripts/codex_context.py` emits repo-local IMO context for experimental Codex hook injection without mutating host files.
+- `.imo/product/scripts/codex_context.py` emits repo-local IMO context for experimental Codex hook injection without mutating host files; when learning events are enabled, it may append a compact digest-injection event to ignored runtime state.
 - `.imo/product/scripts/project_profile.py` manages local project convention snapshots under `.imo/.runtime/project-profile/`.
 - `.imo/product/scripts/check_module_metadata.py` validates machine-readable IMO skill module metadata without mutating source.
 - `.imo/product/scripts/check_rule_contracts.py` validates IMO product rule metadata and rule-document sections without mutating source.
@@ -23,6 +23,8 @@
 - `.imo/product/scripts/check_learning_contracts.py` validates learning-plane policy contracts without writing learning state.
 - `.imo/product/scripts/check_provider_contracts.py` validates optional provider registry contracts without discovering or invoking providers.
 - `.imo/product/scripts/check_root_surfaces.py` validates root `scripts/`, root `skills/`, and `.gitignore` compatibility-surface declarations without mutating source.
+- `.imo/product/scripts/learning_events.py` owns compact local learning event
+  writes and summaries under ignored `.imo/.runtime/learning/events.jsonl`.
 - `.imo/product/scripts/learning.py` exposes learning signal, candidate,
   activity, review, and digest commands with explicit write boundaries.
 - In the current repo state, `audit_managed_ownership.py` is the only script wired to the Trellis host-ownership boundary; it is a read-only guardrail against reintroducing Trellis-owned host-surface management into IMO manifests.
@@ -56,8 +58,14 @@
   unknown or active activity unless the command is explicitly forced.
 - `./imo learning review approve <candidate-id>` must require review and
   rollback metadata before mutating active digest state.
+- `./imo learning metrics summary` reads `.imo/.runtime/learning/events.jsonl`
+  when present and must not create runtime state.
+- Learning event writes are observational only. Event write failures must not
+  turn an otherwise successful learning command into a failed command.
+- Learning event writes can be disabled with `IMO_DISABLE_LEARNING_EVENTS=1`
+  for read-only verification paths.
 - `./imo profile status` and `./imo profile inspect` must not create runtime state when a profile is absent.
 - `./imo profile refresh` is the explicit low-frequency command that writes `.imo/.runtime/project-profile/`.
 - `./imo profile clear` removes local project-profile runtime state only.
-- `./imo codex context` emits hook JSON containing a short `<imo-context>` block. It tells Codex to prefer current repo `.imo/` and `./imo` for IMO-related questions, but remains informational only and must not override user instructions, parent-agent instructions, or Trellis workflow state.
+- `./imo codex context` emits hook JSON containing a short `<imo-context>` block. It tells Codex to prefer current repo `.imo/` and `./imo` for IMO-related questions, but remains informational only and must not override user instructions, parent-agent instructions, or Trellis workflow state. It must not mutate host files, profiles, digests, candidates, raw signals, or Trellis state; compact learning-event append is the only allowed runtime side effect when events are enabled.
 - `scripts/imo.sh ...` must keep behaving as a compatibility form of the same commands.

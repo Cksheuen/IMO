@@ -76,6 +76,8 @@ durable repo-facing summary.
 - `./imo learning review prepare/inbox/inspect/approve/reject` is present for
   pull-based learning review. Background preparation may build candidates only;
   approval reuses the digest review gate.
+- `./imo learning metrics summary [--json]` is present for local learning
+  telemetry summaries from compact ignored event records.
 - `./imo learning digest promote/disable/reset` is present for reviewed active
   digest control with rollback metadata.
 - `./imo profile refresh/status/inspect/clear` is present for explicit
@@ -137,7 +139,8 @@ durable repo-facing summary.
   `./imo learning list`, and `./imo verify` are the current repo-root
   acceptance commands.
 - `./imo codex context` may be used for local Codex context-injection
-  experiments, but it must stay informational and non-mutating.
+  experiments. It must stay informational for agent behavior and host files;
+  compact learning-event append is the only allowed runtime side effect.
 - Keep `.imo/providers/root_surfaces.json` current whenever a root script,
   root skill, or root whitelist rule changes.
 - `scripts/imo.sh verify` remains a compatibility form of the same aggregate

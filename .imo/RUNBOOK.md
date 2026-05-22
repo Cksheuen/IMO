@@ -30,6 +30,7 @@ Run from the repository root:
 ./imo learning candidate list
 ./imo learning activity status
 ./imo learning review inbox
+./imo learning metrics summary
 ./imo codex context --empty
 ./imo verify
 bash scripts/imo.sh verify
@@ -54,14 +55,16 @@ Expected result:
   clean empty state and does not create `.imo/.runtime/session/`
 - `./imo learning review inbox` handles missing candidate state as a clean empty
   state and never creates active digest state
+- `./imo learning metrics summary` handles missing event state as a clean zero
+  summary and does not create `.imo/.runtime/learning/`
 - `./imo verify` checks digest promotion requires review metadata and can
   disable/reset project-scoped digest state
 - `./imo codex context --empty` emits valid hook JSON containing
   `<imo-context>` and injects active learning digest entries and project-profile
   summaries when present
 - `./imo verify` includes module, learning, project-profile, provider, root
-  compatibility, Codex context, defensive audit, compile, and compatibility
-  import checks
+  compatibility, Codex context, defensive audit, learning telemetry, compile,
+  and compatibility import checks
 - `bash scripts/imo.sh verify` remains a compatibility form of the aggregate
   check
 

@@ -22,6 +22,7 @@ Usage:
   ./imo learning activity status
   ./imo learning review inbox
   ./imo learning review prepare [--force]
+  ./imo learning metrics summary [--json]
   ./imo learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
   ./imo profile refresh
   ./imo profile status
@@ -50,6 +51,8 @@ Common commands:
   - `learning review prepare/inbox/inspect/approve/reject` provides an explicit
     deferred review inbox. Prepare may build candidates only; approve still
     requires review and rollback metadata before active digest mutation.
+  - `learning metrics summary` reads compact local learning events and reports
+    effectiveness counters without mutating learning state.
   - `learning digest promote/disable/reset` manages reviewed active digest
     entries and requires rollback metadata for promotion.
   - `profile refresh/status/inspect/clear` manages local project convention
@@ -59,7 +62,8 @@ Common commands:
     compatibility checks, including rule, module, learning, and provider
     contracts.
   - `codex context` emits a small repo-local IMO context block for experimental
-    Codex hook injection.
+    Codex hook injection. Active digest injection may append compact ignored
+    learning telemetry.
 
 Architecture:
   - IMO does not proxy Trellis by default. Use Trellis directly for Trellis

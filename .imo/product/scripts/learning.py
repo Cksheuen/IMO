@@ -10,6 +10,8 @@ import sys
 from typing import Any
 from uuid import uuid4
 
+import learning_events
+
 
 ROOT = Path(__file__).resolve().parents[3]
 SIGNALS_PATH = ROOT / ".imo/.runtime/learning/signals.jsonl"
@@ -48,6 +50,7 @@ def _usage() -> str:
   scripts/imo.sh learning review inspect <candidate-id>
   scripts/imo.sh learning review approve <candidate-id> --review-ref <ref> --rollback-id <id>
   scripts/imo.sh learning review reject <candidate-id> --reason <text>
+  scripts/imo.sh learning metrics summary [--json]
 
 List and inspect commands are read-only. Signal commands write raw learning
 signals only. Candidate and review prepare commands write candidates only; they
@@ -133,6 +136,10 @@ def _write_activity(activity: dict[str, Any]) -> None:
         json.dumps(activity, ensure_ascii=True, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+
+
+def _record_event(event_type: str, **fields: Any) -> None:
+    learning_events.write_event(event_type, "learning-cli", **fields)
 
 
 def _value(item: dict[str, Any], key: str, default: str = "-") -> str:
@@ -438,11 +445,18 @@ def _add_signal(args: list[str]) -> int:
         print(f"[imo learning] failed to write {SIGNALS_DISPLAY_PATH}: {exc}", file=sys.stderr)
         return 1
 
+    _record_event(
+        "signal_created",
+        signal_id=signal["id"],
+        scope=signal["scope"],
+        privacy=signal["privacy"],
+        confidence=signal["confidence"],
+    )
     print(signal["id"])
     return 0
 
 
-def _build_candidates() -> int:
+def _build_candidates(event_type: str = "candidate_build_completed", *, forced: bool | None = None) -> int:
     try:
         signals, empty_reason = _load_signals()
         existing, _ = _load_candidates()
@@ -518,6 +532,13 @@ def _build_candidates() -> int:
         print(f"[imo learning] failed to write {CANDIDATES_DISPLAY_PATH}: {exc}", file=sys.stderr)
         return 1
 
+    event_fields: dict[str, Any] = {
+        "created_count": created,
+        "updated_count": updated,
+    }
+    if forced is not None:
+        event_fields["forced"] = forced
+    _record_event(event_type, **event_fields)
     print(f"[imo learning] candidates built: {created} created, {updated} updated")
     return 0
 
@@ -563,6 +584,7 @@ def _mark_activity(args: list[str]) -> int:
         print(f"[imo learning] failed to write {SESSION_ACTIVITY_DISPLAY_PATH}: {exc}", file=sys.stderr)
         return 1
 
+    _record_event("activity_marked", state=activity["state"])
     print(_value(activity, "state"))
     return 0
 
@@ -599,10 +621,11 @@ def _review_prepare(args: list[str]) -> int:
             return 1
         allowed, reason = _activity_allows_prepare(activity)
         if not allowed:
+            _record_event("prepare_skipped", reason=reason, forced=False)
             print(f"[imo learning] review prepare skipped: {reason}")
             return 0
 
-    return _build_candidates()
+    return _build_candidates("prepare_completed", forced=force)
 
 
 def _promoted_candidate_ids() -> set[str]:
@@ -624,6 +647,7 @@ def _review_inbox() -> int:
         return 1
 
     if not candidates:
+        _record_event("inbox_viewed", pending_count=0)
         print(f"[imo learning] {empty_reason or 'candidate list is empty'}")
         return 0
 
@@ -632,6 +656,7 @@ def _review_inbox() -> int:
         for candidate in candidates
         if candidate.get("status") == "pending" and candidate.get("id") not in promoted
     ]
+    _record_event("inbox_viewed", pending_count=len(pending))
     if not pending:
         print("[imo learning] review inbox is empty")
         return 0
@@ -731,6 +756,7 @@ def _reject_candidate(candidate_id: str, args: list[str]) -> int:
             except OSError as exc:
                 print(f"[imo learning] failed to write {CANDIDATES_DISPLAY_PATH}: {exc}", file=sys.stderr)
                 return 1
+            _record_event("candidate_rejected", candidate_id=candidate_id)
             print(candidate_id)
             return 0
 
@@ -770,7 +796,7 @@ def _parse_digest_promote(args: list[str]) -> tuple[dict[str, str], list[str]]:
     return values, errors
 
 
-def _promote_digest(candidate_id: str, args: list[str]) -> int:
+def _promote_digest(candidate_id: str, args: list[str], event_type: str = "digest_promoted") -> int:
     values, errors = _parse_digest_promote(args)
     if errors:
         for error in errors:
@@ -842,6 +868,12 @@ def _promote_digest(candidate_id: str, args: list[str]) -> int:
         print(f"[imo learning] failed to write {DISPLAY_PATH}: {exc}", file=sys.stderr)
         return 1
 
+    _record_event(
+        event_type,
+        candidate_id=candidate_id,
+        digest_id=digest_id,
+        scope="global" if candidate.get("scope") == "global" else "project",
+    )
     print(digest_id)
     return 0
 
@@ -871,6 +903,7 @@ def _disable_digest(digest_id: str, args: list[str]) -> int:
             except OSError as exc:
                 print(f"[imo learning] failed to write {DISPLAY_PATH}: {exc}", file=sys.stderr)
                 return 1
+            _record_event("digest_disabled", digest_id=digest_id, scope=_value(item, "scope"))
             print(digest_id)
             return 0
 
@@ -905,6 +938,7 @@ def _reset_digest(args: list[str]) -> int:
         print(f"[imo learning] failed to reset {DISPLAY_PATH}: {exc}", file=sys.stderr)
         return 1
 
+    _record_event("digest_reset", scope=scope, removed_count=removed)
     print(f"[imo learning] digest reset: {removed} {scope} item(s) removed")
     return 0
 
@@ -956,6 +990,46 @@ def _inspect_item(item_id: str) -> int:
     return 1
 
 
+def _metrics_summary(args: list[str]) -> int:
+    if args not in ([], ["--json"]):
+        print("[imo learning] metrics summary supports only optional --json", file=sys.stderr)
+        return 64
+
+    as_json = args == ["--json"]
+    try:
+        events, empty_reason = learning_events.load_events()
+    except ValueError as exc:
+        print(f"[imo learning] {exc}", file=sys.stderr)
+        return 1
+    except OSError as exc:
+        print(f"[imo learning] failed to read {learning_events.EVENTS_DISPLAY_PATH}: {exc}", file=sys.stderr)
+        return 1
+
+    summary = learning_events.summarize_events(events)
+    if as_json:
+        print(json.dumps(summary, ensure_ascii=True, indent=2, sort_keys=True))
+        return 0
+
+    if not events:
+        print(f"[imo learning] {empty_reason or 'learning event list is empty'}")
+    print(f"total_events\t{summary['total_events']}")
+    print(f"candidate_created_count\t{summary['candidate_counts']['created']}")
+    print(f"candidate_updated_count\t{summary['candidate_counts']['updated']}")
+    print(f"review_approved_count\t{summary['review_decisions']['approved']}")
+    print(f"review_rejected_count\t{summary['review_decisions']['rejected']}")
+    print(f"digest_promoted_count\t{summary['digest_controls']['promoted']}")
+    print(f"digest_disabled_count\t{summary['digest_controls']['disabled']}")
+    print(f"digest_reset_count\t{summary['digest_controls']['reset']}")
+    print(f"context_digest_injected_count\t{summary['context_digest_injected_count']}")
+    print(f"active_task_interruption_count\t{summary['safety']['active_task_interruption_count']}")
+    print(f"auto_promotion_count\t{summary['safety']['auto_promotion_count']}")
+    if summary["prepare_skip_by_reason"]:
+        print("prepare_skip_by_reason")
+        for reason, count in sorted(summary["prepare_skip_by_reason"].items()):
+            print(f"- {reason}\t{count}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
     if not args or args[0] in {"-h", "--help", "help"}:
@@ -998,9 +1072,13 @@ def main(argv: list[str] | None = None) -> int:
         if review_command == "inspect" and len(args) == 3:
             return _inspect_candidate(args[2])
         if review_command == "approve" and len(args) >= 3:
-            return _promote_digest(args[2], args[3:])
+            return _promote_digest(args[2], args[3:], "candidate_approved")
         if review_command == "reject" and len(args) >= 3:
             return _reject_candidate(args[2], args[3:])
+    if command == "metrics" and len(args) >= 2:
+        metrics_command = args[1]
+        if metrics_command == "summary":
+            return _metrics_summary(args[2:])
     if command == "digest" and len(args) >= 2:
         digest_command = args[1]
         if digest_command == "promote" and len(args) >= 3:

@@ -29,6 +29,7 @@ Durable protocol and policy:
     candidate.schema.json
     digest.schema.json
     session-activity.schema.json
+    event.schema.json
   policies/
 ```
 
@@ -39,6 +40,7 @@ Project-local runtime state:
   signals.jsonl
   candidates.jsonl
   digest.json
+  events.jsonl
 
 .imo/.runtime/session/
   activity.json
@@ -55,6 +57,30 @@ Optional global user state:
 
 Runtime state must be inspectable and rebuildable where possible. Global state
 must never be committed.
+
+## Local Learning Events
+
+Learning events are compact observability records. They are used for local
+metrics only and are never injected into agent context by default.
+
+Events must include:
+
+```yaml
+id: event-id
+created_at: timestamp
+event_type: stable enum id
+source: producer id
+```
+
+Allowed optional fields are compact ids and counters such as `candidate_id`,
+`digest_id`, `scope`, `privacy`, `confidence`, `state`, `reason`,
+`created_count`, `updated_count`, `pending_count`, `removed_count`,
+`injected_count`, and `forced`.
+
+Events must not contain raw prompt text, full candidate summaries, source file
+content, credentials, or project-private facts beyond compact ids/categories.
+Telemetry write failure must not fail the underlying learning or context
+operation.
 
 ## Learning Levels
 
@@ -283,6 +309,19 @@ imo learning review reject <candidate-id> --reason <text>
 when activity state is missing, active, has running tools, has running agents,
 or has pending approval. `review approve` reuses the active digest promotion
 gate and requires review and rollback metadata.
+
+Current metrics CLI support:
+
+```text
+imo learning metrics summary
+imo learning metrics summary --json
+```
+
+Metrics commands read `.imo/.runtime/learning/events.jsonl` when present and
+must not create runtime files. Missing events are a clean zero summary. They
+report aggregate event counts, candidate creation/update counts, review
+decisions, digest controls, context digest injection counts, and explicit safety
+counters.
 
 Current digest write/control CLI support:
 

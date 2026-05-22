@@ -17,6 +17,7 @@ REQUIRED_SCHEMA_FILES = [
     "candidate.schema.json",
     "digest.schema.json",
     "session-activity.schema.json",
+    "event.schema.json",
 ]
 REQUIRED_LEVELS = ["raw_signal", "candidate", "active_digest", "hard_rule_or_skill_update"]
 REQUIRED_PRIVACY = {"public", "project_private", "sensitive"}
@@ -24,6 +25,21 @@ REQUIRED_SCOPES = {"session", "task", "project", "global"}
 REQUIRED_GATES = {"candidate_review", "digest_review", "hard_update_task_review"}
 REQUIRED_CONTROLS = {"list", "inspect", "disable", "reject", "promote", "reset"}
 REQUIRED_ACTIVITY_STATES = {"active", "post_turn", "quiescent"}
+REQUIRED_EVENT_FIELDS = {"id", "created_at", "event_type", "source"}
+REQUIRED_EVENT_TYPES = {
+    "signal_created",
+    "activity_marked",
+    "candidate_build_completed",
+    "prepare_skipped",
+    "prepare_completed",
+    "inbox_viewed",
+    "candidate_approved",
+    "candidate_rejected",
+    "digest_promoted",
+    "digest_disabled",
+    "digest_reset",
+    "context_digest_injected",
+}
 
 
 def _load_json(path: Path) -> Any:
@@ -105,6 +121,26 @@ def main() -> int:
             if REQUIRED_ACTIVITY_STATES - state_values:
                 errors.append(
                     f"{schema_path} missing activity states: {', '.join(sorted(REQUIRED_ACTIVITY_STATES - state_values))}"
+                )
+        if schema_file == "event.schema.json":
+            if schema.get("additionalProperties") is not False:
+                errors.append(f"{schema_path} must reject additional event properties")
+            required = set(schema.get("required", []))
+            if REQUIRED_EVENT_FIELDS - required:
+                errors.append(
+                    f"{schema_path} missing required event fields: {', '.join(sorted(REQUIRED_EVENT_FIELDS - required))}"
+                )
+            properties = schema.get("properties", {})
+            forbidden_properties = {"summary", "prompt", "raw_prompt", "content", "source_file_content"} & set(properties)
+            if forbidden_properties:
+                errors.append(
+                    f"{schema_path} exposes unsafe event properties: {', '.join(sorted(forbidden_properties))}"
+                )
+            event_type = properties.get("event_type", {})
+            event_values = set(event_type.get("enum", [])) if isinstance(event_type, dict) else set()
+            if REQUIRED_EVENT_TYPES - event_values:
+                errors.append(
+                    f"{schema_path} missing event types: {', '.join(sorted(REQUIRED_EVENT_TYPES - event_values))}"
                 )
 
     levels = policy.get("levels")
