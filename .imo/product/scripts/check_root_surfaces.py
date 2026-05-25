@@ -39,6 +39,14 @@ def _link_target(path: Path) -> Path | None:
     return target.resolve(strict=False)
 
 
+def _target_parts_present(text: str, target: Path) -> bool:
+    try:
+        parts = target.relative_to(ROOT).parts
+    except ValueError:
+        return False
+    return all(part in text for part in parts)
+
+
 def _check_root_scripts(contract: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     entries = contract.get("root_scripts")
@@ -73,18 +81,18 @@ def _check_root_scripts(contract: dict[str, Any]) -> list[str]:
         text = path.read_text(encoding="utf-8")
         target_literal = str(target.relative_to(ROOT))
         if kind == "shell-compat-exec":
-            if "exec " not in text or ".imo/product/scripts/" not in text:
-                errors.append(f"{rel_path}: shell wrapper must exec canonical .imo script")
+            if "exec " not in text or target_literal not in text:
+                errors.append(f"{rel_path}: shell wrapper must exec declared target {target_literal}")
         elif kind == "python-compat-runpy":
-            if "runpy.run_path" not in text or target.name not in text:
-                errors.append(f"{rel_path}: python runpy wrapper must forward to canonical script")
+            if "runpy.run_path" not in text or not _target_parts_present(text, target):
+                errors.append(f"{rel_path}: python runpy wrapper must forward to declared target {target_literal}")
         elif kind == "python-compat-import":
-            if "importlib.util.spec_from_file_location" not in text or target.name not in text:
-                errors.append(f"{rel_path}: python import wrapper must load canonical script")
+            if "importlib.util.spec_from_file_location" not in text or not _target_parts_present(text, target):
+                errors.append(f"{rel_path}: python import wrapper must load declared target {target_literal}")
         else:
             errors.append(f"{rel_path}: invalid wrapper kind {kind!r}")
-        if ".imo" not in text and target_literal not in text:
-            errors.append(f"{rel_path}: wrapper does not reference .imo target")
+        if target_literal not in text and not _target_parts_present(text, target):
+            errors.append(f"{rel_path}: wrapper does not reference declared target {target_literal}")
 
     undeclared = sorted(set(actual_scripts) - set(declared_scripts))
     if undeclared:

@@ -41,6 +41,7 @@
 - `.imo/product/scripts/check_project_profile_contracts.py` validates the stable project-profile contract and schema without mutating runtime state.
 - `.imo/product/scripts/check_learning_contracts.py` validates learning-plane policy contracts without writing learning state.
 - `.imo/product/scripts/check_provider_contracts.py` validates optional provider registry contracts without discovering or invoking providers.
+- `.imo/product/scripts/check_host_output_policy.py` validates host-output policy documents so abandoned same-path cutover language cannot silently re-enter the roadmap or adapter contracts.
 - `.imo/product/scripts/check_root_surfaces.py` validates root `scripts/`, root `skills/`, and `.gitignore` compatibility-surface declarations without mutating source.
 - `.imo/product/scripts/learning_events.py` owns compact local learning event
   writes and summaries under ignored `.imo/.runtime/learning/events.jsonl`.
@@ -76,6 +77,7 @@
 - `./imo verify` includes the module metadata, learning contract, project-profile contract, and provider registry checkers before compile/import smoke checks.
 - `./imo verify` includes the rule contract checker so product rules cannot stay prose-only or lose required sections.
 - `./imo verify` includes the root compatibility-surface checker so root `scripts/` and `skills/` cannot drift back into ambiguous source-of-truth surfaces.
+- `./imo verify` includes the host-output policy checker so current coexistence and manual Trellis update merge decisions cannot regress to abandoned wave/upstream-first takeover wording.
 - `./imo verify` includes observability contract and smoke checks. Runtime-write
   observability smokes must back up and restore `.imo/.runtime/observability/`.
 - `./imo verify` includes a global/project scope smoke. The smoke must validate

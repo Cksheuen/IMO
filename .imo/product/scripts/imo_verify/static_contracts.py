@@ -15,6 +15,11 @@ def build_static_checks() -> list[tuple[str, list[str], dict[str, str] | None]]:
             None,
         ),
         (
+            "host output policy",
+            [sys.executable, ".imo/product/scripts/check_host_output_policy.py"],
+            py_env,
+        ),
+        (
             "root entry help",
             ["bash", "scripts/imo.sh", "--help"],
             None,
@@ -103,6 +108,7 @@ def build_static_checks() -> list[tuple[str, list[str], dict[str, str] | None]]:
                 ".imo/product/scripts/install.py",
                 ".imo/product/scripts/learning_events.py",
                 ".imo/product/scripts/check_learning_contracts.py",
+                ".imo/product/scripts/check_host_output_policy.py",
                 ".imo/product/scripts/check-langchain-runtime-deps.py",
                 ".imo/product/scripts/check_module_metadata.py",
                 ".imo/product/scripts/check_observability_contracts.py",

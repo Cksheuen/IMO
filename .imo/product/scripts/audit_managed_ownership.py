@@ -84,6 +84,10 @@ def parse_manifest(root: Path, platform: str) -> list[ManifestTarget]:
 def load_trellis_hashes(root: Path, platforms: list[str]) -> dict[str, str]:
     template_hashes_path = root / ".trellis" / ".template-hashes.json"
     if not template_hashes_path.exists():
+        if (root / ".trellis").exists():
+            raise AuditError(
+                f"{template_hashes_path}: missing in Trellis project; cannot prove host ownership boundary",
+            )
         return {}
     data = load_json(template_hashes_path)
     if not isinstance(data, dict):
