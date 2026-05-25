@@ -111,8 +111,8 @@ Architecture:
 Advanced concepts:
   - Provider discovery/invocation is optional and disabled by default until a
     task adds explicit ownership and side-effect metadata.
-  - Host adapter projection remains blocked while Trellis owns the target host
-    output surfaces.
+  - Same-path host adapter projection remains disabled for Trellis-owned host
+    surfaces; future IMO projections must use namespaced non-overlapping paths.
   - `sync` / `generate` are intentionally not exposed in this repo because
     Trellis remains the active owner of that host projection layer.
 EOF
