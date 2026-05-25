@@ -130,20 +130,27 @@ durable repo-facing summary.
   overlays remain project-level to avoid cross-project task-id collisions and
   project-private fact leakage.
 
-### Blocked
+### Host Output Direction
 
-- Host-output cutover is blocked on upstream Trellis ownership removal.
-- Do not reopen adapter manifest entries while target paths still appear in
-  `.trellis/.template-hashes.json`.
-- Do not hand-edit `.trellis/.template-hashes.json` to simulate handoff.
+- Same-path host-output takeover is abandoned.
+- Trellis remains the owner of Trellis-named agents, hooks, and shared config
+  tracked in `.trellis/.template-hashes.json`.
+- Project-local edits to Trellis-owned host files are customization patches, not
+  IMO managed outputs.
+- Trellis update improvements should be reviewed through the `.new` copy flow
+  and manually merged when useful.
+- Future IMO host outputs must use namespaced non-overlapping paths such as
+  `.claude/agents/imo-*.md` or `.codex/agents/imo-*.toml`.
+- Do not hand-edit `.trellis/.template-hashes.json` to simulate ownership
+  release.
 
 ### Deferred
 
-- Claude command projection under `.imo/adapters/claude/commands`.
-- Claude skill projection under `.imo/adapters/claude/skills`.
-- Codex skill projection under `.imo/adapters/codex/skills`.
+- Namespaced Claude command projection under `.imo/adapters/claude/commands`.
+- Namespaced Claude skill projection under `.imo/adapters/claude/skills`.
+- Namespaced Codex skill projection under `.imo/adapters/codex/skills`.
 - Promotion-gate surfaces.
-- Shared config merge behavior beyond the explicit Wave 3 plan.
+- Shared config behavior outside Trellis-owned files.
 
 ## Next Work
 
@@ -151,8 +158,8 @@ durable repo-facing summary.
 
 - Run `bash scripts/imo.sh audit all` before and after any adapter manifest
   change.
-- Treat any overlap with `.trellis/.template-hashes.json` as an unfinished
-  ownership handoff, not as a byte-level drift issue.
+- Treat any overlap with `.trellis/.template-hashes.json` as a same-path
+  ownership conflict, not as a byte-level drift issue.
 
 ### 1.5. Keep Delegation Observable
 
@@ -224,22 +231,20 @@ Implement only after the contracts above are stable:
   capabilities or Trellis native task flow.
 - Provider invocation remains out of scope until side-effect metadata is stable.
 
-### 7. Host Output Cutover
+### 7. Host Output Coexistence
 
-Follow `.imo/adapters/HOST_OUTPUT_CUTOVER.md`, but keep this after the
-three-plane architecture stabilizes:
+Follow `.imo/adapters/HOST_OUTPUT_CUTOVER.md`:
 
-1. Wave 1: Claude + Codex agent family.
-2. Wave 2: Claude + Codex hooks.
-3. Wave 3: Claude settings and Codex config / hook registry.
-
-Each wave is dual-platform atomic and upstream-first.
+1. Keep Trellis-owned host targets out of IMO manifests.
+2. Review Trellis `.new` update copies manually when local customization exists.
+3. Use only namespaced non-overlapping paths for future IMO host projections.
+4. Keep `./imo audit all` and `./imo verify` green.
 
 ### 8. Adapter Skill And Command Projection
 
 Open a separate task before projecting commands or skills into host adapter
-surfaces. Those surfaces are not part of the current active host-output cutover
-roadmap.
+surfaces. Those surfaces must be namespaced and non-overlapping; there is no
+remaining same-path Trellis takeover work item.
 
 ## Non-Goals
 
@@ -247,7 +252,8 @@ roadmap.
 - Do not restore host-output `sync` or `generate` behavior locally while
   Trellis still owns the targets.
 - Do not treat root compatibility wrappers as long-term canonical logic.
-- Do not broaden a product/runtime migration task into host-output cutover work.
+- Do not broaden a product/runtime migration task into same-path host-output
+  takeover work.
 - Do not vendor external providers into `.imo/product/*` just because they are
   discoverable or useful to IMO.
 - Do not proxy Trellis or add Trellis callbacks as a default requirement for the

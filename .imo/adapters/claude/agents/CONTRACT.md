@@ -7,4 +7,6 @@ This directory will own templates or mapping rules for generated `.claude/agents
 - Source data originates in `.imo/`, not in generated host files.
 - Host output shape is expected to mirror Claude agent entry files (for example `*.md` descriptors).
 - For Trellis-owned Claude agent targets, this directory is a boundary contract rather than an active projection source in the current repo state. Do not store copied Trellis agent templates here while Trellis remains the active owner of `.claude/agents/trellis-*.md`.
-- Agents are the first planned host-output cutover wave, but only after the upstream-first handoff in `../../HOST_OUTPUT_CUTOVER.md` is complete for both Claude and Codex agent families.
+- Future Claude agent projections must use namespaced non-overlapping targets
+  such as `.claude/agents/imo-*.md`; same-path `trellis-*` agent takeover is
+  intentionally abandoned.

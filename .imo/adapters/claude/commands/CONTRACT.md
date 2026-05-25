@@ -7,4 +7,6 @@ This directory will own templates or mapping rules for generated `.claude/comman
 - Command definitions remain adapter outputs derived from `.imo/` source assets.
 - Host output is expected to mirror Claude command markdown entry files.
 - Phase 1 defines the category boundary only; no command sync logic exists yet.
-- Commands are not part of the active host-output cutover roadmap in `../../HOST_OUTPUT_CUTOVER.md`; schedule them in a separate task before adding manifest entries.
+- Commands are not part of a same-path Trellis takeover roadmap. Schedule a
+  separate task before adding manifest entries, and use namespaced
+  non-overlapping command targets such as `.claude/commands/imo/*`.
