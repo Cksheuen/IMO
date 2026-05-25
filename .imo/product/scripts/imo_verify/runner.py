@@ -29,4 +29,5 @@ def python_env() -> dict[str, str]:
 def no_event_env() -> dict[str, str]:
     env = python_env()
     env["IMO_DISABLE_LEARNING_EVENTS"] = "1"
+    env["IMO_DISABLE_EVENTS"] = "1"
     return env

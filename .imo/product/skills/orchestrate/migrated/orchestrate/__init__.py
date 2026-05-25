@@ -30,9 +30,18 @@ from .state import (
     create_feature,
     create_subtask,
     can_execute_subtask,
+    get_ready_subtasks,
+    select_parallel_batch,
     is_subtask_ready,  # Legacy alias
     update_feature_result,
     update_subtask_result,
+)
+
+from .executor import (
+    ExecutionResult,
+    RuntimeExecutor,
+    SimulatedExecutor,
+    execute_subtask,
 )
 
 from .nodes import (
@@ -76,9 +85,17 @@ __all__ = [
     "create_initial_state",
     "create_feature",
     "create_subtask",
+    "can_execute_subtask",
+    "get_ready_subtasks",
+    "select_parallel_batch",
     "is_subtask_ready",
     "update_feature_result",
     "update_subtask_result",
+    # Executor
+    "ExecutionResult",
+    "RuntimeExecutor",
+    "SimulatedExecutor",
+    "execute_subtask",
     # Nodes
     "collect_context_node",
     "decompose_node",

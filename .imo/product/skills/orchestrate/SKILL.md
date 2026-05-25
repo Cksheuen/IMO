@@ -8,6 +8,13 @@ description_zh: "多代理编排技能。自动将大型任务拆分为子任务
 
 将大任务拆成可验证、可并行、可回收的子任务。
 
+## 当前实现状态
+
+- `SKILL.md` 描述的是目标编排协议和人工/host agent 执行规则。
+- migrated LangGraph runtime 当前提供 `RuntimeExecutor` 边界，用于真实执行入口统一记录状态流、依赖关系、并行 batch selection、观测元数据和 verification/fixer loop。
+- `./imo task graph run <task>` 会先完成文件所有权、依赖和冲突 gate，再把 IMO task graph 节点转换为 orchestrate subtasks 并调用 migrated runtime。
+- 任何 host-agent 或 git worktree backend 都必须复用 `.imo/ORCHESTRATION.md` 的 observability gate，并保持 Trellis task plane 独立。
+
 ## 何时使用
 
 满足任一条件即可：
@@ -39,7 +46,7 @@ description_zh: "多代理编排技能。自动将大型任务拆分为子任务
 
 | Agent | 用途 | 隔离 |
 |------|------|------|
-| `implementer` | 写代码、改文件、补测试 | `worktree` |
+| `implementer` | 写代码、改文件、补测试 | 目标协议为 `worktree`；通过 runtime executor 边界接入 |
 | `researcher` | 搜索、阅读、只读调研 | 无 |
 | `reviewer` | 验证、审查、定位 root cause | 无 |
 
@@ -144,7 +151,7 @@ PRD 至少要有：
 
 ### Step 6: 执行与聚合
 
-并行子任务在同一轮启动；串行子任务等前置结果返回后再继续。
+并行子任务在同一轮启动；串行子任务等前置结果返回后再继续。当前 migrated runtime 会在一个 executor tick 内执行所有依赖满足且文件写入不冲突的 subtasks；productive worker backend 必须提供可观测 artifact、diff 或 final summary。
 
 聚合时只保留：
 

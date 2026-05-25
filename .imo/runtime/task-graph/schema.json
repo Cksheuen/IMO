@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://imo.local/schemas/task-graph/schema.json",
+  "title": "IMO Task Graph",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generated_at", "source", "nodes", "edges", "planning", "warnings"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trellis_tasks_dir", "missing_trellis_tasks"],
+      "properties": {
+        "trellis_tasks_dir": {
+          "type": "string"
+        },
+        "missing_trellis_tasks": {
+          "type": "boolean"
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/edge"
+      }
+    },
+    "planning": {
+      "$ref": "#/$defs/planning"
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "run_summary": {
+      "$ref": "#/$defs/run_summary"
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node_id",
+        "trellis_ref",
+        "title",
+        "status",
+        "agent_type",
+        "files_to_read",
+        "files_to_modify",
+        "dependencies",
+        "expected_artifact",
+        "source"
+      ],
+      "properties": {
+        "node_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trellis_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "agent_type": {
+          "type": "string"
+        },
+        "files_to_read": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "files_to_modify": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expected_artifact": {
+          "type": ["string", "null"]
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["edge_id", "from", "to", "type", "source"],
+      "properties": {
+        "edge_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "enum": ["parent-child", "depends-on", "related-to", "blocks", "evidence-for"]
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "planning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ready_nodes",
+        "blocked_nodes",
+        "missing_dependency_targets",
+        "writable_file_conflicts",
+        "candidate_parallel_batches"
+      ],
+      "properties": {
+        "ready_nodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "blocked_nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["node_id", "reasons"],
+            "properties": {
+              "node_id": {
+                "type": "string"
+              },
+              "reasons": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "missing_dependency_targets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "writable_file_conflicts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "node_ids"],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "node_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "candidate_parallel_batches": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "run_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "executor_backend",
+        "input_graph_digest",
+        "started_at",
+        "completed_at",
+        "orchestrate_state_summary",
+        "completed_subtask_count",
+        "blocked_subtask_count",
+        "feature_verification_summary",
+        "errors"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string"
+        },
+        "executor_backend": {
+          "type": "string"
+        },
+        "input_graph_digest": {
+          "type": "string"
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completed_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "orchestrate_state_summary": {
+          "type": "object"
+        },
+        "completed_subtask_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocked_subtask_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "feature_verification_summary": {
+          "type": "object"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

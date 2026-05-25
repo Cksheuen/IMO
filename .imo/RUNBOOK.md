@@ -31,7 +31,14 @@ Run from the repository root:
 ./imo learning activity status
 ./imo learning review inbox
 ./imo learning metrics summary
+./imo metrics status
+./imo metrics summary
+./imo metrics failures
 ./imo codex context --empty
+./imo task graph
+./imo task graph --json
+./imo task graph show 05-22-imo-task-graph-references
+./imo task graph plan
 ./imo verify
 bash scripts/imo.sh verify
 git diff --check
@@ -47,6 +54,12 @@ Expected result:
   state
 - `./imo profile status` handles missing project-profile runtime state as a
   clean missing state and does not create `.imo/.runtime/project-profile/`
+- `./imo task graph`, `show`, and `plan` inspect `.trellis/tasks/*` as external
+  source objects, do not mutate Trellis task JSON, and do not create
+  `.imo/.runtime/task-graph/`
+- `./imo task graph run <task-id-or-dir>` refuses before execution when explicit
+  `files_to_modify` ownership or dependency gates are missing; successful runs
+  may write summaries only under `.imo/.runtime/task-graph/runs/`
 - `./imo learning signal list` handles missing runtime signal state as a clean
   empty state
 - `./imo learning candidate list` handles missing runtime candidate state as a
@@ -57,14 +70,17 @@ Expected result:
   state and never creates active digest state
 - `./imo learning metrics summary` handles missing event state as a clean zero
   summary and does not create `.imo/.runtime/learning/`
+- `./imo metrics status`, `./imo metrics summary`, and `./imo metrics failures`
+  handle missing observability runtime state as clean empty output and do not
+  create `.imo/.runtime/observability/`
 - `./imo verify` checks digest promotion requires review metadata and can
   disable/reset project-scoped digest state
 - `./imo codex context --empty` emits valid hook JSON containing
   `<imo-context>` and injects active learning digest entries and project-profile
   summaries when present
-- `./imo verify` includes module, learning, project-profile, provider, root
-  compatibility, Codex context, defensive audit, learning telemetry, compile,
-  and compatibility import checks
+- `./imo verify` includes module, learning, observability, project-profile,
+  provider, root compatibility, Codex context, defensive audit, learning
+  telemetry, compile, and compatibility import checks
 - `bash scripts/imo.sh verify` remains a compatibility form of the aggregate
   check
 

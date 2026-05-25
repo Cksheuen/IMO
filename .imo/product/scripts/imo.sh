@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+OBSERVABILITY_SCRIPT="$REPO_ROOT/.imo/product/scripts/observability_events.py"
 
 print_placeholder() {
 cat <<'EOF'
@@ -24,10 +25,23 @@ Usage:
   ./imo learning review prepare [--force]
   ./imo learning metrics summary [--json]
   ./imo learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
+  ./imo metrics status
+  ./imo metrics summary [--since <duration>] [--json]
+  ./imo metrics timeline --trace <trace-id> [--json]
+  ./imo metrics failures [--since <duration>] [--json]
   ./imo profile refresh
   ./imo profile status
   ./imo profile inspect
   ./imo profile clear
+  ./imo task graph [--json]
+  ./imo task graph show <task-id-or-dir> [--json]
+  ./imo task graph read <task-id-or-dir> [--json]
+  ./imo task graph plan [--json]
+  ./imo task graph run <task-id-or-dir> [--json]
+  ./imo graph [--json]
+  ./imo show <task-id-or-dir>
+  ./imo read <task-id-or-dir>
+  ./imo plan [--json]
   ./imo codex context
   ./imo verify
 
@@ -55,12 +69,20 @@ Common commands:
     effectiveness counters without mutating learning state.
   - `learning digest promote/disable/reset` manages reviewed active digest
     entries and requires rollback metadata for promotion.
+  - `metrics status/summary/timeline/failures` reads the unified local
+    observability stream and bridges existing learning counters without
+    mutating observability state.
   - `profile refresh/status/inspect/clear` manages local project convention
     snapshots under `.imo/.runtime/project-profile/`; prompt-time context reads
     the cache and never refreshes it.
+  - `task graph`, `graph`, `show`, `read`, and `plan` inspect Trellis task
+    references through the IMO task graph overlay without mutating Trellis task
+    JSON or creating task graph runtime state.
+  - `task graph run` is explicit and gated by file ownership, dependency
+    validation, and conflict checks before any task graph run summary is written.
   - `verify` runs the current read-only IMO guardrail, wrapper, and runtime
-    compatibility checks, including rule, module, learning, and provider
-    contracts.
+    compatibility checks, including rule, module, learning, observability,
+    project-profile, and provider contracts.
   - `codex context` emits a small repo-local IMO context block for experimental
     Codex hook injection. Active digest injection may append compact ignored
     learning telemetry.
@@ -86,27 +108,129 @@ if [[ $# -eq 0 ]]; then
   exit 0
 fi
 
+new_trace_id() {
+  python3 "$OBSERVABILITY_SCRIPT" trace-id 2>/dev/null || printf 'trace-unavailable'
+}
+
+now_ms() {
+  python3 "$OBSERVABILITY_SCRIPT" now-ms 2>/dev/null || printf '0'
+}
+
+emit_observability_event() {
+  python3 "$OBSERVABILITY_SCRIPT" emit "$@" >/dev/null 2>&1 || true
+}
+
+run_observed() {
+  local operation="$1"
+  shift
+  local trace_id="${IMO_TRACE_ID:-$(new_trace_id)}"
+  local start_ms end_ms duration status outcome
+  local error_args=()
+
+  start_ms="$(now_ms)"
+  emit_observability_event \
+    --event-type command_start \
+    --trace-id "$trace_id" \
+    --plane command \
+    --component imo-cli \
+    --operation "$operation" \
+    --phase start \
+    --outcome ok \
+    --privacy project_private \
+    --command "$operation"
+
+  set +e
+  IMO_TRACE_ID="$trace_id" "$@"
+  status=$?
+  set -e
+
+  end_ms="$(now_ms)"
+  duration=0
+  if [[ "$start_ms" =~ ^[0-9]+$ && "$end_ms" =~ ^[0-9]+$ && "$end_ms" -ge "$start_ms" ]]; then
+    duration=$((end_ms - start_ms))
+  fi
+
+  outcome=ok
+  if [[ "$status" -ne 0 ]]; then
+    outcome=error
+    error_args=(--error-kind nonzero_exit)
+  fi
+
+  if [[ "${#error_args[@]}" -gt 0 ]]; then
+    emit_observability_event \
+      --event-type command_end \
+      --trace-id "$trace_id" \
+      --plane command \
+      --component imo-cli \
+      --operation "$operation" \
+      --phase end \
+      --outcome "$outcome" \
+      --privacy project_private \
+      --command "$operation" \
+      --exit-code "$status" \
+      --duration-ms "$duration" \
+      "${error_args[@]}"
+  else
+    emit_observability_event \
+      --event-type command_end \
+      --trace-id "$trace_id" \
+      --plane command \
+      --component imo-cli \
+      --operation "$operation" \
+      --phase end \
+      --outcome "$outcome" \
+      --privacy project_private \
+      --command "$operation" \
+      --exit-code "$status" \
+      --duration-ms "$duration"
+  fi
+
+  exit "$status"
+}
+
 case "${1}" in
   -h|--help|help)
     print_placeholder
     exit 0
     ;;
   audit)
-    exec python3 "$REPO_ROOT/.imo/product/scripts/audit_managed_ownership.py" "${@:2}"
+    run_observed audit python3 "$REPO_ROOT/.imo/product/scripts/audit_managed_ownership.py" "${@:2}"
     ;;
   defensive)
-    exec python3 "$REPO_ROOT/.imo/product/scripts/defensive_audit.py" "${@:2}"
+    run_observed defensive python3 "$REPO_ROOT/.imo/product/scripts/defensive_audit.py" "${@:2}"
     ;;
   learning)
-    exec python3 "$REPO_ROOT/.imo/product/scripts/learning.py" "${@:2}"
+    run_observed learning python3 "$REPO_ROOT/.imo/product/scripts/learning.py" "${@:2}"
+    ;;
+  metrics)
+    exec python3 "$REPO_ROOT/.imo/product/scripts/metrics.py" "${@:2}"
     ;;
   profile)
-    exec python3 "$REPO_ROOT/.imo/product/scripts/project_profile.py" "${@:2}"
+    run_observed profile python3 "$REPO_ROOT/.imo/product/scripts/project_profile.py" "${@:2}"
+    ;;
+  task)
+    case "${2:-}" in
+      graph)
+        run_observed task_graph python3 "$REPO_ROOT/.imo/product/scripts/task_graph.py" "${@:3}"
+        ;;
+      *)
+        print_placeholder >&2
+        printf '\nUnsupported imo task command: %s\n' "${2:-}" >&2
+        exit 64
+        ;;
+    esac
+    ;;
+  # Contract marker: graph|show|read|plan aliases share task_graph.py.
+  graph)
+    run_observed task_graph python3 "$REPO_ROOT/.imo/product/scripts/task_graph.py" "${@:2}"
+    ;;
+  show|read|plan)
+    run_observed task_graph python3 "$REPO_ROOT/.imo/product/scripts/task_graph.py" "$@"
     ;;
   codex)
     case "${2:-}" in
       context)
-        exec python3 "$REPO_ROOT/.imo/product/scripts/codex_context.py" "${@:3}"
+        run_observed codex_context python3 "$REPO_ROOT/.imo/product/scripts/codex_context.py" "${@:3}"
         ;;
       *)
         print_placeholder >&2
@@ -116,7 +240,7 @@ case "${1}" in
     esac
     ;;
   verify)
-    exec python3 "$REPO_ROOT/.imo/product/scripts/verify.py" "${@:2}"
+    run_observed verify python3 "$REPO_ROOT/.imo/product/scripts/verify.py" "${@:2}"
     ;;
   *)
     print_placeholder >&2

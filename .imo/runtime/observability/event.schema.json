@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://imo.local/schemas/runtime/observability/event.schema.json",
+  "title": "IMO Observability Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "created_at",
+    "event_type",
+    "trace_id",
+    "span_id",
+    "plane",
+    "component",
+    "operation",
+    "phase",
+    "outcome",
+    "privacy"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "command_start",
+        "command_end",
+        "verify_start",
+        "verify_check_start",
+        "verify_check_end",
+        "verify_end",
+        "metrics_viewed",
+        "orchestrate_worker_event"
+      ]
+    },
+    "trace_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "span_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "parent_span_id": {
+      "type": "string"
+    },
+    "plane": {
+      "type": "string",
+      "enum": [
+        "command",
+        "verify",
+        "learning",
+        "profile",
+        "provider",
+        "hook",
+        "orchestrate"
+      ]
+    },
+    "component": {
+      "type": "string",
+      "minLength": 1
+    },
+    "operation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "start",
+        "progress",
+        "end",
+        "skip"
+      ]
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "error",
+        "timeout",
+        "skipped",
+        "cancelled"
+      ]
+    },
+    "privacy": {
+      "type": "string",
+      "enum": [
+        "public",
+        "project_private",
+        "sensitive"
+      ]
+    },
+    "duration_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "exit_code": {
+      "type": "integer"
+    },
+    "error_kind": {
+      "type": "string"
+    },
+    "command": {
+      "type": "string"
+    },
+    "check_label": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "item_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pending_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "source": {
+      "type": "string"
+    },
+    "source_event_type": {
+      "type": "string"
+    }
+  }
+}

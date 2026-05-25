@@ -13,6 +13,10 @@ from typing import Dict, Any
 
 
 def _load_runtime():
+    repo_root = Path(__file__).resolve().parents[6]
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+
     module_path = Path(__file__).with_name("__init__.py")
     spec = importlib.util.spec_from_file_location(
         "orchestrate_migrated_runtime",
@@ -32,7 +36,7 @@ _RUNTIME_IMPORT_ERROR = None
 if __package__ in (None, ""):
     try:
         _runtime = _load_runtime()
-    except ModuleNotFoundError as exc:
+    except Exception as exc:
         _runtime = None
         _RUNTIME_IMPORT_ERROR = exc
 else:
@@ -54,6 +58,7 @@ if __package__ not in (None, ""):
         run_orchestration,
     )
     from .nodes import execute_subtask_node
+    from .nodes import verify_node
     from .verification import (
         VerificationGate,
         FixerLoop,
@@ -69,6 +74,8 @@ else:
         create_initial_state = _runtime.create_initial_state
         create_feature = _runtime.create_feature
         create_subtask = _runtime.create_subtask
+        get_ready_subtasks = _runtime.get_ready_subtasks
+        select_parallel_batch = _runtime.select_parallel_batch
         DeltaContext = _runtime.DeltaContext
         create_orchestrate_graph = _runtime.create_orchestrate_graph
         compile_orchestrate_graph = _runtime.compile_orchestrate_graph
@@ -76,6 +83,7 @@ else:
         compile_orchestrate_graph_with_interrupt = _runtime.compile_orchestrate_graph_with_interrupt
         run_orchestration = _runtime.run_orchestration
         execute_subtask_node = _runtime.execute_subtask_node
+        verify_node = _runtime.verify_node
         VerificationGate = _runtime.VerificationGate
         FixerLoop = _runtime.FixerLoop
         run_verification_with_interrupt = _runtime.run_verification_with_interrupt
@@ -291,8 +299,10 @@ async def example_parallel_execution():
     ]
 
     # Mark some as complete
-    state["subtasks"][0]["status"] = "complete"
-    state["subtasks"][1]["status"] = "complete"
+    state = {
+        **state,
+        **(await execute_subtask_node(state)),
+    }
 
     # Check if subtask 3 is ready
     subtask_3 = state["subtasks"][2]
@@ -302,6 +312,7 @@ async def example_parallel_execution():
     )
 
     print(f"Subtask 3 dependencies satisfied: {deps_satisfied}")
+    print(f"Completed in first tick: {[s['status'] for s in state['subtasks']]}")
 
     return state
 
@@ -463,6 +474,86 @@ def test_feature_summary():
     print("✓ test_feature_summary passed")
 
 
+def test_parallel_batch_selection():
+    """Test that ready subtasks are selected without writable conflicts."""
+    state = create_initial_state("Parallel test", "parallel-test")
+    state["subtasks"] = [
+        create_subtask(1, "Task A", "researcher", [], [], []),
+        create_subtask(2, "Task B", "researcher", [], [], []),
+    ]
+
+    ready = get_ready_subtasks(state)
+    batch = select_parallel_batch(ready)
+
+    assert [subtask["id"] for subtask in batch] == [1, 2]
+    print("✓ test_parallel_batch_selection passed")
+
+
+def test_conflicting_batch_selection():
+    """Test that writable ownership conflicts stay out of the same batch."""
+    state = create_initial_state("Conflict test", "conflict-test")
+    state["subtasks"] = [
+        create_subtask(1, "Task A", "implementer", ["src/shared.ts"], [], []),
+        create_subtask(2, "Task B", "implementer", ["src/shared.ts"], [], []),
+    ]
+
+    ready = get_ready_subtasks(state)
+    batch = select_parallel_batch(ready)
+
+    assert [subtask["id"] for subtask in batch] == [1]
+    print("✓ test_conflicting_batch_selection passed")
+
+
+def test_dependency_readiness():
+    """Test that dependencies gate ready subtask selection."""
+    state = create_initial_state("Dependency test", "dependency-test")
+    state["subtasks"] = [
+        create_subtask(1, "Task A", "researcher", [], [], []),
+        create_subtask(2, "Task B", "implementer", [], [], [1]),
+    ]
+
+    ready = get_ready_subtasks(state)
+    assert [subtask["id"] for subtask in ready] == [1]
+
+    state["subtasks"][0]["status"] = "complete"
+    ready = get_ready_subtasks(state)
+    assert [subtask["id"] for subtask in ready] == [2]
+    print("✓ test_dependency_readiness passed")
+
+
+def test_parallel_executor_tick():
+    """Test that two independent subtasks complete in one executor tick."""
+    state = create_initial_state("Executor tick test", "executor-tick-test")
+    state["subtasks"] = [
+        create_subtask(1, "Task A", "researcher", [], [], []),
+        create_subtask(2, "Task B", "researcher", [], [], []),
+    ]
+
+    updates = asyncio.run(execute_subtask_node(state))
+    updated = {**state, **updates}
+
+    assert [subtask["status"] for subtask in updated["subtasks"]] == ["complete", "complete"]
+    assert [subtask["productive"] for subtask in updated["subtasks"]] == [True, True]
+    assert all(subtask["observability"]["final_summary"] for subtask in updated["subtasks"])
+    print("✓ test_parallel_executor_tick passed")
+
+
+def test_failed_verification_delta_context():
+    """Test that explicit verification failure creates delta context."""
+    state = create_initial_state("Failed verification test", "failed-verification-test")
+    state["features"].append(create_feature("F001", "Feature should pass", ["Passes"]))
+    state["verification_feature_results"] = {"F001": False}
+
+    updates = asyncio.run(verify_node(state))
+    updated = {**state, **updates}
+    feature = updated["features"][0]
+
+    assert feature["passes"] is False
+    assert feature["delta_context"] is not None
+    assert updated["fixer_loop_active"] is True
+    print("✓ test_failed_verification_delta_context passed")
+
+
 # Main test runner
 
 async def run_all_examples():
@@ -497,6 +588,12 @@ async def run_all_examples():
 
 def run_all_tests():
     """Run all unit tests."""
+    if _RUNTIME_IMPORT_ERROR is not None:
+        raise RuntimeError(
+            "Prerequisite missing for runtime tests. "
+            "Install LangGraph/LangChain dependencies or set PYTHONPATH=.imo/product"
+        ) from _RUNTIME_IMPORT_ERROR
+
     print("Running unit tests...\n")
 
     test_state_creation()
@@ -504,6 +601,11 @@ def run_all_tests():
     test_subtask_creation()
     test_verification_gate()
     test_feature_summary()
+    test_parallel_batch_selection()
+    test_conflicting_batch_selection()
+    test_dependency_readiness()
+    test_parallel_executor_tick()
+    test_failed_verification_delta_context()
 
     print("\nAll tests passed! ✓")
 

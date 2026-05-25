@@ -32,7 +32,12 @@ The current repo-local IMO command surface is:
 ./imo learning review inbox
 ./imo learning metrics summary
 ./imo learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
+./imo metrics status
+./imo metrics summary
 ./imo codex context
+./imo task graph
+./imo task graph show 05-22-imo-task-graph-references
+./imo task graph plan
 ./imo verify
 ```
 
@@ -90,9 +95,20 @@ remains only as a compatibility wrapper for existing local calls.
   safety counters without uploading data or changing learning state.
 - `./imo learning digest promote/disable/reset` manages reviewed active digest
   entries with rollback metadata.
+- `./imo metrics status/summary/timeline/failures` reads compact unified
+  observability events under `.imo/.runtime/observability/events/`, bridges
+  existing learning counters, and treats missing runtime state as a clean empty
+  state.
 - `./imo profile refresh/status/inspect/clear` manages a local project
   convention snapshot under `.imo/.runtime/project-profile/`. Context hooks may
   read the bounded summary but never refresh it automatically.
+- `./imo task graph`, `./imo task graph show`, `./imo task graph read`, and
+  `./imo task graph plan` inspect Trellis task references through an IMO-owned
+  overlay. These commands are read-only: they do not mutate Trellis task JSON
+  and do not create `.imo/.runtime/task-graph/`.
+- `./imo task graph run <task-id-or-dir>` is explicit and gated by file
+  ownership, dependency validation, and writable-file conflict checks before a
+  local run summary may be written under `.imo/.runtime/task-graph/runs/`.
 - `./imo codex context` emits a short repo-local IMO context block for
   experimental Codex hook injection, including active learning digest entries
   when present. It is informational and does not replace Trellis workflow state;
@@ -108,6 +124,8 @@ remains only as a compatibility wrapper for existing local calls.
   - `.imo/learning/policy.json`
   - `.imo/learning/schemas/event.schema.json`
   - `.imo/providers/registry.json`
+  - `.imo/runtime/observability/event.schema.json`
+  - `.imo/runtime/task-graph/schema.json`
 - `./imo defensive audit --json` provides a stable advisory report shape for
   defensive-programming review.
 - Delegated implementation now has a repo-local observability protocol in

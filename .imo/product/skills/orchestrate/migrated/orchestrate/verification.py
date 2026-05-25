@@ -4,7 +4,7 @@ Verification and Fixer Loop implementation.
 Implements CC's verification-gate + Fixer Loop pattern.
 """
 from typing import Dict, Any, Optional, List
-from langgraph.types import Command, interrupt
+from langgraph.types import Command
 from langgraph.checkpoint.memory import MemorySaver
 
 from .state import (

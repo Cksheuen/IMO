@@ -12,10 +12,10 @@
 | **Verification Gate** | `interrupt_before` + `Command(resume=...)` | 中断恢复模式 |
 | **Delta Context** | `state['delta_context']` | 状态字段 |
 | **Fixer Loop** | 条件边 + 循环回边 | `verify → fixer → execute` |
-| **Subagent** | 并行节点 / `asyncio.gather` | 并行执行 |
+| **Subagent** | executor boundary + `asyncio.gather` for runtime subtasks | 通过 executor backend 接入 productive host agent / worktree 执行 |
 | **Rules Pack** | 硬编码在节点函数中 | 可选：提取为 Callback |
 | **PRD** | `state['prd']` 或外部存储 | 状态字段 |
-| **Worktree 隔离** | 需外部实现 | 非 LangGraph 内置 |
+| **Worktree 隔离** | 需外部 backend 实现 | 非 LangGraph 内置；当前 runtime 不创建 worktree |
 | **Agent 类型选择** | 节点配置不同 LLM | `model` 参数 |
 | **Agent 动态模型分配** | 子任务执行前调用独立 routing runtime | 由 `multi-model-agent` 迁移样例提供 |
 
@@ -109,9 +109,16 @@ def should_continue_execution(state: OrchestrateState) -> Literal["continue", "d
 
 ### Step 5: 并行执行
 
+当前实现状态：
+
+- `execute_subtask_node()` 会选择所有依赖满足且 `files_to_modify` 不冲突的 pending subtasks。
+- selected batch 通过 executor boundary 使用 `asyncio.gather` 并发执行。
+- 已实现 backend 是 `RuntimeExecutor`，会回写 final summary 和 observability metadata。
+- Productive subagent / worktree backend 必须沿用同一 result contract，并提供可审查 artifact、diff 或 worker summary。
+
 | CC 实现 | LangGraph 实现 |
 |---------|----------------|
-| 同一消息中多个 Agent 调用 | 并行节点 / `asyncio.gather` |
+| 同一消息中多个 Agent 调用 | executor boundary + `asyncio.gather` |
 | `isolation: "worktree"` | 需外部实现隔离机制 |
 | 独立 prompt 注入 | 节点函数参数 |
 | implementer / reviewer / researcher 模型选择 | 子任务执行前动态路由 | 调用 `multi-model-agent` runtime |

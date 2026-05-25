@@ -125,7 +125,6 @@ def _run_learning_signal_smoke() -> bool:
                 shutil.copytree(backup_learning, runtime_dir, dirs_exist_ok=True)
             shutil.rmtree(backup_dir, ignore_errors=True)
 
-
 def _run_learning_candidate_smoke() -> bool:
     print("[imo verify] learning candidate behavior")
     runtime_dir = ROOT / ".imo/.runtime/learning"
@@ -1043,4 +1042,3 @@ def _run_learning_telemetry_smoke() -> bool:
                 session_dir.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copytree(backup_session, session_dir, dirs_exist_ok=True)
             shutil.rmtree(backup_dir, ignore_errors=True)
-

@@ -4,21 +4,21 @@ Node implementations for Orchestrate LangGraph migration.
 Implements the core nodes: collect_context, decompose, execute, aggregate, verify.
 """
 import importlib.util
+import asyncio
 from pathlib import Path
 import sys
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from langchain_core.runnables import RunnableLambda
-from langchain_core.messages import HumanMessage, AIMessage
 from skills.migrated.shared_runtime.agent_protocols import build_delta_context
 
+from .executor import execute_subtask
 from .state import (
     OrchestrateState,
-    create_initial_state,
     create_feature,
     create_subtask,
-    can_execute_subtask,
+    get_ready_subtasks,
+    select_parallel_batch,
     update_feature_result,
-    update_subtask_result,
     DeltaContext,
 )
 
@@ -149,63 +149,54 @@ async def decompose_node(state: OrchestrateState) -> Dict[str, Any]:
 
 async def execute_subtask_node(state: OrchestrateState) -> Dict[str, Any]:
     """
-    Step 5: Execute a single subtask.
+    Step 5: Execute ready subtasks as a non-conflicting parallel batch.
 
-    Equivalent to CC's Agent tool calls with implementer/researcher/reviewer.
+    All ready subtasks without writable-file conflicts can finish in one
+    executor tick through the configured runtime executor boundary.
     """
-    current_index = state["current_subtask_index"]
     subtasks = state["subtasks"]
+    ready_subtasks = get_ready_subtasks(state)
+    batch = select_parallel_batch(ready_subtasks)
 
-    if current_index >= len(subtasks):
-        return {"fixer_loop_active": False}
-
-    runnable_index = None
-    current_subtask = None
-    for idx, subtask in enumerate(subtasks):
-        if subtask.get("status") != "pending":
-            continue
-        if can_execute_subtask(state, subtask):
-            runnable_index = idx
-            current_subtask = subtask
-            break
-
-    if current_subtask is None:
+    if not batch:
         return {
             "fixer_loop_active": False,
             "errors": ["No runnable pending subtasks"],
         }
 
-    if runnable_index is None:
-        return {"fixer_loop_active": False}
+    routed_batch = []
+    for subtask in batch:
+        routing = await _route_subtask_model(subtask)
+        routed_batch.append({**subtask, **routing})
 
-    routing = await _route_subtask_model(current_subtask)
-    current_subtask = {
-        **current_subtask,
-        **routing,
-    }
-
-    # In production, this would:
-    # 1. Create an isolated worktree
-    # 2. Call implementer agent with the subtask prompt
-    # 3. Collect results
-
-    # Demo: Simulate execution
-    model_note = current_subtask.get("recommended_model") or "inherit"
-    result = (
-        f"Simulated execution of subtask {current_subtask['id']} "
-        f"with model {model_note}"
+    results = await asyncio.gather(
+        *(execute_subtask(subtask) for subtask in routed_batch)
     )
+    result_by_id = {result["subtask_id"]: result for result in results}
+    routed_by_id = {subtask["id"]: subtask for subtask in routed_batch}
 
     updated_subtasks = []
-    for idx, subtask in enumerate(subtasks):
-        if idx == runnable_index:
-            updated_subtasks.append(dict(current_subtask, status="complete", result=result))
-        else:
+    for subtask in subtasks:
+        result = result_by_id.get(subtask["id"])
+        if result is None:
             updated_subtasks.append(subtask)
+        else:
+            routed = routed_by_id[subtask["id"]]
+            updated_subtasks.append({
+                **subtask,
+                **routed,
+                "status": result["status"],
+                "result": result.get("result"),
+                "started_at": result.get("started_at"),
+                "completed_at": result.get("completed_at"),
+                "final_summary": result.get("final_summary"),
+                "productive": result.get("productive", False),
+                "observability": result.get("observability", {}),
+            })
 
     return {
         "subtasks": updated_subtasks,
-        "current_subtask_index": max(current_index, runnable_index + 1),
+        "current_subtask_index": len([s for s in updated_subtasks if s.get("status") == "complete"]),
     }
 
 
@@ -254,14 +245,27 @@ async def verify_node(state: OrchestrateState) -> Dict[str, Any]:
                 passes = True  # Simulate success
                 notes = "Verified automatically"
 
+            delta_context = None
+            if not passes:
+                delta_context = build_delta_context(
+                    file="(verification payload)",
+                    lines="(verification payload)",
+                    code_snippet="(verification payload)",
+                    root_cause="Feature verification failed",
+                    target=feature["description"],
+                    details="Address the failed acceptance criteria before retrying",
+                )
+
             updates = update_feature_result(
                 state,
                 feature["id"],
                 passes=passes,
                 notes=notes,
+                delta_context=delta_context,
             )
             updates["verification_approved"] = None
             updates["verification_feature_results"] = {}
+            updates["fixer_loop_active"] = not passes
             return updates
 
     # All features verified

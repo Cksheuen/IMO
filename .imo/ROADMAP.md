@@ -39,6 +39,8 @@ durable repo-facing summary.
   local project convention snapshots.
 - `.imo/runtime/defensive-audit/` records the stable advisory-report contract
   for defensive-programming audits.
+- `.imo/runtime/observability/` records the stable unified local observability
+  event contract and schema.
 - `.imo/product/skills/modules.json` records machine-readable module metadata.
 - `.imo/learning/policy.json` records machine-readable learning policy gates.
 - `.imo/providers/registry.json` records machine-readable provider contract and
@@ -61,8 +63,9 @@ durable repo-facing summary.
   necessary boundary guardrails from simplification, contract, and removal
   candidates.
 - `./imo verify` now validates module metadata, learning policy,
-  rule contracts, project-profile contracts, provider registry contracts, and
-  root compatibility surfaces before compile/import smoke checks.
+  rule contracts, observability contracts, project-profile contracts, provider
+  registry contracts, and root compatibility surfaces before compile/import
+  smoke checks.
 - `./imo learning list` and `./imo learning inspect <id>` are
   read-only learning digest commands.
 - `./imo learning signal list` is a read-only raw signal command, and
@@ -80,6 +83,9 @@ durable repo-facing summary.
   telemetry summaries from compact ignored event records.
 - `./imo learning digest promote/disable/reset` is present for reviewed active
   digest control with rollback metadata.
+- `./imo metrics status/summary/timeline/failures` is present for local unified
+  observability over command lifecycle events, failure rollups, trace timelines,
+  and bridged learning counters.
 - `./imo profile refresh/status/inspect/clear` is present for explicit
   low-frequency project convention profiling.
 - `./imo codex context` reads active learning digest entries and injects only
@@ -136,8 +142,8 @@ durable repo-facing summary.
 ### 2. Keep The Direct-Run Entry Green
 
 - `./imo --help`, `./imo audit all`, `./imo defensive audit`,
-  `./imo learning list`, and `./imo verify` are the current repo-root
-  acceptance commands.
+  `./imo learning list`, `./imo metrics status`, and `./imo verify` are the
+  current repo-root acceptance commands.
 - `./imo codex context` may be used for local Codex context-injection
   experiments. It must stay informational for agent behavior and host files;
   compact learning-event append is the only allowed runtime side effect.

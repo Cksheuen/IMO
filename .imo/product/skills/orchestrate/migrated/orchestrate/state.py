@@ -28,6 +28,12 @@ class Subtask(TypedDict):
     recommended_model: Optional[str]
     routing_reason: Optional[str]
     result: Optional[str]
+    expected_artifact: Optional[str]
+    started_at: Optional[str]
+    completed_at: Optional[str]
+    final_summary: Optional[str]
+    productive: bool
+    observability: Dict[str, Any]
 
 
 class PRD(TypedDict):
@@ -169,7 +175,20 @@ def create_subtask(
         status="pending",
         recommended_model=None,
         routing_reason=None,
-        result=None
+        result=None,
+        expected_artifact=None,
+        started_at=None,
+        completed_at=None,
+        final_summary=None,
+        productive=False,
+        observability={
+            "status_artifact": None,
+            "diff": None,
+            "final_summary": None,
+            "first_check_timeout": "2 minutes",
+            "no_diff_timeout": "5 minutes",
+            "fallback": "close_worker_then_serial_or_restart",
+        },
     )
 
 
@@ -198,6 +217,33 @@ def can_execute_subtask(state: OrchestrateState, subtask: Subtask) -> bool:
         if dep_subtask is None or dep_subtask["status"] != "complete":
             return False
     return True
+
+
+def get_ready_subtasks(state: OrchestrateState) -> List[Subtask]:
+    """Get pending subtasks whose dependencies are complete."""
+    return [
+        subtask
+        for subtask in state["subtasks"]
+        if subtask.get("status") == "pending" and can_execute_subtask(state, subtask)
+    ]
+
+
+def select_parallel_batch(subtasks: List[Subtask]) -> List[Subtask]:
+    """
+    Select a non-conflicting batch from ready subtasks.
+
+    A writable file may belong to only one subtask in the same batch. Read-only
+    subtasks and subtasks with no file writes can run together.
+    """
+    selected = []
+    owned_files = set()
+    for subtask in subtasks:
+        writes = [path for path in subtask.get("files_to_modify", []) if path]
+        if any(path in owned_files for path in writes):
+            continue
+        selected.append(subtask)
+        owned_files.update(writes)
+    return selected
 
 
 def update_feature_result(
@@ -232,7 +278,8 @@ def update_subtask_result(
     state: OrchestrateState,
     subtask_id: int,
     status: str,
-    result: Optional[str] = None
+    result: Optional[str] = None,
+    **metadata: Any,
 ) -> Dict[str, Any]:
     """Update subtask execution result."""
     subtasks = []
@@ -241,6 +288,7 @@ def update_subtask_result(
             updated_subtask = dict(s)
             updated_subtask["status"] = status
             updated_subtask["result"] = result
+            updated_subtask.update(metadata)
             subtasks.append(updated_subtask)
         else:
             subtasks.append(s)

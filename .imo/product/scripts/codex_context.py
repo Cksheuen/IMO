@@ -124,7 +124,7 @@ def _build_context(data: dict) -> str:
         "Entrypoint: `./imo`",
         cwd_line,
         "Preference: for IMO-related questions in this repo, inspect current `.imo/` sources and use `./imo` before global `~/.claude` assets.",
-        "Direct commands: `./imo audit all`, `./imo profile status`, `./imo learning list`, `./imo verify`",
+        "Direct commands: `./imo audit all`, `./imo profile status`, `./imo learning list`, `./imo metrics status`, `./imo verify`",
         "Boundary: Trellis remains the task plane; IMO does not proxy Trellis or claim Trellis-owned host outputs by default.",
     ]
     rule_context = _active_rule_context()

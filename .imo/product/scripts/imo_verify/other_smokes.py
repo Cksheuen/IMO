@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -183,4 +182,3 @@ def _run_project_profile_smoke() -> bool:
                 runtime_dir.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copytree(backup_profile, runtime_dir, dirs_exist_ok=True)
             shutil.rmtree(backup_dir, ignore_errors=True)
-

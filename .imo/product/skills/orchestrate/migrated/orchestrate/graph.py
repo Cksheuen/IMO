@@ -9,7 +9,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command
 from skills.migrated.shared_runtime.graph_helpers import compile_graph
 
-from .state import OrchestrateState, DeltaContext
+from .state import OrchestrateState, DeltaContext, get_ready_subtasks, select_parallel_batch
 from .nodes import (
     collect_context_runnable,
     decompose_runnable,
@@ -90,20 +90,8 @@ def should_proceed_after_decompose(state: OrchestrateState) -> Literal["execute"
 
 def should_continue_execution(state: OrchestrateState) -> Literal["continue", "aggregate"]:
     """Check if there are more subtasks to execute."""
-    subtasks = state.get("subtasks", [])
-
-    # Check for pending subtasks with satisfied dependencies
-    for subtask in subtasks:
-        if subtask.get("status") == "pending":
-            # Check dependencies
-            deps_satisfied = all(
-                any(s["id"] == dep_id and s.get("status") == "complete"
-                    for s in subtasks)
-                for dep_id in subtask.get("dependencies", [])
-            )
-            if deps_satisfied:
-                return "continue"
-
+    if select_parallel_batch(get_ready_subtasks(state)):
+        return "continue"
     return "aggregate"
 
 
