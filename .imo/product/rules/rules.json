@@ -43,6 +43,47 @@
         "read_digest": true,
         "write_signals": true
       }
+    },
+    {
+      "id": "update-handoff",
+      "name": "Update Handoff",
+      "status": "active",
+      "owner_surface": ".imo/product/rules/update-handoff.md",
+      "trigger": "Changing IMO update, install, release, runtime-state, hook, or verification mechanics, or explaining how another device should update IMO.",
+      "context_summary": "Before finishing affected IMO release or migration work, review .imo/UPDATE.md, update it when mechanics changed, and state whether the update method changed so another agent can perform the smallest safe cross-device refresh.",
+      "priority_order": [
+        "explicit_user_instruction",
+        "repository_hard_rules_or_specs",
+        "tracked_update_handoff",
+        "current_local_source_evidence",
+        "generic_agent_training_defaults"
+      ],
+      "overrides_generic_habits": [
+        "conversation_history_as_update_source",
+        "release_summary_without_update_review",
+        "destructive_update_before_dirty_check",
+        "runtime_state_as_disposable_source"
+      ],
+      "required_sections": [
+        "Summary",
+        "Trigger",
+        "Priority",
+        "Required Local Evidence",
+        "Habits To Suppress",
+        "Implementation Behavior",
+        "Allowed Exceptions",
+        "Review Questions",
+        "Non-Goals"
+      ],
+      "default_enabled": true,
+      "integration_modes": [
+        "context-guidance",
+        "manual-review"
+      ],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
     }
   ]
 }

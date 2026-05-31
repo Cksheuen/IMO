@@ -25,3 +25,5 @@ and skills without taking over Trellis task flow.
 
 - `chameleon`: adapt to established project conventions before coding new
   modules, and override generic agent habits that conflict with local evidence.
+- `update-handoff`: keep `.imo/UPDATE.md` synchronized whenever IMO update,
+  install, release, runtime-state, hook, or verification mechanics change.

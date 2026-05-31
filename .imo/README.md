@@ -88,6 +88,8 @@ IMO can be installed globally while keeping Trellis-derived state local:
 - `BOUNDARY.md`: ownership, integration, learning, and maintenance guardrails.
 - `ORCHESTRATION.md`: observable worker progress protocol for delegated work.
 - `RUNBOOK.md`: final direct-run acceptance sequence.
+- `UPDATE.md`: cross-device update handoff and the rule for keeping update
+  instructions synchronized with release mechanics.
 - `product/`: reusable framework assets that will eventually replace legacy root sources.
 - `adapters/`: host-specific template boundaries for Claude Code and Codex outputs.
 - `learning/`: shared learning-plane contracts and promotion policy.
@@ -182,6 +184,10 @@ IMO can be installed globally while keeping Trellis-derived state local:
   learning policy, and provider registry contracts, plus root
   compatibility-surface, package-wrapper, global/project scope, and install
   lifecycle checks.
+- `.imo/UPDATE.md` is the tracked handoff for agents updating IMO on another
+  device or in another target repository. Any task that changes update, install,
+  global shim, history-reset, runtime-state, or verification mechanics must
+  update that file before release.
 - Machine-readable contract gates now exist for:
   - `.imo/product/rules/rules.json`
   - `.imo/runtime/project-profile/schema.json`
