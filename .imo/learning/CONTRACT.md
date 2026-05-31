@@ -7,6 +7,7 @@ capabilities and public agents.
 
 The learning plane manages:
 
+- structured user profile
 - user preferences
 - correction signals
 - recurring failure patterns
@@ -51,7 +52,7 @@ Optional global user state:
 ```text
 ~/.imo/runtime/learning/
   digest.json
-  user-preferences.json
+  user-profile.json
   global-lessons.jsonl
   agent-digests/
 ```
@@ -247,6 +248,59 @@ When classification is unclear, keep the item project-local.
 The policy uses `project_private` as the machine-readable id for the
 `project-private` privacy class.
 
+## User Profile
+
+The user profile is the structured, global, hot-pluggable representation of the
+user as a person. It is for interpreting what the user means: phrasing,
+collaboration style, ambiguity tolerance, workflow preferences, and stable
+development habits. It must not store project implementation facts, framework
+standards, repo paths, credentials, or technical rules that belong in project
+specs, rules, skills, project profile, or active digest items.
+
+Runtime file:
+
+```text
+~/.imo/runtime/learning/user-profile.json
+```
+
+Required profile sections:
+
+```yaml
+schema_version: 1
+profile_id: user-profile-id
+updated_at: timestamp
+status: enabled|disabled
+summary:
+  short_context: bounded prompt text
+preferences:
+  meaning_model: []
+  communication: []
+  workflow: []
+  tool_use: []
+  review_style: []
+privacy:
+  scope: global
+  contains_project_private: false
+source_refs: []
+```
+
+Prompt-time consumers may read only enabled, valid profiles and inject bounded
+summary/preferences. Missing, disabled, or invalid profiles must degrade to no
+profile context.
+
+Priority order when user profile is injected:
+
+```text
+current explicit user instruction
+> current project rules / specs
+> current local code evidence
+> project profile
+> user profile
+> active learning digest
+> candidate lessons
+> raw signals
+```
+
 ## User Controls
 
 Current read-only CLI support:
@@ -316,6 +370,25 @@ imo learning review reject <candidate-id> --reason <text>
 when activity state is missing, active, has running tools, has running agents,
 or has pending approval. `review approve` reuses the active digest promotion
 gate and requires review and rollback metadata.
+
+Current user-profile CLI support:
+
+```text
+imo learning profile status [--json]
+imo learning profile inspect [--json]
+imo learning profile update --summary <text> [options]
+imo learning profile enable
+imo learning profile disable
+imo learning profile export [--output <path>]
+imo learning profile import --input <path>
+```
+
+`profile status` and `profile inspect` read global user profile state and must
+not create runtime files when the profile is absent. `profile update`,
+`enable`, `disable`, and `import` write only
+`~/.imo/runtime/learning/user-profile.json`. Import must reject profiles whose
+privacy section is not global/public-safe. `profile export` reads the profile
+and either prints JSON or writes the explicit output file.
 
 Current metrics CLI support:
 

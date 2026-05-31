@@ -1,0 +1,1 @@
+../../.imo/product/skills/plan-predict-execute/SKILL.md

@@ -25,6 +25,7 @@
 - Phase 1 now also includes `codex-cc-sync-check` as a canonical skill family under this subtree.
 - Phase 1 now also includes `multi-model-agent` as a canonical skill family under this subtree.
 - Phase 1 now also includes `orchestrate` as a canonical skill family under this subtree.
+- Phase 1 now also includes `plan-predict-execute` as a canonical skill family under this subtree.
 - Root `skills/` may remain as compatibility projections while migration is in progress, but they should no longer be treated as the long-term source-of-truth for migrated families.
 
 ## Inclusion Rule

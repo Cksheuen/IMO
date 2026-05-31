@@ -23,6 +23,11 @@ Usage:
   ./imo learning activity status
   ./imo learning review inbox
   ./imo learning review prepare [--force]
+  ./imo learning profile status
+  ./imo learning profile inspect
+  ./imo learning profile update --summary <text>
+  ./imo learning profile export [--output <path>]
+  ./imo learning profile import --input <path>
   ./imo learning metrics summary [--json]
   ./imo learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
   ./imo metrics status
@@ -49,7 +54,7 @@ Usage:
   ./imo show <task-id-or-dir>
   ./imo read <task-id-or-dir>
   ./imo plan [--json]
-  ./imo codex context
+  ./imo codex context [--mode compact|standard|full] [--stats]
   ./imo verify
 
 Compatibility:
@@ -72,6 +77,10 @@ Common commands:
   - `learning review prepare/inbox/inspect/approve/reject` provides an explicit
     deferred review inbox. Prepare may build candidates only; approve still
     requires review and rollback metadata before active digest mutation.
+  - `learning profile status/inspect/update/enable/disable/export/import`
+    manages a global, portable user profile under `~/.imo/runtime/learning/`
+    for person-level preference and intent interpretation. It is separate from
+    project profiles, active digest items, rules, and skills.
   - `learning metrics summary` reads compact local learning events and reports
     effectiveness counters without mutating learning state.
   - `learning digest promote/disable/reset` manages reviewed active digest
@@ -98,9 +107,10 @@ Common commands:
   - `verify` runs the current read-only IMO guardrail, wrapper, and runtime
     compatibility checks, including rule, module, learning, observability,
     project-profile, and provider contracts.
-  - `codex context` emits a small repo-local IMO context block for experimental
-    Codex hook injection. Active digest injection may append compact ignored
-    learning telemetry.
+  - `codex context` emits a budgeted repo-local IMO context block for
+    experimental Codex hook injection. Modes are `compact`, `standard`
+    (default), and `full`; `--stats` reports read-only size and section data.
+    Active digest injection may append compact ignored learning telemetry.
 
 Architecture:
   - IMO does not proxy Trellis by default. Use Trellis directly for Trellis

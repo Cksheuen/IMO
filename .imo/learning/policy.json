@@ -4,28 +4,37 @@
     {
       "id": "raw_signal",
       "description": "Single correction, failure, preference hint, or behavior observation.",
-      "allowed_writers": ["public_agent"],
+      "allowed_writers": [
+        "public_agent"
+      ],
       "promotion_gate": "none",
       "may_be_read_by_default": false
     },
     {
       "id": "candidate",
       "description": "Aggregated or high-value lesson proposal.",
-      "allowed_writers": ["imo_learning_workflow", "hermes_like_self_iteration"],
+      "allowed_writers": [
+        "imo_learning_workflow",
+        "hermes_like_self_iteration"
+      ],
       "promotion_gate": "candidate_review",
       "may_be_read_by_default": false
     },
     {
       "id": "active_digest",
       "description": "Short behavior guidance read by public agents.",
-      "allowed_writers": ["imo_learning_workflow"],
+      "allowed_writers": [
+        "imo_learning_workflow"
+      ],
       "promotion_gate": "digest_review",
       "may_be_read_by_default": true
     },
     {
       "id": "hard_rule_or_skill_update",
       "description": "Long-lived rule, skill, or source change.",
-      "allowed_writers": ["explicit_task_review"],
+      "allowed_writers": [
+        "explicit_task_review"
+      ],
       "promotion_gate": "hard_update_task_review",
       "may_be_read_by_default": false
     }
@@ -47,7 +56,12 @@
       "description": "Credential, token, secret, or regulated/private data."
     }
   ],
-  "scopes": ["session", "task", "project", "global"],
+  "scopes": [
+    "session",
+    "task",
+    "project",
+    "global"
+  ],
   "scope_transitions": [
     {
       "from": "session",
@@ -69,27 +83,57 @@
   "promotion_gates": [
     {
       "id": "candidate_review",
-      "requires": ["source_signal_refs", "scope", "privacy", "confidence"]
+      "requires": [
+        "source_signal_refs",
+        "scope",
+        "privacy",
+        "confidence"
+      ]
     },
     {
       "id": "digest_review",
-      "requires": ["candidate_refs", "evidence_ref", "rollback_id", "disable_path"]
+      "requires": [
+        "candidate_refs",
+        "evidence_ref",
+        "rollback_id",
+        "disable_path"
+      ]
     },
     {
       "id": "hard_update_task_review",
-      "requires": ["task_ref", "review_decision", "rollback_plan"]
+      "requires": [
+        "task_ref",
+        "review_decision",
+        "rollback_plan"
+      ]
     }
   ],
   "agent_permissions": {
     "public_agents": {
-      "can_read_levels": ["active_digest"],
-      "can_write_levels": ["raw_signal"],
-      "cannot_write_levels": ["candidate", "active_digest", "hard_rule_or_skill_update"]
+      "can_read_levels": [
+        "active_digest"
+      ],
+      "can_write_levels": [
+        "raw_signal"
+      ],
+      "cannot_write_levels": [
+        "candidate",
+        "active_digest",
+        "hard_rule_or_skill_update"
+      ]
     },
     "hermes_like_self_iteration": {
-      "can_read_levels": ["active_digest", "candidate"],
-      "can_write_levels": ["candidate"],
-      "cannot_write_levels": ["active_digest", "hard_rule_or_skill_update"]
+      "can_read_levels": [
+        "active_digest",
+        "candidate"
+      ],
+      "can_write_levels": [
+        "candidate"
+      ],
+      "cannot_write_levels": [
+        "active_digest",
+        "hard_rule_or_skill_update"
+      ]
     }
   },
   "safety_defaults": {
@@ -100,6 +144,20 @@
     "deferred_review_requires_explicit_command": true,
     "background_prepare_may_promote_digest": false,
     "unknown_activity_allows_background_prepare": false,
-    "required_user_controls": ["list", "inspect", "disable", "reject", "promote", "reset"]
+    "required_user_controls": [
+      "list",
+      "inspect",
+      "disable",
+      "reject",
+      "promote",
+      "reset",
+      "profile_status",
+      "profile_inspect",
+      "profile_update",
+      "profile_enable",
+      "profile_disable",
+      "profile_export",
+      "profile_import"
+    ]
   }
 }

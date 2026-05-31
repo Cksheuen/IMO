@@ -30,6 +30,8 @@ Run from the repository root:
 ./imo learning candidate list
 ./imo learning activity status
 ./imo learning review inbox
+./imo learning profile status
+./imo learning profile inspect
 ./imo learning metrics summary
 ./imo metrics status
 ./imo metrics summary
@@ -45,6 +47,9 @@ node bin/imo.js --help
 ./imo update /tmp/imo-smoke-target
 ./imo uninstall /tmp/imo-smoke-target --force
 ./imo codex context --empty
+./imo codex context --empty --stats
+IMO_CONTEXT_MODE=compact ./imo codex context --empty --stats
+./imo codex context --empty --mode full --stats
 ./imo task graph
 ./imo task graph --json
 ./imo task graph show 05-22-imo-task-graph-references
@@ -82,6 +87,9 @@ Expected result:
   clean empty state and does not create `.imo/.runtime/session/`
 - `./imo learning review inbox` handles missing candidate state as a clean empty
   state and never creates active digest state
+- `./imo learning profile status` and `./imo learning profile inspect` handle
+  missing global user profile state as clean missing output and do not create
+  `~/.imo/runtime/learning/user-profile.json`
 - `./imo learning metrics summary` handles missing event state as a clean zero
   summary and does not create `.imo/.runtime/learning/`
 - `./imo metrics status`, `./imo metrics summary`, and `./imo metrics failures`
@@ -91,7 +99,9 @@ Expected result:
   project root, and does not modify host settings
 - `./imo global install --apply` writes only managed shim files under the
   selected global root, refuses unmanaged shim conflicts unless `--force` is
-  explicit, and does not create global task graph runtime
+  explicit, does not create global task graph runtime, and installs a Codex
+  context hook that skips execution when a project already declares a local IMO
+  context hook
 - `node bin/imo.js --help` reaches the same root `./imo` command surface
 - `npm pack --dry-run` succeeds and includes the package bin, root `imo`, and
   IMO direct-run source assets needed by the local package wrapper
@@ -108,8 +118,11 @@ Expected result:
 - `./imo verify` checks digest promotion requires review metadata and can
   disable/reset project-scoped digest state
 - `./imo codex context --empty` emits valid hook JSON containing
-  `<imo-context>` and injects active learning digest entries and project-profile
-  summaries when present
+  `<imo-context>` and injects enabled user-profile guidance, active learning
+  digest entries, and project-profile summaries when present
+- `./imo codex context --empty --stats` emits read-only JSON showing the
+  default `standard` context stays within the 2200 character budget; compact
+  mode stays within 1200 characters, and full mode stays within 4000 characters
 - `./imo verify` includes module, learning, observability, project-profile,
   provider, root compatibility, package wrapper, global/project scope, Codex
   context, defensive audit, learning telemetry, compile, and compatibility
@@ -154,11 +167,14 @@ Current local Codex context injection is intentionally lightweight:
 
 ```bash
 ./imo codex context
+./imo codex context --stats
 ```
 
 It tells Codex to prefer current repo `.imo/` and `./imo` for IMO-related
 questions. It must not override user instructions, parent-agent instructions,
-or Trellis workflow state.
+or Trellis workflow state. The default `standard` mode is capped at 2200
+characters; `compact` is capped at 1200 characters; `full` is capped at 4000
+characters.
 
 The local `.codex/hooks.json` experiment is not a manifest claim. Adapter
 manifests remain neutral until a future host-output cutover task explicitly

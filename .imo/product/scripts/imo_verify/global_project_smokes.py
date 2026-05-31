@@ -144,6 +144,45 @@ def _run_global_project_scope_smoke() -> bool:
                 print(installed.stderr, file=sys.stderr)
             return False
 
+        hook = global_root / "hooks/codex-context.sh"
+        fake_bin = global_root / "bin"
+        fake_bin.mkdir(parents=True, exist_ok=True)
+        fake_imo = fake_bin / "imo"
+        fake_imo.write_text("#!/usr/bin/env bash\necho imo-called \"$@\"\n", encoding="utf-8")
+        fake_imo.chmod(0o755)
+        hook_env = os.environ.copy()
+        hook_env["PATH"] = f"{fake_bin}{os.pathsep}{hook_env.get('PATH', '')}"
+        hook_workdir = global_root / "hook-work"
+        hook_workdir.mkdir()
+        hook_called = subprocess.run(
+            [str(hook)],
+            cwd=hook_workdir,
+            env=hook_env,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if hook_called.returncode != 0 or "imo-called codex context" not in hook_called.stdout:
+            print("[imo verify] failed: global hook did not call imo", file=sys.stderr)
+            return False
+
+        local_codex = hook_workdir / ".codex"
+        local_codex.mkdir()
+        (local_codex / "hooks.json").write_text('{"command":"./imo codex context"}\n', encoding="utf-8")
+        hook_skipped = subprocess.run(
+            [str(hook)],
+            cwd=hook_workdir,
+            env=hook_env,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if hook_skipped.returncode != 0 or hook_skipped.stdout.strip():
+            print("[imo verify] failed: global hook did not skip local IMO hook", file=sys.stderr)
+            return False
+
         print("[imo verify] ok: global/project scope behavior")
         return True
     except Exception as exc:

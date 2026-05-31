@@ -12,6 +12,7 @@ from .learning_smokes import (
     _run_learning_digest_smoke,
     _run_learning_signal_smoke,
     _run_learning_telemetry_smoke,
+    _run_learning_user_profile_smoke,
 )
 from .observability_smokes import _run_observability_smoke
 from .orchestrate_smoke import run_orchestrate_runtime_smoke
@@ -66,6 +67,7 @@ def main() -> int:
         _run_learning_candidate_smoke,
         _run_learning_digest_smoke,
         _run_learning_context_smoke,
+        _run_learning_user_profile_smoke,
         _run_learning_deferred_review_smoke,
         _run_learning_telemetry_smoke,
         _run_observability_smoke,

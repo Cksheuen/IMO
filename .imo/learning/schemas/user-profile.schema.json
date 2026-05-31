@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://imo.local/schemas/learning/user-profile.schema.json",
+  "title": "IMO Learning User Profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "profile_id",
+    "updated_at",
+    "status",
+    "summary",
+    "preferences",
+    "privacy",
+    "source_refs"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "profile_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "enabled",
+        "disabled"
+      ]
+    },
+    "display_name": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "short_context"
+      ],
+      "properties": {
+        "short_context": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1400
+        }
+      }
+    },
+    "preferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "meaning_model",
+        "communication",
+        "workflow",
+        "tool_use",
+        "review_style"
+      ],
+      "properties": {
+        "meaning_model": {
+          "$ref": "#/$defs/string_list"
+        },
+        "communication": {
+          "$ref": "#/$defs/string_list"
+        },
+        "workflow": {
+          "$ref": "#/$defs/string_list"
+        },
+        "tool_use": {
+          "$ref": "#/$defs/string_list"
+        },
+        "review_style": {
+          "$ref": "#/$defs/string_list"
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "contains_project_private"
+      ],
+      "properties": {
+        "scope": {
+          "type": "string",
+          "const": "global"
+        },
+        "contains_project_private": {
+          "type": "boolean",
+          "const": false
+        }
+      }
+    },
+    "source_refs": {
+      "$ref": "#/$defs/string_list"
+    }
+  },
+  "$defs": {
+    "string_list": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

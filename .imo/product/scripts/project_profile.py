@@ -418,7 +418,26 @@ def status_info() -> dict[str, Any]:
     }
 
 
-def context_lines() -> list[str]:
+def _bounded_context_lines(lines: list[str], *, max_lines: int, max_chars: int) -> list[str]:
+    bounded: list[str] = []
+    total = 0
+    for line in lines:
+        compact = " ".join(line.strip().split())
+        if not compact:
+            continue
+        if len(compact) > max_chars:
+            compact = compact[: max_chars - 3].rstrip() + "..."
+        next_total = total + len(compact)
+        if bounded and next_total > max_chars:
+            break
+        bounded.append(compact)
+        total = next_total
+        if len(bounded) >= max_lines:
+            break
+    return bounded
+
+
+def context_lines(max_lines: int = MAX_CONTEXT_LINES, max_chars: int = MAX_CONTEXT_CHARS) -> list[str]:
     info = status_info()
     status = info["status"]
     if status == "missing":
@@ -435,11 +454,11 @@ def context_lines() -> list[str]:
     lines = [f"- status: {status} ({info.get('reason', '-')})."]
     if status == "stale":
         lines.append("- refresh recommended: run `./imo profile refresh`.")
+    lines.append("- Chameleon use: profile is guidance; inspect neighboring files and existing tests before editing.")
     for line in raw_lines[:MAX_CONTEXT_LINES]:
         if isinstance(line, str) and line.strip():
             lines.append(f"- {line.strip()}")
-    lines.append("- Chameleon use: profile is guidance; inspect neighboring files and existing tests before editing.")
-    return lines
+    return _bounded_context_lines(lines, max_lines=max_lines, max_chars=max_chars)
 
 
 def _print_status(as_json: bool) -> int:

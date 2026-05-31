@@ -18,12 +18,13 @@ REQUIRED_SCHEMA_FILES = [
     "digest.schema.json",
     "session-activity.schema.json",
     "event.schema.json",
+    "user-profile.schema.json",
 ]
 REQUIRED_LEVELS = ["raw_signal", "candidate", "active_digest", "hard_rule_or_skill_update"]
 REQUIRED_PRIVACY = {"public", "project_private", "sensitive"}
 REQUIRED_SCOPES = {"session", "task", "project", "global"}
 REQUIRED_GATES = {"candidate_review", "digest_review", "hard_update_task_review"}
-REQUIRED_CONTROLS = {"list", "inspect", "disable", "reject", "promote", "reset"}
+REQUIRED_CONTROLS = {"list", "inspect", "disable", "reject", "promote", "reset", "profile_status", "profile_inspect", "profile_update", "profile_enable", "profile_disable", "profile_export", "profile_import"}
 REQUIRED_ACTIVITY_STATES = {"active", "post_turn", "quiescent"}
 REQUIRED_EVENT_FIELDS = {"id", "created_at", "event_type", "source"}
 REQUIRED_EVENT_TYPES = {
@@ -142,6 +143,41 @@ def main() -> int:
                 errors.append(
                     f"{schema_path} missing event types: {', '.join(sorted(REQUIRED_EVENT_TYPES - event_values))}"
                 )
+        if schema_file == "user-profile.schema.json":
+            if schema.get("additionalProperties") is not False:
+                errors.append(f"{schema_path} must reject additional profile properties")
+            required = set(schema.get("required", []))
+            expected = {
+                "schema_version",
+                "profile_id",
+                "updated_at",
+                "status",
+                "summary",
+                "preferences",
+                "privacy",
+                "source_refs",
+            }
+            if expected - required:
+                errors.append(
+                    f"{schema_path} missing required user profile fields: {', '.join(sorted(expected - required))}"
+                )
+            properties = schema.get("properties", {})
+            status_values = set(properties.get("status", {}).get("enum", []))
+            if {"enabled", "disabled"} - status_values:
+                errors.append(f"{schema_path} must support enabled and disabled status")
+            preferences = properties.get("preferences", {})
+            preference_required = set(preferences.get("required", [])) if isinstance(preferences, dict) else set()
+            expected_preferences = {"meaning_model", "communication", "workflow", "tool_use", "review_style"}
+            if expected_preferences - preference_required:
+                errors.append(
+                    f"{schema_path} missing preference fields: {', '.join(sorted(expected_preferences - preference_required))}"
+                )
+            privacy = properties.get("privacy", {})
+            privacy_properties = privacy.get("properties", {}) if isinstance(privacy, dict) else {}
+            if privacy_properties.get("scope", {}).get("const") != "global":
+                errors.append(f"{schema_path} privacy.scope must be const global")
+            if privacy_properties.get("contains_project_private", {}).get("const") is not False:
+                errors.append(f"{schema_path} must reject project-private global profile content")
 
     levels = policy.get("levels")
     if not isinstance(levels, list):

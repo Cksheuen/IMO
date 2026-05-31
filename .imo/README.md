@@ -30,6 +30,8 @@ The current repo-local IMO command surface is:
 ./imo learning candidate list
 ./imo learning activity status
 ./imo learning review inbox
+./imo learning profile status
+./imo learning profile inspect
 ./imo learning metrics summary
 ./imo learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
 ./imo metrics status
@@ -39,7 +41,7 @@ The current repo-local IMO command surface is:
 ./imo init <target>
 ./imo update <target> [--strict|--force]
 ./imo uninstall <target>
-./imo codex context
+./imo codex context --empty --stats
 ./imo task graph
 ./imo task graph show 05-22-imo-task-graph-references
 ./imo task graph plan
@@ -69,7 +71,7 @@ behavior still lives in the repo-local direct-run assets under `.imo/`.
 IMO can be installed globally while keeping Trellis-derived state local:
 
 - global state lives under `~/.imo/runtime/` by default and holds shared
-  learning digest state plus global hook shims
+  learning digest state, global user profile state, and global hook shims
 - project state lives under `<project>/.imo/.runtime/` and holds project
   profile, project-private learning, and task graph run summaries
 - `imo task graph` resolves the current project root from cwd and reads only
@@ -77,7 +79,8 @@ IMO can be installed globally while keeping Trellis-derived state local:
 - `imo task graph run` writes only
   `<project>/.imo/.runtime/task-graph/runs/`
 - `imo codex context` may merge project and global learning context, but
-  project digest entries precede global entries
+  project digest entries precede global entries and the injected context stays
+  under the selected mode budget
 
 ## Layout
 
@@ -126,6 +129,11 @@ IMO can be installed globally while keeping Trellis-derived state local:
   explicit deferred review inbox. `prepare` may build candidates only and skips
   active or unknown activity unless forced; `approve` reuses the reviewed digest
   promotion gate.
+- `./imo learning profile status/inspect/update/enable/disable/export/import`
+  manages a global, portable user profile under
+  `~/.imo/runtime/learning/user-profile.json`. The profile describes the user as
+  a person and helps interpret intent; it is not a project implementation rule
+  store.
 - `./imo learning metrics summary [--json]` reads compact local learning events
   under `.imo/.runtime/learning/events.jsonl` and reports effectiveness and
   safety counters without uploading data or changing learning state.
@@ -150,6 +158,8 @@ IMO can be installed globally while keeping Trellis-derived state local:
 - `./imo global status/install/migrate/uninstall` manages the global IMO shim
   and shared runtime root. Install and migrate are dry-run unless `--apply` is
   explicit, and unmanaged shim files are refused unless `--force` is explicit.
+  The global Codex context hook skips projects that already declare a local IMO
+  context hook so prompt-time context is not injected twice.
 - `./imo profile refresh/status/inspect/clear` manages a local project
   convention snapshot under `.imo/.runtime/project-profile/`. Context hooks may
   read the bounded summary but never refresh it automatically.
@@ -161,9 +171,12 @@ IMO can be installed globally while keeping Trellis-derived state local:
   ownership, dependency validation, and writable-file conflict checks before a
   local run summary may be written under `.imo/.runtime/task-graph/runs/`.
 - `./imo codex context` emits a short repo-local IMO context block for
-  experimental Codex hook injection, including active learning digest entries
-  when present. It is informational and does not replace Trellis workflow state;
-  active digest injection may append compact ignored telemetry.
+  experimental Codex hook injection, including enabled user-profile guidance and
+  active learning digest entries when present. The default `standard` mode is
+  capped at 2200 characters, with `compact` capped at 1200 and `full` capped at
+  4000; `--stats` reports read-only size and section data. It is informational
+  and does not replace Trellis workflow state; active digest injection may
+  append compact ignored telemetry.
 - `./imo verify` runs the current aggregate read-only IMO verification
   suite, including rule contracts, module metadata, project-profile contracts,
   learning policy, and provider registry contracts, plus root

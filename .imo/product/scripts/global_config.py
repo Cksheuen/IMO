@@ -21,6 +21,25 @@ def _hook_text() -> str:
     return """#!/usr/bin/env bash
 set -euo pipefail
 
+find_local_hook_file() {
+  local dir="${PWD}"
+  while true; do
+    if [[ -f "${dir}/.codex/hooks.json" ]]; then
+      printf '%s\\n' "${dir}/.codex/hooks.json"
+      return 0
+    fi
+    if [[ "${dir}" == "/" ]]; then
+      return 1
+    fi
+    dir="$(dirname "${dir}")"
+  done
+}
+
+local_hook_file="$(find_local_hook_file || true)"
+if [[ -n "${local_hook_file}" ]] && grep -q "imo codex context" "${local_hook_file}"; then
+  exit 0
+fi
+
 if command -v imo >/dev/null 2>&1; then
   exec imo codex context
 fi

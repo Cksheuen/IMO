@@ -52,6 +52,7 @@ source layout conflict.
 | `locate` | Core code-location memory capability. |
 | `shit` | Core structure simplification and context hygiene capability. |
 | `cc-to-framework-migration` | Core framework migration scenario for IMO. |
+| `plan-predict-execute` | Core planning loop that turns plan-and-execute requests into bounded defect prediction and optimized execution shape. |
 
 ## Provider-Backed
 

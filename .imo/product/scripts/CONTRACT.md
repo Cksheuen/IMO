@@ -22,13 +22,19 @@
 - `.imo/product/scripts/verify.py` is now the canonical read-only IMO verification suite.
 - `.imo/product/scripts/defensive_audit.py` is now the canonical read-only
   advisory report for defensive-programming guardrails and cleanup candidates.
-- `.imo/product/scripts/codex_context.py` emits repo-local IMO context for experimental Codex hook injection without mutating host files; when learning events are enabled, it may append a compact digest-injection event to ignored runtime state.
+- `.imo/product/scripts/codex_context.py` emits budgeted repo-local IMO
+  context for experimental Codex hook injection without mutating host files. It
+  supports `compact`, `standard`, and `full` modes plus read-only `--stats`;
+  when learning events are enabled, it may append a compact digest-injection
+  event to ignored runtime state.
 - `.imo/product/scripts/root_resolver.py` is the shared source/global/project
   root resolver. Scripts must use it when behavior depends on the current
   project rather than the IMO source package root.
 - `.imo/product/scripts/global_config.py` manages global IMO shim status,
   install, migrate, and uninstall. Write operations are dry-run unless
-  `--apply` is explicit.
+  `--apply` is explicit. The global Codex context hook must skip execution when
+  the current project already declares a local IMO context hook, preventing
+  duplicate prompt-time context injection.
 - `.imo/product/scripts/project_profile.py` manages local project convention snapshots under `.imo/.runtime/project-profile/`.
 - `.imo/product/scripts/observability_events.py` owns compact unified
   observability event writes under ignored `.imo/.runtime/observability/events/`.
@@ -46,7 +52,8 @@
 - `.imo/product/scripts/learning_events.py` owns compact local learning event
   writes and summaries under ignored `.imo/.runtime/learning/events.jsonl`.
 - `.imo/product/scripts/learning.py` exposes learning signal, candidate,
-  activity, review, and digest commands with explicit write boundaries.
+  activity, review, digest, and user-profile commands with explicit write
+  boundaries.
 - `.imo/product/scripts/task_graph.py` exposes the IMO task graph overlay for
   current-project Trellis task references. `graph`, `show`, `read`, and `plan`
   are read-only; explicit `run` may write summaries only under the current
@@ -103,6 +110,13 @@
   unknown or active activity unless the command is explicitly forced.
 - `./imo learning review approve <candidate-id>` must require review and
   rollback metadata before mutating active digest state.
+- `./imo learning profile status` and `./imo learning profile inspect` read
+  `~/.imo/runtime/learning/user-profile.json` when present and must not create
+  runtime state.
+- `./imo learning profile update|enable|disable|import` write only the global
+  user profile file and must reject project-private global profile content.
+- `./imo learning profile export` reads the global user profile and writes only
+  when an explicit `--output` path is supplied.
 - `./imo learning metrics summary` reads `.imo/.runtime/learning/events.jsonl`
   when present and must not create runtime state.
 - Learning event writes are observational only. Event write failures must not
@@ -130,7 +144,7 @@
   write task graph runtime state under the global IMO root.
 - Top-level `./imo graph`, `./imo show`, `./imo read`, and `./imo plan` are
   compatibility aliases for the same task graph reader.
-- `./imo codex context` emits hook JSON containing a short `<imo-context>` block. It tells Codex to prefer current repo `.imo/` and `./imo` for IMO-related questions, but remains informational only and must not override user instructions, parent-agent instructions, or Trellis workflow state. It must not mutate host files, profiles, digests, candidates, raw signals, or Trellis state; compact learning-event append is the only allowed runtime side effect when events are enabled.
+- `./imo codex context` emits hook JSON containing a short `<imo-context>` block. It tells Codex to prefer current repo `.imo/` and `./imo` for IMO-related questions, and may read an enabled global user profile as bounded guidance, but remains informational only and must not override user instructions, parent-agent instructions, or Trellis workflow state. Default `standard` context must remain within 2200 characters; `compact` must remain within 1200 characters; `full` must remain within 4000 characters. `./imo codex context --stats` is read-only and reports mode, total size, approximate token range, and section sizes. Context generation must not mutate host files, profiles, digests, candidates, raw signals, or Trellis state; compact learning-event append is the only allowed runtime side effect when events are enabled.
 - `scripts/imo.sh ...` must keep behaving as a compatibility form of the same commands.
 - `./imo init/update/uninstall` must preserve the managed-file contract:
   unchanged managed files may be replaced or removed, user-modified managed
@@ -141,4 +155,6 @@
 - `./imo global install/migrate/uninstall` must preserve the same managed-file
   safety for global shim files: dry-run by default, refuse unmanaged existing
   shim files unless `--force` is explicit, and record managed hashes under the
-  selected global root.
+  selected global root. The installed global Codex hook must call `imo codex
+  context` when no local IMO hook is present, and must exit cleanly when the
+  current project already has a local `imo codex context` hook.

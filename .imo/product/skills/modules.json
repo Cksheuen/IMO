@@ -26,6 +26,20 @@
       }
     },
     {
+      "id": "plan-predict-execute",
+      "name": "plan-predict-execute",
+      "classification": "native",
+      "owner_surface": ".imo/product/skills/plan-predict-execute",
+      "lifecycle": "adopted",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct"],
+      "external_dependencies": [],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
       "id": "architecture-health",
       "name": "architecture-health",
       "classification": "native",
@@ -279,4 +293,3 @@
     }
   ]
 }
-
