@@ -23,6 +23,7 @@ Run from the repository root:
 ```bash
 ./imo --help
 ./imo audit all
+./imo budget audit
 ./imo defensive audit
 ./imo profile status
 ./imo learning list
@@ -63,6 +64,9 @@ Expected result:
 
 - every command exits `0`
 - `./imo audit all` reports zero overlap with Trellis-owned host outputs
+- `./imo budget audit` exits `0`, reports visible local context slices,
+  ownership-aware Trellis/IMO/project labels, and threshold-based IMO-facing
+  follow-up suggestions, and does not mutate source or runtime state
 - `./imo defensive audit` exits `0`, prints an advisory defensive-programming
   report, and does not mutate source or runtime state
 - `./imo learning list` handles missing runtime digest state as a clean empty

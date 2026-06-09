@@ -13,6 +13,7 @@ Source of truth lives under `.imo/`.
 
 Usage:
   ./imo audit [claude|codex|all]
+  ./imo budget audit [--json] [target-path]
   ./imo defensive audit [--json]
   ./imo learning list
   ./imo learning inspect <id>
@@ -63,6 +64,10 @@ Compatibility:
 Common commands:
   - `audit` is read-only and checks whether IMO reintroduces Trellis-owned
     Claude/Codex host-surface management.
+  - `budget audit` is read-only and measures visible local context slices such
+    as instruction files, Trellis specs/hooks, active tasks, and IMO context
+    stats. It reports approximate token ranges plus threshold-based follow-up
+    suggestions.
   - `defensive audit` is read-only and separates necessary boundary guardrails
     from fallback code that should be simplified, contracted, or removed.
   - `learning list` and `learning inspect` read active learning digest state
@@ -220,6 +225,18 @@ case "${1}" in
     ;;
   audit)
     run_observed audit python3 "$REPO_ROOT/.imo/product/scripts/audit_managed_ownership.py" "${@:2}"
+    ;;
+  budget)
+    case "${2:-}" in
+      audit)
+        exec python3 "$REPO_ROOT/.imo/product/scripts/budget_audit.py" "${@:3}"
+        ;;
+      *)
+        print_placeholder >&2
+        printf '\nUnsupported imo budget command: %s\n' "${2:-}" >&2
+        exit 64
+        ;;
+    esac
     ;;
   defensive)
     run_observed defensive python3 "$REPO_ROOT/.imo/product/scripts/defensive_audit.py" "${@:2}"

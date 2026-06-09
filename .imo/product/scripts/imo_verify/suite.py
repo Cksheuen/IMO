@@ -16,7 +16,11 @@ from .learning_smokes import (
 )
 from .observability_smokes import _run_observability_smoke
 from .orchestrate_smoke import run_orchestrate_runtime_smoke
-from .other_smokes import _run_defensive_audit_smoke, _run_project_profile_smoke
+from .other_smokes import (
+    _run_budget_audit_smoke,
+    _run_defensive_audit_smoke,
+    _run_project_profile_smoke,
+)
 from .package_smokes import _run_package_smoke
 from .runner import run_check
 from .static_contracts import build_static_checks
@@ -63,6 +67,7 @@ def main() -> int:
     smoke_checks = [
         run_orchestrate_runtime_smoke,
         _run_learning_signal_smoke,
+        _run_budget_audit_smoke,
         _run_defensive_audit_smoke,
         _run_learning_candidate_smoke,
         _run_learning_digest_smoke,

@@ -9,6 +9,71 @@ import tempfile
 from .runner import ROOT, no_event_env
 
 
+def _run_budget_audit_smoke() -> bool:
+    print("[imo verify] context budget audit")
+    human = subprocess.run(
+        ["./imo", "budget", "audit"],
+        cwd=ROOT,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if human.returncode != 0 or "Context Budget Audit" not in human.stdout:
+        print("[imo verify] failed: budget audit human report", file=sys.stderr)
+        if human.stderr:
+            print(human.stderr, file=sys.stderr)
+        return False
+
+    as_json = subprocess.run(
+        ["./imo", "budget", "audit", "--json"],
+        cwd=ROOT,
+        env=no_event_env(),
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if as_json.returncode != 0:
+        print("[imo verify] failed: budget audit json report", file=sys.stderr)
+        if as_json.stderr:
+            print(as_json.stderr, file=sys.stderr)
+        return False
+    try:
+        report = __import__("json").loads(as_json.stdout)
+    except ValueError as exc:
+        print(f"[imo verify] failed: budget audit json parse: {exc}", file=sys.stderr)
+        return False
+    if report.get("schema_version") != 1 or report.get("root") != str(ROOT):
+        print("[imo verify] failed: budget audit contract shape", file=sys.stderr)
+        return False
+    trellis_info = report.get("trellis_integration")
+    if not isinstance(trellis_info, dict) or trellis_info.get("owner") != "external_trellis":
+        print("[imo verify] failed: budget audit Trellis integration metadata", file=sys.stderr)
+        return False
+    slices = report.get("slices")
+    if not isinstance(slices, list) or not slices:
+        print("[imo verify] failed: budget audit slices missing", file=sys.stderr)
+        return False
+    if any(not isinstance(item, dict) or "owner" not in item for item in slices):
+        print("[imo verify] failed: budget audit slice owner metadata", file=sys.stderr)
+        return False
+    slice_ids = {item.get("id") for item in slices if isinstance(item, dict)}
+    expected_ids = {"platform_system_prompt"}
+    if not expected_ids.issubset(slice_ids):
+        print("[imo verify] failed: budget audit slice ids", file=sys.stderr)
+        return False
+    if "imo_context_block" not in slice_ids and "root_instruction_files" not in slice_ids:
+        print("[imo verify] failed: budget audit did not report any concrete local slice", file=sys.stderr)
+        return False
+    if not isinstance(report.get("recommendations"), list) or not report["recommendations"]:
+        print("[imo verify] failed: budget audit recommendations missing", file=sys.stderr)
+        return False
+
+    print("[imo verify] ok: context budget audit")
+    return True
+
+
 def _run_defensive_audit_smoke() -> bool:
     print("[imo verify] defensive programming audit")
     human = subprocess.run(

@@ -56,6 +56,11 @@ SELECTED_SOURCE_CANDIDATES = [
     ".imo/learning/CONTRACT.md",
     ".imo/learning/schemas/event.schema.json",
     ".trellis/spec/backend/imo-managed-outputs.md",
+    ".trellis/spec/backend/imo-managed-outputs/imo-three-plane-boundary-and-shared-learning-contract.md",
+    ".trellis/spec/backend/imo-managed-outputs/repo-local-codex-imo-context-hook-experiment.md",
+    ".trellis/spec/backend/imo-managed-outputs/repo-local-imo-verification-suite.md",
+    ".trellis/spec/backend/imo-managed-outputs/project-profile-convention-cache.md",
+    ".trellis/spec/backend/imo-managed-outputs/repo-local-ownership-audit-for-trellis-owned-host-surfaces.md",
     ".trellis/spec/backend/index.md",
     ".trellis/spec/guides/index.md",
 ]
@@ -224,7 +229,12 @@ def _evidence(paths: list[Path]) -> list[dict[str, str]]:
         ".imo/product/scripts/CONTRACT.md": "CLI and verification script contract",
         ".imo/product/rules/chameleon.md": "local convention adaptation rule",
         ".imo/runtime/CONTRACT.md": "stable runtime source boundary",
-        ".trellis/spec/backend/imo-managed-outputs.md": "executable IMO/Trellis ownership contract",
+        ".trellis/spec/backend/imo-managed-outputs.md": "executable IMO/Trellis ownership contract index",
+        ".trellis/spec/backend/imo-managed-outputs/imo-three-plane-boundary-and-shared-learning-contract.md": "core IMO/Trellis plane boundary contract",
+        ".trellis/spec/backend/imo-managed-outputs/repo-local-codex-imo-context-hook-experiment.md": "Codex context injection contract",
+        ".trellis/spec/backend/imo-managed-outputs/repo-local-imo-verification-suite.md": "aggregate IMO verification contract",
+        ".trellis/spec/backend/imo-managed-outputs/project-profile-convention-cache.md": "project-profile runtime contract",
+        ".trellis/spec/backend/imo-managed-outputs/repo-local-ownership-audit-for-trellis-owned-host-surfaces.md": "host-surface ownership audit contract",
     }
     items: list[dict[str, str]] = []
     for path in paths:

@@ -226,7 +226,14 @@ def _active_digest_context(
     return _bounded_lines(lines, max_lines=max_items, max_chars=max_chars)
 
 
-def _project_profile_context(max_lines: int, max_chars: int) -> list[str]:
+def _project_profile_context(
+    project_root: Path | None,
+    *,
+    max_lines: int,
+    max_chars: int,
+) -> list[str]:
+    if project_root is None:
+        return []
     if project_profile is None:
         return []
     try:
@@ -269,7 +276,11 @@ def _build_sections(data: dict, mode: str) -> list[tuple[str, list[str]]]:
         sections.append(("rules", ["Active IMO rules:"] + rule_context))
 
     profile_lines, profile_chars = budgets["project_profile"]
-    profile_context = _project_profile_context(profile_lines, profile_chars)
+    profile_context = _project_profile_context(
+        project_root,
+        max_lines=profile_lines,
+        max_chars=profile_chars,
+    )
     if profile_context:
         sections.append(("project_profile", ["Project profile:"] + profile_context))
 

@@ -31,6 +31,8 @@ SCAN_SCOPE = [
     ".imo/runtime/defensive-audit/CONTRACT.md",
     ".imo/runtime/project-profile/CONTRACT.md",
     ".trellis/spec/backend/imo-managed-outputs.md",
+    ".trellis/spec/backend/imo-managed-outputs/repo-local-defensive-programming-audit.md",
+    ".trellis/spec/backend/imo-managed-outputs/repo-local-imo-verification-suite.md",
 ]
 
 

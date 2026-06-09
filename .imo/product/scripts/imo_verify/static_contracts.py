@@ -15,6 +15,11 @@ def build_static_checks() -> list[tuple[str, list[str], dict[str, str] | None]]:
             None,
         ),
         (
+            "context budget audit",
+            ["./imo", "budget", "audit", "--json"],
+            None,
+        ),
+        (
             "host output policy",
             [sys.executable, ".imo/product/scripts/check_host_output_policy.py"],
             py_env,
@@ -102,6 +107,7 @@ def build_static_checks() -> list[tuple[str, list[str], dict[str, str] | None]]:
                 "py_compile",
                 ".imo/product/scripts/audit_managed_ownership.py",
                 ".imo/product/scripts/audit_runtime_links_core.py",
+                ".imo/product/scripts/budget_audit.py",
                 ".imo/product/scripts/codex_context.py",
                 ".imo/product/scripts/defensive_audit.py",
                 ".imo/product/scripts/global_config.py",

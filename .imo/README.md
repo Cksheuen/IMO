@@ -22,6 +22,7 @@ The current repo-local IMO command surface is:
 ```bash
 ./imo --help
 ./imo audit all
+./imo budget audit
 ./imo defensive audit
 ./imo profile status
 ./imo profile refresh
@@ -111,6 +112,11 @@ IMO can be installed globally while keeping Trellis-derived state local:
   surfaces.
 - IMO does not project Trellis-owned Claude/Codex host files in this repo state.
 - `./imo audit [claude|codex|all]` verifies that IMO manifests do not claim host outputs still owned by Trellis.
+- `./imo budget audit [target-path]` reports visible local context slices,
+  approximate token ranges, controllability labels, owner labels, and
+  threshold-based IMO-facing recommendations without mutating source or runtime
+  state. Trellis surfaces are treated as external integration evidence, not
+  IMO-owned optimization targets.
 - `./imo defensive audit` reports necessary guardrails, simplification
   candidates, prose-to-contract candidates, and blanket fallback anti-patterns
   without mutating source or runtime state.
