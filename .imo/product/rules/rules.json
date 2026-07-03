@@ -84,6 +84,51 @@
         "read_digest": true,
         "write_signals": true
       }
+    },
+    {
+      "id": "structured-refactoring",
+      "name": "Structured Refactoring",
+      "status": "active",
+      "owner_surface": ".imo/product/rules/structured-refactoring.md",
+      "trigger": "Refactoring large, mixed-responsibility, or compatibility-sensitive modules in established projects.",
+      "context_summary": "For structural refactors, preserve old imports and command paths with thin facades, split by responsibility, search for existing owners before creating shared helpers, keep source growth bounded, and validate with package-local checks.",
+      "priority_order": [
+        "explicit_user_instruction",
+        "repository_hard_rules_or_specs",
+        "local_neighboring_patterns",
+        "active_imo_learning_digest",
+        "generic_agent_training_defaults"
+      ],
+      "overrides_generic_habits": [
+        "caller_migration_during_compatibility_refactor",
+        "behavior_rewrite_hidden_as_refactor",
+        "single_use_global_helpers",
+        "props_heavy_over_splitting",
+        "new_module_location_without_owner_search",
+        "generated_host_output_edits",
+        "line_count_slicing",
+        "skipping_validation_for_import_moves"
+      ],
+      "required_sections": [
+        "Summary",
+        "Trigger",
+        "Priority",
+        "Required Local Evidence",
+        "Habits To Suppress",
+        "Implementation Behavior",
+        "Allowed Exceptions",
+        "Review Questions",
+        "Non-Goals"
+      ],
+      "default_enabled": true,
+      "integration_modes": [
+        "context-guidance",
+        "manual-review"
+      ],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
     }
   ]
 }
