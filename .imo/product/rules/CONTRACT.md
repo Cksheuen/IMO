@@ -25,8 +25,9 @@ and skills without taking over Trellis task flow.
 
 - `chameleon`: adapt to established project conventions before coding new
   modules, and override generic agent habits that conflict with local evidence.
-- `structured-refactoring`: split oversized modules through compatibility
-  facades, responsibility-based placement, and bounded validation instead of
-  broad rewrites or arbitrary extraction.
+- `structured-refactoring`: apply structure as a development standard, keeping
+  modules focused during normal changes and using compatibility facades,
+  responsibility-based placement, and bounded validation when refactoring
+  drifted code.
 - `update-handoff`: keep `.imo/UPDATE.md` synchronized whenever IMO update,
   install, release, runtime-state, hook, or verification mechanics change.

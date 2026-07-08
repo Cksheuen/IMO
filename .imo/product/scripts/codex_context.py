@@ -34,19 +34,19 @@ CONTEXT_MODE_BUDGETS = {
 }
 SECTION_BUDGETS = {
     "compact": {
-        "rules": (1, 180),
+        "rules": (2, 420),
         "project_profile": (3, 360),
         "user_profile": (2, 360),
         "digest": (1, 220, 140),
     },
     "standard": {
-        "rules": (1, 240),
+        "rules": (3, 900),
         "project_profile": (5, 620),
         "user_profile": (4, 520),
         "digest": (3, 460, 160),
     },
     "full": {
-        "rules": (4, 520),
+        "rules": (4, 1200),
         "project_profile": (8, 1400),
         "user_profile": (8, 1400),
         "digest": (8, 1100, 220),

@@ -87,11 +87,11 @@
     },
     {
       "id": "structured-refactoring",
-      "name": "Structured Refactoring",
+      "name": "Structured Development",
       "status": "active",
       "owner_surface": ".imo/product/rules/structured-refactoring.md",
-      "trigger": "Refactoring large, mixed-responsibility, or compatibility-sensitive modules in established projects.",
-      "context_summary": "For structural refactors, preserve old imports and command paths with thin facades, split by responsibility, search for existing owners before creating shared helpers, keep source growth bounded, and validate with package-local checks.",
+      "trigger": "Adding, changing, reviewing, or refactoring modules where structure, ownership, file size, public imports, commands, tests, schemas, or UI composition could drift.",
+      "context_summary": "During development and refactors, keep modules focused, preserve public surfaces, search existing owners before helpers, budget file growth, and validate locally.",
       "priority_order": [
         "explicit_user_instruction",
         "repository_hard_rules_or_specs",
@@ -102,6 +102,8 @@
       "overrides_generic_habits": [
         "caller_migration_during_compatibility_refactor",
         "behavior_rewrite_hidden_as_refactor",
+        "treating_structure_rules_as_refactor_only",
+        "growing_mixed_modules_without_boundary_review",
         "single_use_global_helpers",
         "props_heavy_over_splitting",
         "new_module_location_without_owner_search",
