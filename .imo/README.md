@@ -34,6 +34,9 @@ CI runs the strict tracked-reference checker, `verify`, and
 runtime; all smoke fixture state uses a temporary runtime and never touches
 source `.imo/.runtime`.
 
+Full verification requires the pinned migrated-runtime dependencies. Follow
+the virtual-environment setup in `UPDATE.md` on a new machine.
+
 ## Layout
 
 - `KNOWLEDGE.md`: lazy-loaded router for stable decisions and contracts.

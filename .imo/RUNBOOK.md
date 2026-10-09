@@ -14,10 +14,12 @@ Run from the repository root:
 ./imo veil status
 ./imo global doctor --json
 python3 .imo/product/scripts/check_tracked_references.py --require-tracked --json
-./imo verify
+PATH="$HOME/.imo/venv/bin:$PATH" ./imo verify
 ```
 
 Acceptance criteria:
+
+Prepare the IMO virtual environment using `UPDATE.md` before full verification.
 
 - root wrappers delegate to `.imo/product/**`;
 - context modes stay within `1200 / 2200 / 4000` characters;
