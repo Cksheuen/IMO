@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://imo.local/schemas/identity-veil/policy.schema.json",
+  "title": "IMO Identity Veil Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "enabled",
+    "commands",
+    "paths",
+    "patterns"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["match", "alias", "action"],
+        "properties": {
+          "match": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Real executable basename. Local-only; never emitted to the model. Registered commands are invoked through alias."
+          },
+          "alias": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Neutral handle the agent uses with `veil run --task`, e.g. org-cli-1."
+          },
+          "description": {
+            "type": "string",
+            "description": "Model-visible neutral purpose text; must not contain the real name."
+          },
+          "action": {
+            "type": "string",
+            "enum": ["sanitize", "opaque"],
+            "description": "sanitize forces the redaction pipeline; opaque always hides output."
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "paths": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["prefix", "alias", "action"],
+        "properties": {
+          "prefix": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Absolute or ~-prefixed directory/file prefix. Local-only; accessed through alias."
+          },
+          "alias": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Neutral handle the agent uses with `veil read --task`, e.g. org-config-1."
+          },
+          "description": {
+            "type": "string",
+            "description": "Model-visible neutral purpose text; must not contain the real prefix."
+          },
+          "action": {
+            "type": "string",
+            "enum": ["sanitize", "opaque"]
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "patterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "pattern", "level"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pattern": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Python regular expression applied to command and file output."
+          },
+          "level": {
+            "type": "string",
+            "enum": ["sanitize", "opaque"],
+            "description": "sanitize replaces matches; opaque escalates the whole result to opaque."
+          },
+          "replacement": {
+            "type": "string",
+            "default": "[REDACTED]"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

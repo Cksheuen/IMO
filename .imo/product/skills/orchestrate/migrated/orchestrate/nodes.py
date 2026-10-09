@@ -283,7 +283,7 @@ async def fixer_node(state: OrchestrateState) -> Dict[str, Any]:
     Equivalent to CC's delta_context → implementer loop.
     """
     for feature in state["features"]:
-        if feature["passes"] is False and feature["attempt_count"] < feature["max_attempts"]:
+        if feature["passes"] is False:
             # Create delta context for fixer
             delta_context: DeltaContext = build_delta_context(
                 file="(auto-detected)",

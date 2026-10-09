@@ -18,7 +18,7 @@ Apply this rule when all of these are true:
   error handling, state flow, testing, or dependency usage
 
 Also apply it when the user explicitly asks for work in an existing or mature
-project.
+project, including incremental changes to an existing review artifact.
 
 ## Priority
 
@@ -73,13 +73,27 @@ explicitly requires them:
 
 When applying the rule:
 
-1. Identify the closest local precedent.
+1. Resolve the real Git root, current branch, staged/unstaged baseline, and
+   editable source before choosing the closest local precedent. A workspace
+   container, installed projection, or rendered snapshot is not the source.
 2. Reuse existing helpers, schemas, fixtures, and naming patterns.
 3. Match the layer boundary already present in the project.
 4. Keep changes scoped to the task.
 5. Add abstraction only when it removes real local duplication or matches an
    established pattern.
 6. Validate with the project's existing test or verification style.
+
+When fixing feedback, search the affected module and its consumers for the
+same defect pattern. Repair confirmed occurrences within the authorized scope
+in one pass; report occurrences outside that scope without changing them.
+Apply incremental edits to the complete editable source, preserving unrelated
+work, stable IDs, existing pages, and human feedback. A rendering rebuild must
+not regenerate or replace the underlying review data.
+
+A reply or processing status alone does not fulfill a requested change.
+Record the changed source and a relevant verification result, or explicitly
+explain a no-change outcome. Agent completion does not resolve human review;
+keep feedback open until the user accepts it.
 
 ## Allowed Exceptions
 

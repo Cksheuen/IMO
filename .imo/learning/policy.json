@@ -14,8 +14,7 @@
       "id": "candidate",
       "description": "Aggregated or high-value lesson proposal.",
       "allowed_writers": [
-        "imo_learning_workflow",
-        "hermes_like_self_iteration"
+        "imo_learning_workflow"
       ],
       "promotion_gate": "candidate_review",
       "may_be_read_by_default": false
@@ -121,25 +120,12 @@
         "active_digest",
         "hard_rule_or_skill_update"
       ]
-    },
-    "hermes_like_self_iteration": {
-      "can_read_levels": [
-        "active_digest",
-        "candidate"
-      ],
-      "can_write_levels": [
-        "candidate"
-      ],
-      "cannot_write_levels": [
-        "active_digest",
-        "hard_rule_or_skill_update"
-      ]
     }
   },
   "safety_defaults": {
     "ambiguous_privacy_scope": "project",
     "raw_signal_default_weight": "low",
-    "candidate_only_self_iteration": true,
+    "background_prepare_candidate_only": true,
     "global_learning_requires_public_privacy": true,
     "deferred_review_requires_explicit_command": true,
     "background_prepare_may_promote_digest": false,

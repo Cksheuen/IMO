@@ -44,7 +44,6 @@ from .graph import (
     compile_dual_review_graph_with_interrupt,
     run_dual_review_loop,
     resume_after_fix,
-    sync_with_feature_list,
 )
 
 __all__ = [
@@ -85,5 +84,4 @@ __all__ = [
     "compile_dual_review_graph_with_interrupt",
     "run_dual_review_loop",
     "resume_after_fix",
-    "sync_with_feature_list",
 ]

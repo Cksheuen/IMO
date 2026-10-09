@@ -26,20 +26,6 @@
       }
     },
     {
-      "id": "plan-predict-execute",
-      "name": "plan-predict-execute",
-      "classification": "native",
-      "owner_surface": ".imo/product/skills/plan-predict-execute",
-      "lifecycle": "adopted",
-      "default_enabled": true,
-      "allowed_integration_modes": ["direct"],
-      "external_dependencies": [],
-      "learning_access": {
-        "read_digest": true,
-        "write_signals": true
-      }
-    },
-    {
       "id": "architecture-health",
       "name": "architecture-health",
       "classification": "native",
@@ -68,14 +54,42 @@
       }
     },
     {
-      "id": "freshness",
-      "name": "freshness",
+      "id": "evolve-notes",
+      "name": "evolve-notes",
       "classification": "native",
-      "owner_surface": ".imo/product/skills/freshness",
+      "owner_surface": ".imo/product/skills/evolve-notes",
       "lifecycle": "adopted",
       "default_enabled": true,
       "allowed_integration_modes": ["direct"],
       "external_dependencies": [],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "history-distillation",
+      "name": "history-distillation",
+      "classification": "native",
+      "owner_surface": ".imo/product/skills/history-distillation",
+      "lifecycle": "adopted",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct"],
+      "external_dependencies": [],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "freshness",
+      "name": "freshness",
+      "classification": "provider-backed",
+      "owner_surface": ".imo/product/skills/freshness",
+      "lifecycle": "adopted-policy",
+      "default_enabled": true,
+      "allowed_integration_modes": ["direct", "optional-provider"],
+      "external_dependencies": ["claude-global-config"],
       "learning_access": {
         "read_digest": true,
         "write_signals": true
@@ -98,12 +112,12 @@
     {
       "id": "lesson-review",
       "name": "lesson-review",
-      "classification": "native",
+      "classification": "provider-backed",
       "owner_surface": ".imo/product/skills/lesson-review",
-      "lifecycle": "adopted",
+      "lifecycle": "adopted-policy",
       "default_enabled": true,
-      "allowed_integration_modes": ["direct"],
-      "external_dependencies": [],
+      "allowed_integration_modes": ["direct", "optional-provider"],
+      "external_dependencies": ["claude-global-config"],
       "learning_access": {
         "read_digest": true,
         "write_signals": true
@@ -112,12 +126,12 @@
     {
       "id": "codex-feedback-review",
       "name": "codex-feedback-review",
-      "classification": "native",
+      "classification": "provider-backed",
       "owner_surface": ".imo/product/skills/codex-feedback-review",
-      "lifecycle": "adopted",
+      "lifecycle": "adopted-policy",
       "default_enabled": true,
-      "allowed_integration_modes": ["direct"],
-      "external_dependencies": [],
+      "allowed_integration_modes": ["direct", "optional-provider"],
+      "external_dependencies": ["claude-global-config"],
       "learning_access": {
         "read_digest": true,
         "write_signals": true
@@ -126,12 +140,12 @@
     {
       "id": "locate",
       "name": "locate",
-      "classification": "native",
+      "classification": "provider-backed",
       "owner_surface": ".imo/product/skills/locate",
-      "lifecycle": "adopted",
+      "lifecycle": "adopted-policy",
       "default_enabled": true,
-      "allowed_integration_modes": ["direct"],
-      "external_dependencies": [],
+      "allowed_integration_modes": ["direct", "optional-provider"],
+      "external_dependencies": ["claude-global-config"],
       "learning_access": {
         "read_digest": true,
         "write_signals": true
@@ -140,12 +154,12 @@
     {
       "id": "shit",
       "name": "shit",
-      "classification": "native",
+      "classification": "provider-backed",
       "owner_surface": ".imo/product/skills/shit",
-      "lifecycle": "adopted",
+      "lifecycle": "adopted-policy",
       "default_enabled": true,
-      "allowed_integration_modes": ["direct"],
-      "external_dependencies": [],
+      "allowed_integration_modes": ["direct", "optional-provider"],
+      "external_dependencies": ["claude-global-config"],
       "learning_access": {
         "read_digest": true,
         "write_signals": true
@@ -284,10 +298,24 @@
       "owner_surface": ".imo/product/skills/functional-test-chain",
       "lifecycle": "adopted-candidate",
       "default_enabled": true,
+      "allowed_integration_modes": ["direct", "extension", "optional-provider"],
+      "external_dependencies": ["claude-skill-assets"],
+      "learning_access": {
+        "read_digest": false,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "david",
+      "name": "david",
+      "classification": "native",
+      "owner_surface": ".imo/product/skills/david",
+      "lifecycle": "adopted",
+      "default_enabled": true,
       "allowed_integration_modes": ["direct", "extension"],
       "external_dependencies": [],
       "learning_access": {
-        "read_digest": false,
+        "read_digest": true,
         "write_signals": true
       }
     }

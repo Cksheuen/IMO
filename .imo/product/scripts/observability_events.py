@@ -13,10 +13,11 @@ import time
 from typing import Any
 from uuid import uuid4
 
+import root_resolver
 
-ROOT = Path(__file__).resolve().parents[3]
-EVENTS_DIR = ROOT / ".imo/.runtime/observability/events"
-EVENTS_DISPLAY_DIR = ".imo/.runtime/observability/events"
+ROOT = root_resolver.project_root_or_source()
+EVENTS_DIR = root_resolver.project_runtime_root(ROOT) / "observability/events"
+EVENTS_DISPLAY_DIR = root_resolver.project_runtime_display(ROOT, "observability/events")
 SCHEMA_VERSION = 1
 EVENT_TYPES = {
     "command_start",

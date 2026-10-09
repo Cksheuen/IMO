@@ -13,7 +13,6 @@ ROOT = Path(__file__).resolve().parents[3]
 REGISTRY_PATH = ROOT / ".imo/providers/registry.json"
 REQUIRED_HEALTH_STATES = {"not_installed", "unavailable", "degraded", "ok"}
 REQUIRED_CATEGORIES = {
-    "task-provider",
     "plugin-provider",
     "skill-provider",
     "runtime-provider",
@@ -153,4 +152,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

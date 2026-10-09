@@ -1,206 +1,47 @@
-# IMO Architecture Plan
+# IMO Architecture
 
-## Summary
+IMO has three durable layers:
 
-IMO is not a proxy for Trellis.
+1. `product/`: canonical commands, rules, and on-demand skills.
+2. `runtime/`: versioned contracts, schemas, and shared helpers.
+3. `learning/`: reviewed user-adaptation policy and data contracts.
 
-The long-term architecture has three primary planes:
+Global `~/.imo/runtime/` contains user-level state. Project-scoped profiles,
+learning state, observability events, and caches live under
+`~/.imo/projects/<project-id>/runtime/`, outside application repositories.
 
-```text
-Trellis Task Plane
-  task / PRD / spec / workflow
+## Source and projection
 
-IMO Capability Plane
-  IMO-owned skills / rules / metrics / feedback / runtime helpers
+- `.imo/` in the IMO source checkout is canonical.
+- Root `imo`, `scripts/`, and `skills/` are source-checkout compatibility
+  surfaces only; they are not copied into consumer projects.
+- `imo global install --apply` registers a bounded Codex hook and projects
+  enabled skills into `~/.codex/skills/` as symlinks to canonical source.
+- External plugins, skills, and runtimes stay direct-use providers by default;
+  discovery is read-only and invocation is opt-in.
 
-IMO Learning Plane
-  shared learning signals / candidates / digests / user preference adaptation
-```
+## Context path
 
-External providers and host outputs are integration planes around those primary
-planes, not the center of the architecture.
+`imo codex context` emits a compact advisory router. It reads cached project
+and reviewed learning summaries, never scans the repository or refreshes state
+at prompt time, and stays within mode budgets. Detailed contracts and skills
+are loaded on demand through `KNOWLEDGE.md` and skill entrypoints.
 
-Prediction and optimization history is recorded in `PREDICTION_LOOP.md`.
+## Safety path
 
-## Plane Responsibilities
+`imo init` and `update` write project registration only under `~/.imo/projects/`.
+They write no framework files into a consumer repository. `imo uninstall`
+retains a compatibility cleanup path for old managed direct-run profiles and
+never removes global or project runtime knowledge by default.
 
-### Trellis Task Plane
-
-Owned by Trellis.
-
-Responsibilities:
-
-- task lifecycle
-- PRD and status files
-- spec injection
-- workflow phase guidance
-- Trellis implement/check/research agent flow
-
-IMO does not own this plane and should not patch Trellis internals.
-
-### IMO Capability Plane
-
-Owned by IMO.
-
-Responsibilities:
-
-- IMO-native skills
-- IMO-owned rules and contracts
-- metrics, feedback, lessons, promotion workflows
-- runtime helpers
-- host adapter contracts
-- IMO verification
-
-This plane is useful even when Trellis is not installed or not involved in the
-current workflow.
-
-### IMO Learning Plane
-
-Owned by IMO.
-
-Responsibilities:
-
-- collect raw learning signals
-- aggregate candidate lessons
-- publish active learning digests
-- coordinate Hermes-like self-iteration outputs
-- make user adaptation available to public agents
-
-The learning plane is the shared adaptation layer. It prevents Trellis-side
-agents, IMO skills, Codex agents, Claude agents, and Hermes-like loops from
-learning separate and conflicting user models.
-
-### External Provider Plane
-
-Owned by each provider.
-
-Examples:
-
-- Trellis
-- Claude Code plugins
-- Codex plugins
-- downloaded skills
-- LiteLLM or model gateways
-- local LangGraph-based systems
-
-Provider integration is optional. Provider source stays outside IMO by default.
-
-### Host Output Plane
-
-Owned by the host adapter or the current source owner.
-
-Examples:
-
-- `.claude/**`
-- `.codex/**`
-- future host-visible directories
-
-Host outputs are generated/projected surfaces. They are never the durable IMO
-source-of-truth.
-
-## Default Usage
-
-Normal use is independent:
-
-```text
-Use Trellis for tasks.
-Use IMO for capabilities and learning.
-```
-
-Examples:
-
-```text
-trellis-start
-imo verify
-imo learning list
-imo skill run <skill>
-```
-
-IMO-managed provider calls and Trellis callbacks are advanced integration modes.
-They are not the default path.
-
-## Long-Term Implementation Plan
-
-### Phase 0: Architecture Freeze
-
-- Keep Trellis and IMO as independent planes.
-- Document ownership and update-stability boundaries.
-- Rewrite provider integration as optional, not default.
-
-### Phase 1: Capability Plane Inventory
-
-- Classify current `.imo/product/skills/*` modules.
-- Add machine-readable module metadata.
-- Teach `imo verify` to check classification consistency.
-- Add dependency-pattern checks so `native` modules do not silently grow
-  provider-backed behavior.
-
-### Phase 2: Learning Plane Protocol
-
-- Define signal, candidate, digest, and hard-rule promotion contracts.
-- Add local and global learning storage boundaries.
-- Add user-visible inspect/disable/reject/reset controls before automated
-  promotion.
-- Add learning write, digest read, and promotion gates before any public agent
-  consumes active digests by default.
-
-### Phase 3: Public Agent Learning Integration
-
-- Define how public agents read learning digests.
-- Define how public agents write raw signals.
-- Keep promotion gated.
-- Keep provider internals untouched.
-
-### Phase 4: Optional Provider Discovery
-
-- Add read-only discovery and health checks.
-- Do not invoke providers until side-effect metadata is explicit.
-- Missing or broken providers must degrade cleanly.
-- Treat noisy or missing optional providers as health signals, not IMO core
-  failures.
-
-### Phase 5: Optional Callback / Invocation
-
-- Add callbacks or managed invocations only for explicit use cases.
-- Default to observe/advise modes.
-- Gate modes require explicit user opt-in.
-
-### Phase 6: Host Adapter Projection
-
-- Project only IMO-owned capabilities.
-- Keep ownership gates and dry-run/diff checks.
-- Do not claim Trellis-owned host files.
-
-### Phase 7: Hermes-Like Self-Iteration
-
-- Produce candidates from learning signals.
-- Evaluate candidate changes.
-- Require review before active digest, rule, or skill updates.
-- Preserve rollback paths for every promoted learning item.
-
-## Maintenance Risks And Controls
-
-| Risk | Control |
-| --- | --- |
-| Learning pollution | TTL, confidence, source tracking, review gates |
-| Self-iteration drift | candidates-only loop, regression checks, rollback ids |
-| Provider compatibility burden | read-only discovery first, health checks, clean degradation |
-| Module classification drift | machine-readable metadata checked by `imo verify` |
-| Host ownership conflict | ownership audit, dry-run diff, adapter manifests gated |
-| Runtime log growth | rotation, summaries, debug-only full payloads |
-| Privacy leakage | project/global scope split, opt-out, user-visible review |
-| Controls remain prose-only | staged `imo verify` enforcement backlog |
-| CLI sprawl | common commands and advanced provider/adapter commands documented separately |
-| Digest quality ambiguity | digest rubric and privacy classification before active promotion |
-
-## Non-Goals
-
-- Do not proxy Trellis by default.
-- Do not require Trellis to call IMO during normal task flow.
-- Do not patch Trellis internals.
-- Do not vendor external provider source into IMO without an adoption task.
-- Do not let self-iteration directly mutate active rules or skills.
-- Do not ship learning, provider, or host-output write behavior before the
-  matching gate in `PREDICTION_LOOP.md` is satisfied.
-- Re-run the prediction loop before shipping learning writes, provider
-  invocation, or host adapter writes.
+The identity veil is an independent, opt-in safety path. `imo veil install
+--apply` projects a generated PreToolUse gate hook and, by default, a
+SessionStart context hook under `~/.imo/hooks/`, registering each per chosen
+host (`~/.claude/settings.json`, `~/.codex/hooks.json`) without touching
+foreign registrations. The context hook announces neutral tool handles so a
+session never needs to emit a real command name; `--gate-only` omits it. The
+veil keeps a dedicated manifest under `~/.imo/install/identity-veil/`, is
+never part of default `global install`, and is fully removed by
+`imo veil uninstall --apply`. The gate redirects identity-marked calls and
+files to `imo veil run`/`imo veil read`, which return only graded redacted
+envelopes addressed by neutral handles; the veil never logs argv or raw output.

@@ -2,12 +2,64 @@
   "schema_version": 1,
   "rules": [
     {
+      "id": "delegated-coding-relay-safety",
+      "name": "Delegated Coding And Relay Safety",
+      "status": "active",
+      "owner_surface": ".imo/product/rules/delegated-coding-relay-safety.md",
+      "trigger": "Choose direct execution or bounded delegation from current authorization, coupling and coordination cost. For selected workers use Herdr with explicit ownership, model route, budget and lifecycle return.",
+      "context_summary": "Keep short or tightly coupled work in main unless delegation is mandated. Selected delegation uses Herdr, exact model and inherited budget; distinguish usage from reservations. Reclaim ownership for authorized takeover; verify real integrated behavior.",
+      "priority_order": [
+        "explicit_user_instruction",
+        "repository_hard_rules_or_specs",
+        "local_neighboring_patterns",
+        "active_imo_learning_digest",
+        "generic_agent_training_defaults"
+      ],
+      "overrides_generic_habits": [
+        "delegating read-only or purely explanatory work only to satisfy a generic policy",
+        "parallel workers without independent ownership",
+        "full conversation history to a worker instead of delta context",
+        "session split as substitute for a bounded task",
+        "assuming model field is the effective provider/model",
+        "silent provider/model fallback",
+        "native subagents as the default or fallback for Herdr execution",
+        "forcing delegation without independent value or bypassing an explicit route mandate",
+        "large raw tool output inline",
+        "relay use for evaluation or live traffic",
+        "treating worker startup or idle status as completion",
+        "treating done, blocked, unknown, or process exit as a final project state",
+        "waiting for an artifact before waking the parent or handling a failure",
+        "claiming background execution without a verified return channel",
+        "reasking standing delegation permission"
+      ],
+      "required_sections": [
+        "Summary",
+        "Trigger",
+        "Priority",
+        "Required Local Evidence",
+        "Habits To Suppress",
+        "Implementation Behavior",
+        "Allowed Exceptions",
+        "Review Questions",
+        "Non-Goals"
+      ],
+      "default_enabled": true,
+      "integration_modes": [
+        "context-guidance",
+        "manual-review"
+      ],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
       "id": "chameleon",
       "name": "Chameleon",
       "status": "active",
       "owner_surface": ".imo/product/rules/chameleon.md",
-      "trigger": "Developing new or changed modules inside a mature project with established local conventions.",
-      "context_summary": "For mature-project module work, inspect neighboring files and existing tests first; local evidence overrides generic model defaults, including heavy defensive programming, premature abstraction, and broad rewrites unless the user, local specs, or real risk require them.",
+      "trigger": "Developing or changing modules and review artifacts inside a mature project with established local conventions.",
+      "context_summary": "Resolve true repo/source and reuse local owners; fix same-pattern defects within scope, preserving IDs, feedback and dirty work.",
       "priority_order": [
         "explicit_user_instruction",
         "repository_hard_rules_or_specs",
@@ -45,24 +97,30 @@
       }
     },
     {
-      "id": "update-handoff",
-      "name": "Update Handoff",
+      "id": "structured-refactoring",
+      "name": "Structured Development",
       "status": "active",
-      "owner_surface": ".imo/product/rules/update-handoff.md",
-      "trigger": "Changing IMO update, install, release, runtime-state, hook, or verification mechanics, or explaining how another device should update IMO.",
-      "context_summary": "Before finishing affected IMO release or migration work, review .imo/UPDATE.md, update it when mechanics changed, and state whether the update method changed so another agent can perform the smallest safe cross-device refresh.",
+      "owner_surface": ".imo/product/rules/structured-refactoring.md",
+      "trigger": "Adding, changing, reviewing, or refactoring modules where structure, ownership, file size, public imports, commands, tests, schemas, or UI composition could drift.",
+      "context_summary": "Keep cohesive modules; change incrementally and test affected behavior, without redundant full runs or constant-only tests.",
       "priority_order": [
         "explicit_user_instruction",
         "repository_hard_rules_or_specs",
-        "tracked_update_handoff",
-        "current_local_source_evidence",
+        "local_neighboring_patterns",
+        "active_imo_learning_digest",
         "generic_agent_training_defaults"
       ],
       "overrides_generic_habits": [
-        "conversation_history_as_update_source",
-        "release_summary_without_update_review",
-        "destructive_update_before_dirty_check",
-        "runtime_state_as_disposable_source"
+        "caller_migration_during_compatibility_refactor",
+        "behavior_rewrite_hidden_as_refactor",
+        "treating_structure_rules_as_refactor_only",
+        "growing_mixed_modules_without_boundary_review",
+        "single_use_global_helpers",
+        "props_heavy_over_splitting",
+        "new_module_location_without_owner_search",
+        "generated_host_output_edits",
+        "line_count_slicing",
+        "skipping_validation_for_import_moves"
       ],
       "required_sections": [
         "Summary",
@@ -86,12 +144,12 @@
       }
     },
     {
-      "id": "structured-refactoring",
-      "name": "Structured Development",
+      "id": "focused-context-reading",
+      "name": "Focused Context Reading",
       "status": "active",
-      "owner_surface": ".imo/product/rules/structured-refactoring.md",
-      "trigger": "Adding, changing, reviewing, or refactoring modules where structure, ownership, file size, public imports, commands, tests, schemas, or UI composition could drift.",
-      "context_summary": "During development and refactors, keep modules focused, preserve public surfaces, search existing owners before helpers, budget file growth, and validate locally.",
+      "owner_surface": ".imo/product/rules/focused-context-reading.md",
+      "trigger": "Reading or reviewing large source files, documents, logs, generated artifacts, or repository-wide search results.",
+      "context_summary": "Search and filter large surfaces by keywords and structure before reading bounded slices; avoid redundant full-content context while preserving traceable evidence.",
       "priority_order": [
         "explicit_user_instruction",
         "repository_hard_rules_or_specs",
@@ -100,16 +158,139 @@
         "generic_agent_training_defaults"
       ],
       "overrides_generic_habits": [
-        "caller_migration_during_compatibility_refactor",
-        "behavior_rewrite_hidden_as_refactor",
-        "treating_structure_rules_as_refactor_only",
-        "growing_mixed_modules_without_boundary_review",
-        "single_use_global_helpers",
-        "props_heavy_over_splitting",
-        "new_module_location_without_owner_search",
-        "generated_host_output_edits",
-        "line_count_slicing",
-        "skipping_validation_for_import_moves"
+        "full_large_file_read_before_targeted_search",
+        "unbounded_recursive_output",
+        "repeated_duplicate_context_loading",
+        "historical_or_generated_dump_when_source_evidence_is_available",
+        "treating_truncated_search_as_proof_of_absence"
+      ],
+      "required_sections": [
+        "Summary",
+        "Trigger",
+        "Priority",
+        "Required Local Evidence",
+        "Habits To Suppress",
+        "Implementation Behavior",
+        "Allowed Exceptions",
+        "Review Questions",
+        "Non-Goals"
+      ],
+      "default_enabled": true,
+      "integration_modes": [
+        "context-guidance",
+        "manual-review"
+      ],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "evidence-first",
+      "name": "Evidence First",
+      "status": "active",
+      "owner_surface": ".imo/product/rules/evidence-first.md",
+      "trigger": "Diagnosing failures or unexpected behavior, validating host integrations, or reporting fixes and feedback changes as complete.",
+      "context_summary": "Diagnose from runtime evidence; verify actual consumers before claiming completion. Configured, started, tested and accepted are distinct.",
+      "priority_order": [
+        "explicit_user_instruction",
+        "repository_hard_rules_or_specs",
+        "runtime_evidence",
+        "local_code_evidence",
+        "verified_hypothesis"
+      ],
+      "overrides_generic_habits": [
+        "guessing_from_truncated_error",
+        "fixing_before_reading_full_error",
+        "treating_render_symptom_as_render_bug_without_checking_request",
+        "skipping_working_vs_broken_diff",
+        "rederiving_documented_root_cause",
+        "editing_to_test_unverified_hypothesis"
+      ],
+      "required_sections": [
+        "Summary",
+        "Trigger",
+        "Priority",
+        "Required Local Evidence",
+        "Habits To Suppress",
+        "Implementation Behavior",
+        "Allowed Exceptions",
+        "Review Questions",
+        "Non-Goals"
+      ],
+      "default_enabled": true,
+      "integration_modes": [
+        "context-guidance",
+        "manual-review"
+      ],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "identity-veil",
+      "name": "Identity Veil",
+      "status": "active",
+      "owner_surface": ".imo/product/rules/identity-veil.md",
+      "trigger": "About to run an organization-marking CLI or read an identity directory registered under a neutral veil handle, while an external provider records the session.",
+      "context_summary": "Discover handles with ./imo veil status and run marked commands/files only by --task; use the graded envelope and never state the real name or redacted content.",
+      "priority_order": [
+        "explicit_user_instruction",
+        "repository_hard_rules_or_specs",
+        "local_neighboring_patterns",
+        "active_imo_learning_digest",
+        "generic_agent_training_defaults"
+      ],
+      "overrides_generic_habits": [
+        "direct_shell_call_to_identity_cli",
+        "direct_read_of_identity_files",
+        "wrapping_marked_command_to_evade_the_gate",
+        "restating_blocked_command_or_raw_output",
+        "retrying_after_gate_denial",
+        "extracting_opaque_content_through_another_tool",
+        "pasting_internal_markers_into_external_tools"
+      ],
+      "required_sections": [
+        "Summary",
+        "Trigger",
+        "Priority",
+        "Required Local Evidence",
+        "Habits To Suppress",
+        "Implementation Behavior",
+        "Allowed Exceptions",
+        "Review Questions",
+        "Non-Goals"
+      ],
+      "default_enabled": true,
+      "integration_modes": [
+        "context-guidance",
+        "manual-review"
+      ],
+      "learning_access": {
+        "read_digest": true,
+        "write_signals": true
+      }
+    },
+    {
+      "id": "update-handoff",
+      "name": "Update Handoff",
+      "status": "active",
+      "owner_surface": ".imo/product/rules/update-handoff.md",
+      "trigger": "Changing IMO update, install, release, runtime-state, hook, or verification mechanics, or explaining how another device should update IMO.",
+      "context_summary": "When install, update, release, hook, or verification mechanics change, update .imo/UPDATE.md and report the smallest safe refresh.",
+      "priority_order": [
+        "explicit_user_instruction",
+        "repository_hard_rules_or_specs",
+        "tracked_update_handoff",
+        "current_local_source_evidence",
+        "generic_agent_training_defaults"
+      ],
+      "overrides_generic_habits": [
+        "conversation_history_as_update_source",
+        "release_summary_without_update_review",
+        "destructive_update_before_dirty_check",
+        "runtime_state_as_disposable_source"
       ],
       "required_sections": [
         "Summary",

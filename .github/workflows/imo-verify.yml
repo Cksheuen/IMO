@@ -1,0 +1,42 @@
+name: IMO Verify
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check whitespace in pull request
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: git diff --check "$BASE_SHA...HEAD"
+      - name: Check whitespace in push
+        if: github.event_name == 'push'
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+        run: git diff --check "$BEFORE_SHA..$AFTER_SHA"
+      - name: python3 .imo/product/scripts/check_tracked_references.py --require-tracked --json
+        run: python3 .imo/product/scripts/check_tracked_references.py --require-tracked --json
+      - name: ./imo verify
+        run: ./imo verify
+      - name: npm pack --dry-run
+        run: npm pack --dry-run

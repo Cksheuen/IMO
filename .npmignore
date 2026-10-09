@@ -5,3 +5,9 @@ __pycache__/
 *.pyc
 *.pyo
 .DS_Store
+*.bak-*
+.concurrency/
+test-results/
+*.tsbuildinfo
+.imo/notes/**
+!.imo/notes/README.md

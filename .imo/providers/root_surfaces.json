@@ -15,16 +15,6 @@
       "path": "scripts/imo.sh",
       "kind": "shell-compat-exec",
       "target": ".imo/product/scripts/imo.sh"
-    },
-    {
-      "path": "scripts/task-audit.py",
-      "kind": "python-compat-import",
-      "target": ".imo/product/scripts/task-audit.py"
-    },
-    {
-      "path": "scripts/task-bootstrap.sh",
-      "kind": "shell-compat-exec",
-      "target": ".imo/product/scripts/task-bootstrap.sh"
     }
   ],
   "skill_surfaces": {

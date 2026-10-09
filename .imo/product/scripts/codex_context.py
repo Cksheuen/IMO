@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Emit repo-local IMO context for Codex hook injection."""
+"""Emit repo-aware IMO context for global Codex hook injection."""
 
 from __future__ import annotations
 
@@ -40,16 +40,16 @@ SECTION_BUDGETS = {
         "digest": (1, 220, 140),
     },
     "standard": {
-        "rules": (3, 900),
-        "project_profile": (5, 620),
-        "user_profile": (4, 520),
-        "digest": (3, 460, 160),
+        "rules": (5, 1000),
+        "project_profile": (3, 220),
+        "user_profile": (4, 250),
+        "digest": (3, 200, 90),
     },
     "full": {
-        "rules": (4, 1200),
-        "project_profile": (8, 1400),
-        "user_profile": (8, 1400),
-        "digest": (8, 1100, 220),
+        "rules": (5, 1200),
+        "project_profile": (8, 800),
+        "user_profile": (8, 750),
+        "digest": (8, 550, 180),
     },
 }
 DEFAULT_CONTEXT_MODE = "standard"
@@ -189,7 +189,7 @@ def _active_digest_context(
     lines: list[str] = []
     roots: list[tuple[str, Path]] = []
     if project_root is not None:
-        roots.append(("project", project_root / ".imo/.runtime/learning/digest.json"))
+        roots.append(("project", root_resolver.project_runtime_root(project_root) / "learning/digest.json"))
     roots.append(("global", root_resolver.global_runtime_root() / "learning/digest.json"))
 
     seen: set[str] = set()
@@ -201,7 +201,8 @@ def _active_digest_context(
         for item in items:
             if item.get("status") != "active":
                 continue
-            if item.get("scope") not in {"project", "global"}:
+            expected_scope = "global" if source == "global" else "project"
+            if item.get("scope") != expected_scope:
                 continue
             summary = item.get("summary")
             if not isinstance(summary, str) or not summary.strip():
@@ -260,14 +261,12 @@ def _build_sections(data: dict, mode: str) -> list[tuple[str, list[str]]]:
     base_lines = [
         "<imo-context>",
         f"Mode: IMO context ({mode})",
-        "Entrypoint: `imo` or project `./imo`",
+        "Entrypoint: global `imo` (source checkout: `./imo`)",
         cwd_line,
         project_line,
-        "Boundary: Trellis remains the task plane; IMO owns capability and learning context only.",
+        "Boundary: IMO context is advisory; repository and platform-native workflows remain authoritative.",
         PRIORITY_LINE,
     ]
-    if mode != "compact":
-        base_lines.insert(2, "Commands: `imo global status`, `imo learning list --scope merged`, `imo task graph`, `imo verify`.")
     sections: list[tuple[str, list[str]]] = [("base", base_lines)]
 
     rule_lines, rule_chars = budgets["rules"]
@@ -305,35 +304,77 @@ def _build_sections(data: dict, mode: str) -> list[tuple[str, list[str]]]:
             )
         )
 
-    sections.append(("note", ["Note: informational only; user instructions, parent-agent instructions, and Trellis workflow win.", "</imo-context>"]))
+    sections.append(("note", ["</imo-context>"]))
     return sections
 
 
 def _render_sections(sections: list[tuple[str, list[str]]], mode: str) -> tuple[str, dict[str, dict[str, int]]]:
     max_chars = CONTEXT_MODE_BUDGETS[mode]
-    rendered: list[str] = []
-    section_stats: dict[str, dict[str, int]] = {}
-    used = 0
     closing = "</imo-context>"
     closing_len = len(closing) + 1
+    minimum_counts = {
+        "rules": 2,
+        "project_profile": 2,
+        "user_profile": 2,
+        "digest": 3,
+    }
+
+    kept_by_section: dict[str, list[str]] = {}
+    used = 0
+
     for label, lines in sections:
-        kept: list[str] = []
-        for line in lines:
+        if label == "note":
+            continue
+        content = [line for line in lines if line != closing]
+        if not content:
+            continue
+        if label == "base":
+            reserved: list[str] = []
+            for line in content:
+                line_len = len(line) + 1
+                if used + line_len + closing_len > max_chars:
+                    break
+                reserved.append(line)
+                used += line_len
+            if reserved:
+                kept_by_section[label] = reserved
+            continue
+        minimum = minimum_counts.get(label, 0)
+        if not minimum or len(content) < minimum:
+            continue
+        reserved_cost = sum(len(line) + 1 for line in content[:minimum])
+        if used + reserved_cost + closing_len > max_chars:
+            continue
+        kept_by_section[label] = content[:minimum]
+        used += reserved_cost
+
+    for label, lines in sections:
+        if label in ("base", "note"):
+            continue
+        kept = kept_by_section.get(label)
+        if not kept:
+            continue
+        for line in lines[len(kept):]:
             if line == closing:
                 continue
             line_len = len(line) + 1
             if used + line_len + closing_len > max_chars:
-                continue
-            rendered.append(line)
+                break
             kept.append(line)
             used += line_len
-        if kept:
-            section_stats[label] = {
-                "chars": len("\n".join(kept)),
-                "lines": len(kept),
-            }
-    if not rendered or rendered[-1] != closing:
-        rendered.append(closing)
+
+    rendered: list[str] = []
+    section_stats: dict[str, dict[str, int]] = {}
+    for label, _ in sections:
+        kept = kept_by_section.get(label)
+        if not kept:
+            continue
+        rendered.extend(kept)
+        section_stats[label] = {
+            "chars": len("\n".join(kept)),
+            "lines": len(kept),
+        }
+    rendered.append(closing)
     context = "\n".join(rendered)
     return context, section_stats
 

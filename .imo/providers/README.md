@@ -1,110 +1,14 @@
 # IMO Providers
 
-Providers are optional integrations. They are not the default path for Trellis
-or IMO usage.
+Providers describe optional external capabilities without absorbing their
+source or routing normal usage through IMO.
 
-## Purpose
+- Discovery is read-only.
+- Invocation is disabled by default.
+- Adoption requires explicit side effects, ownership, risk, and safe modes.
+- Optional absence is `not_installed`, not an IMO failure.
+- Provider failures remain isolated from IMO-native commands.
 
-The provider layer documents how IMO may discover or call external capabilities
-without absorbing their source code and without requiring users to route normal
-Trellis work through IMO.
-
-## Default Rule
-
-- Trellis remains directly usable as Trellis.
-- External plugins and downloaded skills remain directly usable from their host
-  environments.
-- IMO remains directly usable through IMO commands and IMO-owned skills.
-- Provider integration is added only when a task needs cross-plane discovery,
-  health checks, optional callbacks, or advanced orchestration.
-
-## Provider Categories
-
-| Category | Examples | Default relationship |
-| --- | --- | --- |
-| Task provider | Trellis | Independent; optional discovery/callback only |
-| Plugin provider | Claude Code plugins, Codex plugins | External; discoverable if needed |
-| Skill provider | marketplace skills, downloaded skill packs | External; not vendored into IMO |
-| Runtime provider | LiteLLM, model gateways, local runtimes | External execution substrate |
-| IMO native provider | `.imo/product/*` capabilities | IMO-owned |
-
-## Discovery Model
-
-Provider discovery must be read-only.
-
-The machine-readable provider registry is `registry.json`. It is validated by
-`.imo/product/scripts/check_provider_contracts.py` and is intentionally limited
-to discovery, health, and default-disabled invocation metadata.
-
-Repo-root compatibility and external-provider surfaces are declared in
-`root_surfaces.json`. It is validated by
-`.imo/product/scripts/check_root_surfaces.py` and is intentionally limited to
-read-only classification of existing tracked root surfaces.
-
-Expected discovery inputs may include:
-
-- known project-local directories, such as `.trellis/` or `.agents/skills/`
-- known user-level directories, such as `~/.claude/plugins/`,
-  `~/.claude/skills/`, or `~/.codex/skills/`
-- provider manifests, when a provider exposes one
-- executable entrypoints with stable command contracts
-
-Discovery output is a capability inventory, not generated source files.
-
-## Invocation Model
-
-Provider invocation is an advanced mode.
-
-The current registry keeps invocation disabled by default for every provider.
-Enabling invocation requires a future task with explicit side-effect and
-ownership metadata.
-
-It requires a capability contract that states:
-
-- provider id
-- capability id
-- entrypoint
-- required inputs
-- expected outputs
-- side effects
-- risk level
-- safe modes such as `dry_run`, `observe`, or `apply`
-- ownership of files it may read or write
-
-IMO should refuse ambiguous calls when ownership or side effects are unclear.
-
-## Failure Model
-
-Provider integration must degrade cleanly:
-
-- missing provider -> unavailable capability
-- broken provider -> health warning
-- invocation failure -> isolated failure record
-- provider update drift -> adapter update task, not IMO core corruption
-
-Provider failures must not break IMO native capabilities or Trellis native task
-flow.
-
-## Health Severity
-
-Provider health should distinguish optional absence from real failure:
-
-| Severity | Meaning |
-| --- | --- |
-| `not_installed` | Provider is optional and not present. |
-| `unavailable` | Provider is expected by current config but cannot be used. |
-| `degraded` | Provider is present but some capabilities are unavailable. |
-| `ok` | Provider discovery is healthy. |
-
-`not_installed` must not fail IMO native verification.
-
-## Current Scope
-
-This directory is mostly contract-only. It now includes a read-only
-`root_surfaces.json` declaration so root compatibility surfaces cannot drift
-back into ambiguous source-of-truth status. It does not yet implement provider
-discovery, callback handling, or invocation.
-
-The first implementation step should be read-only discovery and health
-reporting. Provider execution should remain out of scope until discovery and
-side-effect metadata are stable.
+`registry.json` declares provider metadata. `root_surfaces.json` classifies
+tracked compatibility and external surfaces. Both are checked by
+`./imo verify`.

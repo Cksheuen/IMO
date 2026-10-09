@@ -14,7 +14,6 @@ from .types import (
     HandoffPayload,
     ProblemLocation,
     ProgressEvent,
-    RetryableFeature,
     ReviewableFeature,
 )
 
@@ -30,6 +29,5 @@ __all__ = [
     "HandoffPayload",
     "ProblemLocation",
     "ProgressEvent",
-    "RetryableFeature",
     "ReviewableFeature",
 ]

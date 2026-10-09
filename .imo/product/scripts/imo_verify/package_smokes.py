@@ -74,7 +74,7 @@ def _run_package_smoke() -> bool:
         stderr=subprocess.PIPE,
         text=True,
     )
-    if helped.returncode != 0 or "imo: repo-local IMO command surface" not in helped.stdout:
+    if helped.returncode != 0 or "imo: global-first IMO command surface" not in helped.stdout:
         print("[imo verify] failed: package wrapper help", file=sys.stderr)
         if helped.stderr:
             print(helped.stderr, file=sys.stderr)

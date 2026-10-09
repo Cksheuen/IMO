@@ -1,106 +1,105 @@
 ---
 name: eat
-description: 知识吸收元技能。深度分析输入内容（X/Twitter帖子、GitHub项目、技术文章、代码片段），提取可复用模式与原理，写入持久存储（rules/或创建新skill），实现能力增量。当用户提供URL、代码片段、技术文章或要求"学习"、"吸收"、"消化"知识时触发此技能。
-description_en: "Knowledge ingestion meta-skill. Deeply analyzes inputs such as X/Twitter posts, GitHub projects, technical articles, and code snippets, extracts reusable patterns and principles, and writes them into persistent assets like rules or new skills."
+description: 炼化新的外部资料或本地材料（论文、文章、代码库、技术文档、长文本、多媒体转写）：建立来源地图，经过多轮证据阅读持续修订认识，将来源事实、推断和假设分开，并把稳定结论直接映射为现有 rules、skills 或 profile。用户要求“炼化”“学习”“吸收”“消化”“深度阅读”或提供资料要求转化为可复用能力时触发；只有确实需要跨轮修订时才使用 evolve-notes 作为临时工作面。
 ---
 
-# Eat - 知识吸收元技能
+# Eat / 炼化
 
-吸收新资料，把它变成可复用能力。
+把“读完并总结”升级为可追溯的多轮认知更新，再把稳定部分转化为本地能力。
 
-## 核心边界
+## 边界
 
-- 处理的是**新输入**：URL、文章、项目、代码片段、长文本
-- 目标是提取 pattern、workflow、decision rule，而不是复制原文
-- 可以写 `notes/`、`rules/`、`skills/`
-- 可以提出 declarative memory candidate，但**不能直接写** `memory/declarative/*`
-- `eat` 不是旧 note 的默认晋升入口；旧经验升格交给 `promote-notes`
+- 处理新输入；已有 note 可由 `promote-notes` 评估，但用户要求直接炼化时应直接回填现有 owner。
+- 提取 pattern、mechanism、workflow 和 decision rule，不复制原文。
+- 来源事实、我们的推断、待验证假设和本地证据必须可区分。
+- 短小且一轮可理解的材料直接处理，不强制建立笔记。
+- 长文、多来源、跨主题或会反复修正认识时，可按需用 `evolve-notes` 建立临时工作面；目标 owner 已明确时直接回填，不为产生 note 而建 note。
+- 可以提出 declarative memory candidate，但不能直接写 canonical declarative memory。
 
-## 关键原则
+## 炼化流程
 
-- 提取，不复制
-- 高同构输入优先反哺本地能力
-- 新资料若能直接修正本地缺口，本轮必须落地 patch
-- 还不稳定的理解先写 `notes/`
-- 写入前先做相关知识检索与去重
+### 1. 确认来源
 
-## 最小流程
+- 获取正文、版本、发布日期和稳定链接；URL 资料优先抓原文。
+- 论文优先记录标题、版本、章节结构、实验和附录位置。
+- 外部资料默认检查时效性；基础原理与当前实现细节分开判断。
 
-### Step 1: 获取内容
+### 2. 查重与定位
 
-按输入类型选择：
+搜索当前项目的：
 
-- URL：优先抓正文；遇到鉴权再走浏览器登录态复用
-- 本地文件：直接读取
-- 粘贴内容：直接分析
-- 多媒体：先提取文字或结构
+- `notes/research/`、`notes/lessons/`、`notes/design/`；
+- `.imo/notes/`（IMO 真源）；
+- 相关 rules、skills、contracts、实现和测试。
 
-### Step 2: 检索现有知识
+只读取能改变当前判断的命中，不全量加载历史知识。
 
-至少检查：
+### 3. 选择承载方式
 
-- `notes/research/`
-- `notes/lessons/`
-- `notes/design/`
-- `rules/`
-- `skills/`
+| 输入形态 | 承载方式 |
+| --- | --- |
+| 短小、稳定、单轮 | 当前回复或现有 rule/skill/profile |
+| 长文、多轮、认识会变化 | 临时使用 `evolve-notes`，稳定后回填 owner 并删除 note |
+| 多主题且超过目录化阈值 | 先拆到现有 owners；只有仍无 owner 且需要跨轮修订时才暂存目录 |
 
-目的不是复习旧知识，而是避免重复吸收和重复落地。
+长资料不强制创建笔记容器。若确需临时工作面，首轮只写来源地图、问题和证据位置，
+完成回填、回读和引用清理后删除该工作面，不保留第二真源。
 
-### Step 3: 判断同构度
+### 4. 迭代炼化
 
-问四个问题：
+每轮只围绕一个主题或问题：
 
-1. 外部资料是否在解决和本地系统相同的问题？
-2. 其分层或闭环能否映射到本地 `rules/skills/hooks/workflows`？
-3. 本地是否已经存在明确缺口？
-4. 现在是否已经足够支撑一次直接优化？
+1. 定位原文证据；
+2. 记录来源事实；
+3. 写出推断和置信度；
+4. 寻找反例、限制和替代解释；
+5. 更新当前认识；旧认识用划除线保留并说明修订原因；
+6. 用书签维持可按主题读取的上下文。
 
-处理规则：
+不要因为摘要已经流畅就提前停止。遇到能推翻当前主张的证据时，先修订笔记再继续。
 
-- 高同构：直接 patch 本地内容，`notes/` 只存证据
-- 中同构：先写 `notes/research/` 或 `notes/design/`
-- 低同构：可只沉淀 research note
+### 5. 映射本地系统
 
-### Step 4: 验证时效性
+按同构度处理：
 
-外部资料默认要做时效性判断：
+- 高同构且证据充分：修复明确本地缺口，在目标 owner 或验证输出保留必要来源与证据；
+- 中同构：只保留为当前任务的可验证候选；若用了临时 note，结论收敛后删除；
+- 低同构：记录启发，不制造 rule 或 skill；
+- 已稳定且跨任务复用：交给 `promote-notes` 显式升格。
 
-- `< 1 年`：通常可直接采用
-- `1-3 年`：检查核心方法是否仍成立
-- `> 3 年`：只参考原理，不默认采用具体实践
-- 数学 / 基础原理：可视为长期有效
+外部资料只能提出方向；本地代码、运行时、测试和契约决定能否落地。
 
-### Step 5: 决定输出位置
+### 6. 轻量演化闭环
 
-| 情况 | 去向 |
-|------|------|
-| 已能直接形成稳定规范 | `rules/` |
-| 已能形成完整工作流 | `skills/` |
-| 还在探索、需要缓冲 | `notes/research/` 或 `notes/design/` |
-| 只补充已有 lesson | 更新 `notes/lessons/` |
-| 发现本地明确缺口 | 先 patch 本地内容，再补 note |
+当炼化结果会修改本地 harness、rule、skill 或治理脚本时，使用薄协议控制回归，
+但不要创建 task/spec 状态机：
 
-## 写入前检查
+1. 记录当前 baseline 与本轮单一、可证伪的机制假设；不要捆绑无关改动。
+2. 先运行能暴露结构性故障的便宜 preflight，再运行与假设直接相关的 focused check。
+3. 另选至少一个未直接用于调参的 transfer check，避免只对开发证据过拟合。
+4. 比较 baseline、candidate 与 best-so-far；candidate 回归时恢复最佳版本，不用“可能是噪声”代替复测或回滚。
+5. 连续局部修改没有收益时，停止 prompt/gate 微调，触发一次架构层重审或结束本轮。
 
-- 是否已搜索相近 rule / skill / note
-- 是否只是已有 note 的晋升冲动，而不是新资料吸收
-- 是否已经脱离具体案例，具备迁移性
-- 若判断为高同构，是否已经把本地缺口一并修掉
+这些状态留在当前工作面、平台 plan 或验证输出中；临时 note 在目标 owner 回读后删除，默认不生成仓库任务目录、
+实验状态机或长期 ledger 服务。
 
-## 输出要求
+### 7. 停止条件
 
-至少说明：
+满足以下条件后才结束本轮炼化：
 
-- 核心价值是什么
-- 可迁移 pattern 是什么
-- 与现有知识的关系
-- 输出去向为什么是这里
-- 若高同构，本轮具体 patch 了哪些本地内容
+- 核心论点、关键证据、限制和反例已定位；
+- 当前认识可从目标 owner、来源证据和验证输出读取；若使用临时 note，已完成回填并删除；
+- 未验证假设和本地映射候选已显式列出；
+- 已说明采用、暂缓或拒绝每个主要优化方向的原因；
+- 若本次暴露了 `eat` 或 `evolve-notes` 的真实缺口，已在授权范围内补强；不为了记录缺口新建历史 note。
+- 若修改了本地 harness，已记录 baseline/best、focused/transfer checks 与回滚判断。
 
-## 参考文件
+## 渐进式自我补强
 
-- `references/playbook.md`：详细 phase、模板、即时配置细节
-- `rules-library/technique/browser-auth-reuse.md`
-- `skills/promote-notes/SKILL.md`
-- `skills/skill-creator/SKILL.md`
+用真实炼化任务 dogfood 本技能。只有来源或运行证据证明流程缺失时，才修改 `eat`、`evolve-notes` 或相关 contract；不要把单篇资料的术语硬编码进通用技能。
+
+## 参考
+
+- `references/playbook.md`：多轮炼化、claim ledger 和输出检查表。
+- `evolve-notes`：划除修订、当前视图、书签和目录化。
+- `promote-notes`：稳定 notes 的显式升格。

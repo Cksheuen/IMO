@@ -1,0 +1,95 @@
+{
+  "slug": "change-blocks-example",
+  "title": "改动块 changeBlock 示例 · 评审",
+  "subtitle": "演示 add / modify / remove 三种方案改动表达：新增内容说明原因与作用，改动内容给出前后对比，删除内容保留改动前。",
+  "pageHtml": "<div class=\"page\"><section class=\"preview-section\" data-component-id=\"checkout-ticket\" data-review-target=\"checkout-ticket\" data-review-label=\"券核销面板\"><h3 data-review-target=\"checkout-ticket-title\" data-review-label=\"券核销面板标题\">券核销面板</h3><div class=\"ticket-card\" data-review-node-id=\"ticket-discount-line\" data-review-target=\"ticket-discount-line\" data-review-label=\"满减优惠行\"><span class=\"label\">满减优惠</span><span class=\"value\" data-api-field=\"discount_text\">满 100 减 20</span></div><button class=\"cta\" data-review-target=\"ticket-confirm\" data-review-label=\"确认使用按钮\">确认使用</button></section></div>",
+  "overview": {
+    "title": "改动块示例总览",
+    "summary": "三行 mapping 分别演示新增 / 改动 / 删除三种 changeBlock.kind。"
+  },
+  "components": [
+    {
+      "id": "checkout-ticket",
+      "label": "券核销面板",
+      "kind": "change",
+      "kindLabel": "改动点 / 券链路",
+      "mapping": [
+        {
+          "id": "add-discount-line",
+          "title": "新增满减优惠行",
+          "requirement": "结算页需要让用户在确认前看到券带来的满减优惠金额，降低使用疑虑。",
+          "change": "在券核销面板新增一条满减优惠行，只读展示后端下发的 discount_text。",
+          "api": {
+            "summary": "券核销预览接口新增 discount_text 字段。",
+            "fields": [
+              {
+                "name": "discount_text",
+                "type": "string",
+                "meaning": "满减优惠文案，如“满 100 减 20”",
+                "target": "discount_text"
+              }
+            ]
+          },
+          "changeBlock": {
+            "kind": "add",
+            "rationale": "旧版券面板只展示券名与有效期，用户在确认核销前看不到优惠金额，客诉集中在“不知道能减多少”。新增满减优惠行把优惠金额前置到确认动作之前，作用是提升券核销转化率，并为后续多券叠加展示预留行结构。",
+            "after": {
+              "lang": "TSX",
+              "code": "<TicketCard ticket={ticket}>\n  <DiscountLine text={ticket.discount_text} />\n  <ConfirmButton onClick={onConfirm} />\n</TicketCard>"
+            },
+            "impact": "仅券核销面板新增只读展示，不改下单与核销接口写路径；discount_text 缺省时该行不渲染。"
+          }
+        },
+        {
+          "id": "modify-confirm-track",
+          "title": "确认按钮埋点改造",
+          "requirement": "增长侧需要按优惠类型拆分确认按钮点击，旧埋点只有一个 click 事件，无法区分满减与折扣。",
+          "change": "确认按钮点击埋点从单一事件改为携带 coupon_type 参数的通用事件。",
+          "api": {
+            "summary": "纯前端埋点改动，无后端契约变化。",
+            "changed": false
+          },
+          "changeBlock": {
+            "kind": "modify",
+            "rationale": "旧埋点 event 名写死为 ticket_confirm_click，新增优惠类型需要新增事件名与看板配置，维护成本随类型数线性增长。改为通用事件 + coupon_type 参数后，新类型只需扩展枚举，看板用同一事件分组。",
+            "before": {
+              "lang": "TypeScript",
+              "code": "track(\"ticket_confirm_click\", {\n  ticketId: ticket.id,\n});"
+            },
+            "after": {
+              "lang": "TypeScript",
+              "code": "track(\"ticket_confirm\", {\n  ticketId: ticket.id,\n  couponType: ticket.coupon_type,\n});"
+            },
+            "impact": "数仓侧需将旧事件 ticket_confirm_click 迁移到 ticket_confirm + coupon_type 分组，过渡期双发两周。"
+          }
+        },
+        {
+          "id": "remove-expired-tag",
+          "title": "移除过期券红色角标",
+          "requirement": "过期券在新设计中整卡置灰并下沉到“历史券”分组，保留红色角标会与置灰态冲突并误导用户以为可点击。",
+          "change": "删除过期券卡片右上角的红色“已过期”角标。",
+          "api": {
+            "summary": "纯前端展示删除，无后端契约变化。",
+            "changed": false
+          },
+          "changeBlock": {
+            "kind": "remove",
+            "rationale": "新设计以整卡置灰 + “历史券”分组表达过期态，红色角标属于旧视觉体系的双重标记，删除后过期语义仍完整且不与置灰态冲突。",
+            "before": {
+              "lang": "TSX",
+              "code": "{ticket.expired && (\n  <span className=\"ticket-expired-tag\">已过期</span>\n)}"
+            }
+          }
+        }
+      ],
+      "children": [
+        {
+          "id": "ticket-discount-line",
+          "label": "满减优惠行",
+          "interaction": "highlight",
+          "mappingIds": ["add-discount-line"]
+        }
+      ]
+    }
+  ]
+}

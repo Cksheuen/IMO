@@ -11,10 +11,11 @@ Observability covers compact operational facts for:
 - verification checks
 - learning metrics bridge
 - profile status visibility
-- future orchestrate worker lifecycle events
+- orchestrate worker lifecycle events (Herdr instrumentation design; live wiring
+  must be verified separately)
 
-It does not own Trellis task state, host-output projection, remote telemetry, or
-user consent decisions.
+It does not own repository task state, host-output projection, remote telemetry,
+or user consent decisions.
 
 ## Runtime Storage
 
@@ -24,12 +25,13 @@ Stable contracts live in tracked source:
 .imo/runtime/observability/
   CONTRACT.md
   event.schema.json
+  herdr-telemetry.md
 ```
 
-Generated local state lives only under ignored runtime:
+Generated local state lives only under global project runtime:
 
 ```text
-.imo/.runtime/observability/
+~/.imo/projects/<project-id>/runtime/observability/
   events/YYYY-MM-DD.jsonl
 ```
 
@@ -56,6 +58,12 @@ Allowed optional fields are compact ids, counts, and categories such as
 `parent_span_id`, `duration_ms`, `exit_code`, `error_kind`, `command`,
 `check_label`, `status`, `reason`, `count`, `item_count`, `pending_count`,
 `source`, and `source_event_type`.
+
+The [Herdr telemetry design](herdr-telemetry.md) profiles this existing envelope
+for route decisions, lifecycle delivery, actual parent receipts, intervention,
+and successor dispatch. It defines correlation, missing-event audits, latency
+budgets, and live-effectiveness checks. A recorded send or successful metrics
+command is not proof that the parent received or acted on an event.
 
 ## Privacy Boundary
 
@@ -92,5 +100,8 @@ empty results when no events exist.
 - Local events must never upload or sync by default.
 - Runtime activity or telemetry state must not be treated as task completion or
   user consent.
-- Verification smokes that write observability runtime state must back up and
-  restore existing local state.
+- Verification must emit paired `verify_start`/`verify_end` and
+  `verify_check_start`/`verify_check_end` events to the normal resolved project
+  runtime.
+- Verification fixtures and smoke events must use a temporary runtime and must
+  not mutate source `.imo/.runtime` files or pre-existing project runtime state.

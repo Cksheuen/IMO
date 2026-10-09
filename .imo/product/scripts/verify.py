@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the repo-local IMO verification suite."""
+"""Run the canonical IMO verification suite."""
 
 from __future__ import annotations
 

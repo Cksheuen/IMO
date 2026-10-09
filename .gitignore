@@ -3,9 +3,6 @@
 
 *
 
-# Trellis 引导与 runtime 资产不属于本项目源码
-.trellis/
-
 # 保留的共享源码
 # scripts/ 和 skills/ 仅作为已审计兼容面 / 外部 provider 占位保留；
 # 真正产品源在 .imo/，声明见 .imo/providers/root_surfaces.json。
@@ -13,6 +10,9 @@
 !.npmignore
 !package.json
 !imo
+!/.github/
+!/.github/workflows/
+!/.github/workflows/imo-verify.yml
 !bin/
 !bin/**
 !.imo/
@@ -21,8 +21,6 @@
 !skills/**
 !scripts/
 !scripts/**
-!tasks/
-!tasks/README.md
 
 # skills 本地/工作区产物不入库
 skills/**/workspace/
@@ -38,6 +36,11 @@ __pycache__/
 *.swp
 *.swo
 *~
+*.bak-*
+.concurrency/
+node_modules/
+test-results/
+*.tsbuildinfo
 
 # 冷存储
 .cold-storage/

@@ -1,0 +1,265 @@
+/*
+ * Real canvas pan/zoom layer styles.
+ *
+ * Overview layering:
+ *   .page-frame (legacy card surface, hover/click delegation, FLIP source)
+ *     .dv-canvas-stage (clipping viewport, owns pointer/wheel gestures)
+ *       .dv-canvas-world (React-controlled translate + scale)
+ *         .dv-canvas-host (injected page HTML, natural layout width)
+ *
+ * Dock layering (legacy DOM contract kept: clone is the dock's direct child,
+ * or inside .component-dock-scroll-content in the clamped / canvas models;
+ * the user pan/zoom transform is composed onto the clone inline):
+ *   .component-dock (fixed FLIP box; owns pointer/wheel gestures)
+ *     > [data-component-id] clone               (transform / fullpage model)
+ *     > .component-dock-scroll-content          (viewport / canvas model)
+ *         > [data-component-id] clone
+ */
+
+/* ---- overview frame stage ---- */
+
+:is(.page-frame, .dv-logic-canvas) .dv-canvas-stage {
+  /* In-flow clipping layer: at scale 1 the world keeps its natural layout
+     box, so the frame grows with its content exactly like before (the shell
+     is sticky and the page scrolls normally). Transform scale never reflows
+     the layout box; zoom/pan only changes the painted result, and overflow is
+     clipped while pan reaches every part of the world. */
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+  touch-action: none;
+  cursor: grab;
+}
+
+:is(.page-frame, .dv-logic-canvas) .dv-canvas-stage[data-panning="true"] {
+  cursor: grabbing;
+}
+
+:is(.page-frame, .dv-logic-canvas) .dv-canvas-world {
+  position: relative;
+  display: block;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+:is(.page-frame, .dv-logic-canvas) .dv-canvas-host {
+  /* Natural page layout: content keeps its own width and at least fills the
+     stage so empty canvases still cover the card surface. */
+  min-width: 100%;
+  transform-origin: 0 0;
+}
+
+:is(.page-frame, .dv-logic-canvas) .dv-canvas-world[data-animated="true"] {
+  transition: transform 180ms cubic-bezier(0.22, 0.8, 0.24, 1);
+}
+
+/* ---- dock preview ---- */
+
+/* The dock owns the gestures directly (no nested stage element). */
+.component-dock {
+  touch-action: none;
+  cursor: grab;
+}
+
+.component-dock[data-panning="true"] {
+  cursor: grabbing;
+}
+
+.component-dock.flip-morph {
+  cursor: default;
+}
+
+/* User pan/zoom is composed onto the clone inline; button-driven zoom gets a
+   short transition, wheel / drag updates are instant (set inline to none). */
+@media (prefers-reduced-motion: reduce) {
+  :is(.page-frame, .dv-logic-canvas) .dv-canvas-world,
+  .component-dock [data-component-id] {
+    transition: none !important;
+  }
+}
+
+/* Scroll placeholder (clamped viewport / canvas model): the dock is the
+   scroll container; the wrapper defines the content extent and never clips
+   interaction (its absolutely positioned child receives pointer events). */
+.component-dock > .component-dock-scroll-content {
+  overflow: hidden;
+}
+
+/* Fullpage model: CSS grid owns layout; gestures are disabled in the hook. */
+.component-dock[data-dock-model="fullpage"] {
+  touch-action: auto;
+  cursor: pointer;
+}
+
+/* ---- zoom controls ---- */
+
+.dv-canvas-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid var(--line, rgba(0, 0, 0, 0.12));
+  background: color-mix(in srgb, var(--card, #fff) 88%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+  font:
+    12px/1.2 -apple-system,
+    BlinkMacSystemFont,
+    "PingFang SC",
+    sans-serif;
+  color: var(--ink, #161823);
+  z-index: 45;
+  user-select: none;
+  /* The pill itself lets clicks reach the preview behind it; only the actual
+     buttons capture pointer events, so content under the padding/gap stays
+     clickable (node/component navigation lives there). */
+  pointer-events: none;
+}
+
+.dv-canvas-controls > * {
+  pointer-events: auto;
+}
+
+/* Fixed to the viewport rather than the (potentially very tall) frame, so the
+   zoom toolbar stays reachable on long canvases. The double-class selector
+   beats index.css's `.page-frame > * { position: relative }` without relying
+   on stylesheet injection order. It hides while the inspector owns the stage
+   (the dock has its own toolbar). */
+:is(.page-frame, .dv-logic-canvas)
+  .dv-canvas-frame-controls.dv-canvas-controls {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+}
+
+.page-frame.is-inspector-open .dv-canvas-frame-controls {
+  display: none;
+}
+
+.dv-canvas-dock-controls-anchor {
+  position: fixed;
+  z-index: 45;
+  pointer-events: none;
+}
+
+.dv-canvas-dock-controls-anchor .dv-canvas-controls {
+  pointer-events: auto;
+}
+
+/* Controls inside the pill use the ui-kit IconButton (contract 3); the pill
+   context flattens their bordered-card look into subtle borderless round
+   buttons. */
+.dv-canvas-controls .dv-ui-icon-button {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  color: inherit;
+}
+
+.dv-canvas-controls .dv-ui-icon-button:hover:not(:disabled),
+.dv-canvas-controls .dv-ui-icon-button:focus-visible:not(:disabled) {
+  border: 0;
+  background: color-mix(in srgb, var(--accent, #c6842d) 14%, transparent);
+  color: inherit;
+  outline: none;
+}
+
+.dv-canvas-controls .dv-ui-icon-button:active:not(:disabled) {
+  border: 0;
+  background: color-mix(in srgb, var(--accent, #c6842d) 24%, transparent);
+}
+
+.dv-canvas-controls .dv-ui-icon-button:focus-visible {
+  outline: 2px solid var(--accent, #c6842d);
+  outline-offset: 1px;
+}
+
+.dv-canvas-control-wide {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dv-canvas-zoom-ratio {
+  min-width: 46px;
+  align-self: center;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--muted, #64748b);
+  cursor: pointer;
+  padding: 6px 4px;
+  border-radius: 999px;
+}
+
+.dv-canvas-zoom-ratio:hover {
+  color: var(--ink, #161823);
+  background: color-mix(in srgb, var(--accent, #c6842d) 10%, transparent);
+}
+
+.dv-canvas-zoom-ratio:focus-visible {
+  outline: 2px solid var(--accent, #c6842d);
+  outline-offset: 1px;
+}
+
+/* Narrow screens: keep controls compact and reachable. */
+@media (max-width: 720px) {
+  .dv-canvas-control-wide {
+    display: none;
+  }
+  .dv-canvas-zoom-ratio {
+    min-width: 40px;
+  }
+}
+
+/* Global capture mode: gestures yield to the region-selection overlay, which
+   captures pointer events at document level. The canvas keeps its default
+   cursor signalling crosshair selection. */
+body.david-gc-mode :is(.page-frame, .dv-logic-canvas) .dv-canvas-stage,
+body.david-gc-mode .component-dock {
+  cursor: default;
+}
+
+/* Native screens keep wheel, touch scrolling and text selection. */
+:is(.page-frame, .dv-logic-canvas) .dv-canvas-stage[data-gestures="native"],
+.component-dock[data-gestures="native"] {
+  touch-action: auto;
+  cursor: auto;
+}
+:is(.page-frame, .dv-logic-canvas) .dv-canvas-stage[data-gestures="native"] {
+  overflow: auto;
+  max-height: calc(100dvh - 180px);
+}
+
+/* Logic surfaces keep a fixed viewport; transformed content cannot paint into prose. */
+.page-frame .dv-canvas-stage[data-gestures="canvas"] {
+  max-height: calc(100dvh - 180px);
+  contain: paint;
+}
+.component-dock[data-gestures="canvas"] {
+  overflow: clip !important;
+  contain: paint;
+}
+
+.dv-canvas-controls[data-orientation="vertical"] {
+  flex-direction: column;
+  min-width: 44px;
+  border-radius: 10px;
+}
+.dv-canvas-controls[data-orientation="vertical"] .dv-canvas-zoom-ratio {
+  white-space: nowrap;
+}
+
+.dv-canvas-controls[data-orientation="vertical"] .dv-ui-icon-button {
+  padding: 0 4px;
+}
+.dv-canvas-controls[data-orientation="vertical"] .dv-canvas-control-wide {
+  white-space: nowrap;
+}

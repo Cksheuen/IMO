@@ -1,0 +1,878 @@
+{
+  "slug": "latam-video-conversion-upgrade",
+  "title": "LATAM 视频转化提升 · 视频拆解页评审",
+  "subtitle": "把 F3/F4 方案、页面改动点和现有后端契约放在同一条可追溯阅读链路里。点击彩框进入三联动，点击页面任意元素留下评论。",
+  "sourcePath": "/Users/bytedance/Documents/Projects/latam-c/tech_docs/video_conversion_skill_test/tech_design.md",
+  "pageHtml": "<style>.app-phone{position:relative;background:#f8f8f8;min-height:980px}.app-nav-overlay{position:absolute;top:0;left:0;right:0;z-index:4;border:0;color:#fff;background:linear-gradient(180deg,rgba(0,0,0,.48),transparent);padding-top:18px;padding-bottom:32px}.app-nav-overlay .app-nav-back,.app-nav-overlay .app-nav-title,.app-nav-overlay .app-nav-action{color:#fff}.app-nav-action{margin-left:auto;font-size:22px;line-height:1}.app-video-hero{height:438px;position:relative;overflow:hidden;background:linear-gradient(145deg,#10141f 0%,#35435f 46%,#c4a36d 100%);color:#fff}.app-video-art{position:absolute;inset:0;background:radial-gradient(circle at 72% 28%,rgba(255,255,255,.34),transparent 16%),linear-gradient(155deg,transparent 0 42%,rgba(255,255,255,.14) 42% 44%,transparent 44% 100%)}.app-video-art:before{content:'SMART SCALE';position:absolute;left:22px;top:112px;color:rgba(255,255,255,.78);font-size:12px;letter-spacing:.18em;font-weight:700;transform:rotate(-8deg)}.app-video-art:after{content:'◒';position:absolute;right:42px;top:122px;color:rgba(255,255,255,.62);font-size:112px;line-height:1;transform:rotate(14deg)}.app-video-play{position:absolute;left:50%;top:50%;width:58px;height:58px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.75);border-radius:50%;background:rgba(0,0,0,.28);font-size:22px;transform:translate(-50%,-50%)}.app-video-progress{position:absolute;left:16px;right:16px;bottom:112px;height:3px;background:rgba(255,255,255,.38);border-radius:4px}.app-video-progress span{display:block;width:38%;height:100%;background:#fff;border-radius:4px}.app-video-duration{position:absolute;right:16px;bottom:91px;font-size:12px;color:rgba(255,255,255,.86)}.app-video-copy{position:absolute;left:16px;right:50px;bottom:22px;display:flex;flex-direction:column;gap:4px}.app-video-author{font-size:15px;font-weight:700}.app-video-name{font-size:13px;line-height:1.35;color:rgba(255,255,255,.9);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.app-video-favorite{position:absolute;right:18px;bottom:29px;font-size:26px}.app-video-sheet{position:relative;margin-top:-14px;background:#fff;border-radius:14px 14px 0 0;padding-top:7px;z-index:2}.app-sheet-chevron{text-align:center;height:22px;color:#8a8b90;font-size:18px;line-height:20px}.app-performance{padding:12px 16px 15px}.app-metric-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 8px}.app-metric{text-align:center;min-width:0}.app-metric-value{display:block;color:#161823;font-size:20px;line-height:1.15;font-weight:700;white-space:nowrap}.app-metric-label{display:block;margin-top:5px;color:#86878b;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.app-contract-note{margin-top:12px;text-align:right;color:#9a9ba0;font-size:11px}.app-section-divider{height:8px;background:#f5f5f5}.app-techniques{padding:16px}.app-section-title{display:flex;align-items:center;gap:6px;margin-bottom:15px;color:#161823;font-size:19px;font-weight:700}.app-info-icon{color:#86878b;font-size:14px}.app-stage-divider{display:flex;align-items:center;gap:9px;margin:4px 0 15px;color:#8a8b90;font-size:16px}.app-stage-divider:before,.app-stage-divider:after{content:'';height:1px;flex:1;background:#dedfe2}.app-technique-card{padding:0 0 16px;margin-bottom:15px;border-bottom:1px solid #f0f0f0}.app-technique-card:last-child{margin-bottom:0;border-bottom:0}.app-technique-tag{display:inline-flex;padding:4px 9px;border-radius:6px;background:#e7f4ff;color:#0879d1;font-size:14px;font-weight:700}.app-technique-evidence{margin-top:10px;color:#161823;font-size:15px;line-height:1.42;white-space:pre-line}.app-technique-why{margin-top:11px;color:#8a8b90;font-size:14px;font-style:italic;line-height:1.4}.app-technique-why strong{font-weight:600}.app-technique-why.is-collapsed{color:#8a8b90}.app-featured-product{padding:16px 0 18px}.app-featured-label{padding:0 16px;color:#86878b;font-size:12px;font-weight:700;letter-spacing:.08em}.app-product-card{border-bottom:0}.app-product-img{background:linear-gradient(145deg,#d6d8da,#747b82);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.85);font-size:31px}.app-product-meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.app-product-add{align-self:flex-end;padding:7px 17px;border:0;border-radius:999px;background:#fe2c55;color:#fff;font-size:13px;font-weight:700}.app-bottom-bar{position:sticky;bottom:0;z-index:5}</style><div class=\"app-phone\"><div class=\"app-nav app-nav-overlay\" data-review-target=\"breakdown-nav\" data-review-label=\"视频拆解导航栏\"><span class=\"app-nav-back\">←</span><span class=\"app-nav-title\">Video insights</span><span class=\"app-nav-action\">⋯</span></div><div class=\"app-video-hero\" data-component-id=\"video-player\" data-review-target=\"video-player\" data-review-label=\"Inspiration video player\"><div class=\"app-video-art\"><span class=\"app-video-play\">▶</span></div><span class=\"app-video-duration\" data-api-field=\"VideoInspirationItem.video_meta.video_play_info.duration\">00:20</span><div class=\"app-video-progress\"><span></span></div><div class=\"app-video-copy\"><span class=\"app-video-author\" data-api-field=\"VideoInspirationItem.creator_meta.alias\">JP Conde</span><span class=\"app-video-name\" data-api-field=\"VideoInspirationItem.video_meta.name\">#ventaveraniega #bascula #basculadigital #basculainteligente</span></div><span class=\"app-video-favorite\">♡</span></div><div class=\"app-video-sheet\" data-component-id=\"video-sheet\" data-api-field=\"video_list[] video_list[].video_meta.video_id\" data-review-target=\"video-sheet\" data-review-label=\"VideoSheet 页面编排\"><div class=\"app-sheet-chevron\">⌃</div><section class=\"app-performance\" data-component-id=\"performance-panel\" data-review-target=\"performance-panel\" data-review-label=\"Performance panel\"><div class=\"app-metric-row\"><div class=\"app-metric\" data-review-target=\"metric-views\" data-review-label=\"Views\"><span class=\"app-metric-value\" data-api-field=\"video_counters.views\">4.93M</span><span class=\"app-metric-label\">Views</span></div><div class=\"app-metric\" data-review-target=\"metric-likes\" data-review-label=\"Likes\"><span class=\"app-metric-value\" data-api-field=\"video_counters.likes\">29.6K</span><span class=\"app-metric-label\">Likes</span></div><div class=\"app-metric\" data-review-target=\"metric-comments\" data-review-label=\"Comments\"><span class=\"app-metric-value\" data-api-field=\"video_counters.comments\">192</span><span class=\"app-metric-label\">Comments</span></div><div class=\"app-metric\" data-review-target=\"metric-shares\" data-review-label=\"Shares\"><span class=\"app-metric-value\" data-api-field=\"video_counters.shares\">1.88K</span><span class=\"app-metric-label\">Shares</span></div></div><div class=\"app-contract-note\" data-review-target=\"metric-gmv\" data-review-label=\"GMV 指标（契约待补）\">GMV · 契约待补</div></section><div class=\"app-section-divider\"></div><section class=\"app-techniques\" data-component-id=\"video-techniques\" data-review-target=\"video-techniques\" data-review-label=\"Video techniques\"><div class=\"app-section-title\" data-review-target=\"video-techniques-title\" data-review-label=\"Video techniques 标题\">Video techniques <span class=\"app-info-icon\">ⓘ</span></div><div class=\"app-stage-divider\" data-review-target=\"stage-divider\" data-review-label=\"阶段分割线\" data-api-field=\"video_technique.show_video_technique[].video_stage video_technique.all_video_technique[].video_stage\"><span class=\"app-stage-title\">Hook</span></div><div class=\"app-technique-card\" data-review-target=\"technique-card-1\" data-review-label=\"技巧卡 1\"><div class=\"app-technique-tag\" data-api-field=\"technique_detail_list[].tag\">Aesthetic appeal</div><div class=\"app-technique-evidence\" data-api-field=\"technique_detail_list[].evidence\">Use backlighting and macro shots to highlight the smart scale.</div><div class=\"app-technique-why\" data-api-field=\"technique_detail_list[].explanation\">▾ <strong>Why It Works?</strong><div>Showing the key result upfront helps viewers understand the value instantly.</div></div></div><div class=\"app-technique-card\" data-review-target=\"technique-card-2\" data-review-label=\"技巧卡 2\"><div class=\"app-technique-tag\" data-api-field=\"technique_detail_list[].tag\">Benefit first</div><div class=\"app-technique-evidence\" data-api-field=\"technique_detail_list[].evidence\">State the primary benefit before showing the routine.</div><div class=\"app-technique-why is-collapsed\" data-api-field=\"technique_detail_list[].explanation\">▸ <strong>Why It Works?</strong></div></div></section><div class=\"app-section-divider\"></div><section class=\"app-featured-product\" data-review-target=\"featured-product\" data-review-label=\"Featured product\"><div class=\"app-featured-label\">FEATURED PRODUCT</div><div class=\"app-product-card\" data-api-field=\"inspiration_detail_page_info.product_list[0]\"><div class=\"app-product-img\">⚖</div><div class=\"app-product-info\"><div class=\"app-product-name\" data-api-field=\"ProductInfoV2.product_base.title\">Báscula Inteligente de Baño Digital Sincroniza Datos con APP de Fitness en Negro Blanco Rosa</div><div class=\"app-product-meta\" data-api-field=\"ProductInfoV2.product_stock.stock_num\">Stock: 15,467 <span aria-hidden=\"true\">·</span> <span data-api-field=\"ProductInfoV2.product_shop.shop_name\">BELLA Z</span></div><div class=\"app-product-earn\" data-api-field=\"ProductInfoV2.product_plan.est_commission_expense\">Earn $9.26</div><div class=\"app-product-price\" data-api-field=\"ProductInfoV2.product_price.format_price\">$109.00</div></div><button class=\"app-product-add\">Add</button></div></section></div><div class=\"app-bottom-bar\" data-review-target=\"bottom-drawer-cta\" data-review-label=\"底部操作栏\"><button class=\"app-cta-secondary\">Write Similar Script</button><button class=\"app-cta-primary\">Create video</button></div></div>",
+  "components": [
+    {
+      "id": "video-sheet",
+      "label": "VideoSheet 页面编排",
+      "kind": "composition",
+      "kindLabel": "页面编排 / 组件顺序",
+      "mapping": [
+        {
+          "id": "f3-order",
+          "title": "页面编排与组件渲染顺序",
+          "codePaths": [
+            "src/components/VideoSheet/index.tsx",
+            "src/pages/VideoBreakdown/index.tsx"
+          ],
+          "reviewBrief": {
+            "visibleChange": "固定三段式模块垂直流",
+            "trigger": "页面加载时",
+            "status": "结构对齐"
+          },
+          "requirement": "视频拆解页需要把 Performance panel → Video techniques → Featured product 组织成可读的连续页面。",
+          "change": "以 orderedComponents 作为单一顺序源，并按 order 排序渲染三个页面模块。",
+          "trd": {
+            "productDesign": {
+              "heading": "三段式模块流",
+              "positioning": "位于视频播放器下方，通过 Sheet 弹层组织详情卡片",
+              "sections": [
+                {
+                  "title": "模块顺序",
+                  "moduleId": "M1",
+                  "items": [
+                    {
+                      "label": "位置",
+                      "text": "自上而下依次排列：<code>Performance</code> → <code>Techniques</code> → <code>Featured Product</code>"
+                    },
+                    {
+                      "label": "展示",
+                      "text": "模块间通过 8px 灰底分割带 <code>.app-section-divider</code> 隔开"
+                    }
+                  ]
+                }
+              ]
+            },
+            "technical": {
+              "heading": "单一顺序源与条件渲染",
+              "modules": [
+                {
+                  "id": "M1",
+                  "name": "VideoSheetLayout",
+                  "change": "modify",
+                  "desc": "统一编排"
+                }
+              ],
+              "techPoints": [
+                {
+                  "title": "以 orderedComponents 驱动三段式流",
+                  "moduleId": "M1",
+                  "bullets": [
+                    "维护 orderedComponents 数组，按 order 升序映射组件",
+                    "各模块通过 React.memo 减少非必要重渲染"
+                  ],
+                  "pseudoCode": "const orderedComponents = useMemo(() => [\n  { key: 'perf', Comp: PerformancePanel, order: 1 },\n  { key: 'tech', Comp: VideoTechniques, order: 2 },\n  { key: 'prod', Comp: FeaturedProduct, order: 3 },\n].sort((a, b) => a.order - b.order), []);",
+                  "codeLabel": "TypeScript"
+                }
+              ]
+            },
+            "apiChange": {
+              "heading": "消费已有详情数据",
+              "head": "GET /api/inspiration/detail · 关联 BE-F3-000",
+              "items": [
+                {
+                  "title": "视频数据容器契约",
+                  "beId": "BE-F3-000",
+                  "codeLabel": "Thrift / DTO",
+                  "code": "struct VideoInspirationDetailResp {\n  1: list<VideoInspirationItem> video_list;\n}",
+                  "bullets": ["沿用视频拆解详情接口，不新增额外请求"],
+                  "fields": [
+                    {
+                      "name": "video_list[]",
+                      "type": "array",
+                      "meaning": "视频拆解详情中的视频数据容器",
+                      "target": "video-sheet"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "api": {
+            "summary": "沿用视频拆解详情接口，不新增请求；页面组合只消费已解析的详情项。",
+            "fields": [
+              {
+                "name": "video_list[]",
+                "type": "array",
+                "meaning": "视频拆解详情中的视频数据容器",
+                "target": "video-sheet"
+              }
+            ]
+          },
+          "cross": {
+            "note": "页面编排作为主容器宿主，负责统一分发数据与分发滚动吸顶通知。",
+            "flow": [
+              "VideoBreakdown 页面加载完成",
+              "请求 /api/inspiration/detail 获取 video_list",
+              "VideoSheet 按 order 依次挂载子模块"
+            ],
+            "state": [
+              "scrollPercentage: 当前滚动进度",
+              "activeModule: 当前吸顶模块"
+            ],
+            "dataflow": [
+              "VideoInspirationDetailResp → VideoSheet → 子组件"
+            ],
+            "edge": [
+              "video_list 为空时展示缺省骨架屏",
+              "网络失败触发重试浮层"
+            ],
+            "files": [
+              "src/components/VideoSheet/index.tsx",
+              "src/pages/VideoBreakdown/index.tsx"
+            ]
+          }
+        },
+        {
+          "id": "f3-props",
+          "title": "宿主控制与 Props 分发边界",
+          "codePaths": [
+            "src/components/VideoSheet/index.tsx",
+            "src/components/VideoTechniques/index.tsx"
+          ],
+          "reviewBrief": {
+            "visibleChange": "纯展示组件无副作用",
+            "trigger": "数据下发与用户交互",
+            "status": "已对齐"
+          },
+          "requirement": "改动组件应能被页面宿主控制，不能把页面跳转或请求逻辑藏进展示组件。",
+          "change": "VideoSheet 通过 item、product、currentTime、scrollPercentage、onCardClick 等 props 接收数据与动作；VideoTechniques 继续通过 onExpandChange 上报展开状态。",
+          "api": {
+            "summary": "本行无新增后端字段；它约束前端组件边界，数据仍来自详情接口。",
+            "fields": [
+              {
+                "name": "video_list[].video_meta.video_id",
+                "type": "string?",
+                "meaning": "传入技巧组件和埋点上下文的视频 ID",
+                "target": "video-sheet"
+              }
+            ]
+          }
+        },
+        {
+          "id": "f3-boundary",
+          "title": "Video insights 与 Video techniques 模块边界",
+          "codePaths": [
+            "src/types/inspiration.ts",
+            "src/components/VideoSheet/index.tsx"
+          ],
+          "reviewBrief": {
+            "visibleChange": "区分洞察与技巧两套独立数据源",
+            "trigger": "详情页解析时",
+            "status": "已对齐"
+          },
+          "requirement": "Video insights 与 Video techniques 必须保持为两个不同的页面模块，不能按名称合并。",
+          "change": "保留 VideoSheet 的模块顺序和独立 VideoTechniques 渲染，不新增 Video insights 作为本轮视频技巧卡的别名。",
+          "api": {
+            "summary": "接口中的 video_inspiration_info_list 与 video_technique 是不同数据区域；本轮只消费 video_technique。",
+            "fields": [
+              {
+                "name": "video_inspiration_info_list[]",
+                "type": "array?",
+                "meaning": "脚本/洞察数据，不等同于技巧卡；当前详情页没有独立的洞察视觉节点，保留为契约证据不参与页面高亮"
+              },
+              {
+                "name": "video_technique",
+                "type": "object?",
+                "meaning": "视频拍摄技巧数据入口",
+                "target": "video-techniques"
+              }
+            ]
+          }
+        }
+      ],
+      "evidence": [
+        "tech_design.md：本轮范围只覆盖视频拆解页 UI 与页面内数据适配。",
+        "Claude history：be9965b1… 的 Figma 走查明确区分 Video insights 与 Video techniques，不得按名称混为同一组件。"
+      ]
+    },
+    {
+      "id": "performance-panel",
+      "label": "Performance panel",
+      "kind": "deferred",
+      "kindLabel": "改动点 / 需求暂缓",
+      "mapping": [
+        {
+          "id": "f4-gmv-intent",
+          "title": "GMV 指标前置展示（需求暂缓）",
+          "codePaths": ["src/components/PerformancePanel/index.tsx"],
+          "reviewBrief": {
+            "visibleChange": "明确标注 GMV 契约待补",
+            "trigger": "指标区渲染时",
+            "status": "暂缓"
+          },
+          "requirement": "F4 需要把 GMV 指标前置展示，便于创作者先看到转化表现。",
+          "change": "Performance panel 保留现有指标区；GMV 在展示页明确标为“契约待补”，不伪造数值。",
+          "trd": {
+            "productDesign": {
+              "heading": "GMV 转化指标诉求",
+              "positioning": "创作者期望第一屏即可获知视频的带货转化数据",
+              "sections": [
+                {
+                  "title": "字段缺口",
+                  "moduleId": "M2",
+                  "items": [
+                    {
+                      "label": "展示",
+                      "text": "在指标下方展示 <code>GMV · 契约待补</code> 灰色占位"
+                    },
+                    {
+                      "label": "兜底",
+                      "text": "当前接口缺失 GMV，禁止前端伪造数值"
+                    }
+                  ]
+                }
+              ]
+            },
+            "technical": {
+              "heading": "指标占位与暂缓标记",
+              "modules": [
+                {
+                  "id": "M2",
+                  "name": "PerformancePanel",
+                  "change": "deferred",
+                  "desc": "指标面板"
+                }
+              ],
+              "techPoints": [
+                {
+                  "title": "安全兜底与缺口隔离",
+                  "moduleId": "M2",
+                  "bullets": [
+                    "指标卡容器预留 GMV 槽位，但不绑定虚假字段",
+                    "类型系统中保留 promote_gmv 待接入注释"
+                  ],
+                  "pseudoCode": "// 暂缓：VideoInspirationItem 暂无 GMV\n+ const hasGmv = Boolean(item.promote_gmv);\n// 待后端下发 promote_gmv / promote_gmv_range 后接通",
+                  "codeLabel": "TypeScript"
+                }
+              ]
+            },
+            "apiChange": {
+              "heading": "缺失 GMV 契约",
+              "head": "DTO 字段缺口 · 关联 BE-F4-001",
+              "items": [
+                {
+                  "title": "待补充字段定义",
+                  "beId": "BE-F4-001",
+                  "codeLabel": "Ferry 契约草案",
+                  "code": "struct VideoInspirationItem {\n  // 现有字段...\n+ // 待补充: optional string promote_gmv;\n+ // 待补充: optional string promote_gmv_range;\n}",
+                  "bullets": [
+                    "当前 Ferry 类型不存在，不能消费，页面使用占位展示"
+                  ],
+                  "fields": [
+                    {
+                      "name": "VideoInspirationItem.promote_gmv",
+                      "type": "missing",
+                      "meaning": "当前 Ferry 类型不存在，不能消费",
+                      "target": "metric-gmv"
+                    },
+                    {
+                      "name": "VideoInspirationItem.promote_gmv_range",
+                      "type": "missing",
+                      "meaning": "当前 Ferry 类型不存在，不能消费",
+                      "target": "metric-gmv"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "api": {
+            "summary": "当前 VideoInspirationItem DTO 没有可消费的 GMV 字段。",
+            "fields": [
+              {
+                "name": "VideoInspirationItem.promote_gmv",
+                "type": "missing",
+                "meaning": "当前 Ferry 类型不存在，不能消费",
+                "target": "metric-gmv"
+              },
+              {
+                "name": "VideoInspirationItem.promote_gmv_range",
+                "type": "missing",
+                "meaning": "当前 Ferry 类型不存在，不能消费",
+                "target": "metric-gmv"
+              }
+            ]
+          }
+        },
+        {
+          "id": "f4-current-metrics",
+          "title": "现有视频表现数据（Views / Likes / Comments / Shares）",
+          "codePaths": [
+            "src/components/PerformancePanel/index.tsx",
+            "src/utils/numberFormat.ts"
+          ],
+          "reviewBrief": {
+            "visibleChange": "4 列指标网格正常展示",
+            "trigger": "数据解析成功后",
+            "status": "已对齐"
+          },
+          "requirement": "现有可用视频表现指标仍需正常展示，不能因 GMV 暂缓而删除整个 Performance panel。",
+          "change": "继续将 video_counters.views/comments/likes/shares/saves 解析为 PerformancePanel 的 video_*_cnt props。",
+          "trd": {
+            "productDesign": {
+              "heading": "核心互动数据网格",
+              "positioning": "以大号粗体展示观看、点赞、评论与分享数",
+              "sections": [
+                {
+                  "title": "数值格式化",
+                  "moduleId": "M2",
+                  "items": [
+                    {
+                      "label": "展示",
+                      "text": "大于 10,000 的数值格式化为 <code>4.93M</code>、<code>29.6K</code>"
+                    },
+                    {
+                      "label": "交互",
+                      "text": "saves 为 -1 时按规则不展示"
+                    }
+                  ]
+                }
+              ]
+            },
+            "technical": {
+              "heading": "video_counters 字段映射",
+              "modules": [
+                {
+                  "id": "M2",
+                  "name": "PerformancePanel",
+                  "change": "modify"
+                }
+              ],
+              "techPoints": [
+                {
+                  "title": "数值转换与负值过滤",
+                  "moduleId": "M2",
+                  "bullets": [
+                    "video_counters.views → video_watch_cnt",
+                    "video_counters.likes → video_like_cnt",
+                    "video_counters.comments → video_cmnt_cnt",
+                    "video_counters.shares → video_share_cnt"
+                  ],
+                  "pseudoCode": "const formatCount = (val?: string | number) => {\n  const num = Number(val);\n  if (isNaN(num) || num < 0) return null;\n  return formatCompactNumber(num);\n};",
+                  "codeLabel": "TypeScript"
+                }
+              ]
+            },
+            "apiChange": {
+              "heading": "计数器对象结构",
+              "head": "VideoCounters 结构体 · 关联 BE-F4-002",
+              "items": [
+                {
+                  "title": "video_counters 契约",
+                  "beId": "BE-F4-002",
+                  "codeLabel": "Thrift / DTO",
+                  "code": "struct VideoCounters {\n  1: optional string views;\n  2: optional string likes;\n  3: optional string comments;\n  4: optional string shares;\n  5: optional string saves;\n}",
+                  "bullets": [
+                    "所有字段均为 optional 字符串，需安全转换为数字"
+                  ],
+                  "fields": [
+                    {
+                      "name": "video_counters.views",
+                      "type": "string?",
+                      "meaning": "观看次数，解析为 video_watch_cnt",
+                      "target": "metric-views"
+                    },
+                    {
+                      "name": "video_counters.likes",
+                      "type": "string?",
+                      "meaning": "点赞次数，解析为 video_like_cnt",
+                      "target": "metric-likes"
+                    },
+                    {
+                      "name": "video_counters.comments",
+                      "type": "string?",
+                      "meaning": "评论次数，解析为 video_cmnt_cnt",
+                      "target": "metric-comments"
+                    },
+                    {
+                      "name": "video_counters.shares",
+                      "type": "string?",
+                      "meaning": "分享次数",
+                      "target": "metric-shares"
+                    },
+                    {
+                      "name": "video_counters.saves",
+                      "type": "string?",
+                      "meaning": "收藏次数；当前样例值为 -1，按真实组件条件不展示",
+                      "target": "performance-panel"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "api": {
+            "summary": "PerformancePanel 当前真实消费的是 VideoInspirationItem.video_counters，而不是 GMV。",
+            "fields": [
+              {
+                "name": "video_counters.views",
+                "type": "string?",
+                "meaning": "观看次数，解析为 video_watch_cnt",
+                "target": "metric-views"
+              },
+              {
+                "name": "video_counters.likes",
+                "type": "string?",
+                "meaning": "点赞次数，解析为 video_like_cnt",
+                "target": "metric-likes"
+              },
+              {
+                "name": "video_counters.comments",
+                "type": "string?",
+                "meaning": "评论次数，解析为 video_cmnt_cnt",
+                "target": "metric-comments"
+              },
+              {
+                "name": "video_counters.shares",
+                "type": "string?",
+                "meaning": "分享次数",
+                "target": "metric-shares"
+              },
+              {
+                "name": "video_counters.saves",
+                "type": "string?",
+                "meaning": "收藏次数；当前样例值为 -1，按真实组件条件不展示",
+                "target": "performance-panel"
+              }
+            ]
+          }
+        }
+      ],
+      "evidence": [
+        "tech_design.md F4：明确标记为暂缓，当前 VideoInspirationItem 无 GMV 字段。",
+        "页面预览中用“— / 契约待补”表达缺口，避免把未实现能力展示成真实指标。"
+      ]
+    },
+    {
+      "id": "video-techniques",
+      "label": "Video techniques",
+      "kind": "change",
+      "kindLabel": "改动点 / F3",
+      "mapping": [
+        {
+          "id": "f3-stage",
+          "title": "视频技巧阶段标题 (video_stage)",
+          "codePaths": ["src/components/video-techniques/StageDivider.tsx"],
+          "reviewBrief": {
+            "visibleChange": "阶段分割线居中标题",
+            "trigger": "阶段切换时",
+            "status": "已对齐"
+          },
+          "requirement": "F3 需要展示每组技巧的 video_stage 阶段标题。",
+          "change": "阶段标题渲染在分割线之间，不由组件自行猜测或拆分文本。",
+          "trd": {
+            "productDesign": {
+              "heading": "阶段分割线",
+              "positioning": "区分视频不同阶段（如 Hook、Body、Call to Action）",
+              "sections": [
+                {
+                  "title": "视觉规范",
+                  "moduleId": "M3",
+                  "items": [
+                    {
+                      "label": "展示",
+                      "text": "居中灰色大号字体展示 <code>Hook</code>，两侧带有 1px 细分割线"
+                    }
+                  ]
+                }
+              ]
+            },
+            "technical": {
+              "heading": "阶段数据渲染",
+              "modules": [
+                {
+                  "id": "M3",
+                  "name": "StageDivider",
+                  "change": "new"
+                }
+              ],
+              "techPoints": [
+                {
+                  "title": "直接消费后端阶段字段",
+                  "moduleId": "M3",
+                  "bullets": [
+                    "禁止前端根据文本自行拆分或猜测阶段名",
+                    "阶段标题为空时隐藏分割线"
+                  ]
+                }
+              ]
+            },
+            "apiChange": {
+              "heading": "阶段标题契约",
+              "head": "TechniqueData.video_stage · 关联 BE-F3-001",
+              "items": [
+                {
+                  "title": "阶段数据结构",
+                  "beId": "BE-F3-001",
+                  "codeLabel": "Thrift / DTO",
+                  "code": "struct TechniqueData {\n+ 1: string video_stage; // 阶段名称 (Hook/Body/CTA)\n  2: list<TechniqueDetail> technique_detail_list;\n}",
+                  "fields": [
+                    {
+                      "name": "video_technique.show_video_technique[].video_stage",
+                      "type": "string",
+                      "meaning": "当前视频默认展示技巧组的阶段标题",
+                      "target": "stage-divider"
+                    },
+                    {
+                      "name": "video_technique.all_video_technique[].video_stage",
+                      "type": "string",
+                      "meaning": "全部技巧组的阶段标题",
+                      "target": "stage-divider"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "api": {
+            "summary": "当前生成类型把阶段放在 video_technique.show_video_technique[] / all_video_technique[] 的 TechniqueData 中。",
+            "fields": [
+              {
+                "name": "video_technique.show_video_technique[].video_stage",
+                "type": "string",
+                "meaning": "当前视频默认展示技巧组的阶段标题",
+                "target": "stage-divider"
+              },
+              {
+                "name": "video_technique.all_video_technique[].video_stage",
+                "type": "string",
+                "meaning": "全部技巧组的阶段标题",
+                "target": "stage-divider"
+              }
+            ]
+          }
+        },
+        {
+          "id": "f3-detail",
+          "title": "技巧卡 Tag 与 Evidence 展示",
+          "codePaths": ["src/components/video-techniques/TechniqueCard.tsx"],
+          "reviewBrief": {
+            "visibleChange": "蓝底标签与加粗主说明",
+            "trigger": "卡片挂载时",
+            "d2c": "走 D2C 卡片结构",
+            "status": "已对齐"
+          },
+          "requirement": "每张技巧卡需要展示 tag 和 evidence，字段语义必须直接对应卡片内容。",
+          "change": "TechniqueCard 直接渲染 TechniqueDetail.tag 与单个 evidence 字符串，不把 evidence 再猜测拆成额外字段。",
+          "trd": {
+            "productDesign": {
+              "heading": "技巧卡信息结构",
+              "positioning": "技巧卡的核心主视觉",
+              "sections": [
+                {
+                  "title": "卡片信息",
+                  "moduleId": "M4",
+                  "items": [
+                    {
+                      "label": "展示",
+                      "text": "浅蓝底色 <code>Aesthetic appeal</code> 徽章"
+                    },
+                    {
+                      "label": "展示",
+                      "text": "<code>evidence</code> 阐述具体拍摄手法"
+                    }
+                  ]
+                }
+              ]
+            },
+            "technical": {
+              "heading": "TechniqueCard 组件渲染",
+              "modules": [
+                {
+                  "id": "M4",
+                  "name": "TechniqueCard",
+                  "change": "new"
+                }
+              ],
+              "techPoints": [
+                {
+                  "title": "字段与卡片映射",
+                  "moduleId": "M4",
+                  "bullets": [
+                    "tag 使用 .app-technique-tag 渲染",
+                    "evidence 支持换行符多行展示"
+                  ]
+                }
+              ]
+            },
+            "apiChange": {
+              "heading": "卡片标签与证据",
+              "head": "TechniqueDetail 基础字段",
+              "items": [
+                {
+                  "title": "明细结构",
+                  "beId": "BE-F3-002",
+                  "codeLabel": "Thrift",
+                  "code": "struct TechniqueDetail {\n  1: string tag;\n  2: string evidence;\n}",
+                  "fields": [
+                    {
+                      "name": "technique_detail_list[].tag",
+                      "type": "string",
+                      "meaning": "卡片标签",
+                      "target": "technique-card-1 technique-card-2"
+                    },
+                    {
+                      "name": "technique_detail_list[].evidence",
+                      "type": "string",
+                      "meaning": "卡片主说明",
+                      "target": "technique-card-1 technique-card-2"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "api": {
+            "summary": "技巧明细位于 TechniqueData.technique_detail_list[]。",
+            "fields": [
+              {
+                "name": "technique_detail_list[].tag",
+                "type": "string",
+                "meaning": "卡片标签",
+                "target": "technique-card-1 technique-card-2"
+              },
+              {
+                "name": "technique_detail_list[].evidence",
+                "type": "string",
+                "meaning": "卡片主说明",
+                "target": "technique-card-1 technique-card-2"
+              }
+            ]
+          }
+        },
+        {
+          "id": "f3-expand",
+          "title": "Why It Works 折叠展开交互",
+          "codePaths": ["src/components/video-techniques/TechniqueCard.tsx"],
+          "reviewBrief": {
+            "visibleChange": "展开收起箭头与深度解析文案",
+            "trigger": "点击 Why It Works",
+            "status": "已对齐"
+          },
+          "requirement": "Why It Works explanation 可展开收起；第一张卡默认展开，空 explanation 不显示入口。",
+          "change": "DEFAULT_EXPANDED_TECHNIQUE_INDEX 固定首卡默认展开；TechniqueCard 仅在 explanation 有值时显示展开入口，并通过 onExpandChange 上报。",
+          "trd": {
+            "productDesign": {
+              "heading": "Why It Works 折叠交互",
+              "positioning": "解释拍摄技巧背后的转化机理",
+              "sections": [
+                {
+                  "title": "展开逻辑",
+                  "moduleId": "M4",
+                  "items": [
+                    {
+                      "label": "交互",
+                      "text": "首张卡片默认展开（显示 ▾ <strong>Why It Works?</strong>），其余折叠（显示 ▸）"
+                    },
+                    {
+                      "label": "兜底",
+                      "text": "explanation 字段为空时不显示展开箭头"
+                    }
+                  ]
+                }
+              ]
+            },
+            "technical": {
+              "heading": "展开状态与埋点",
+              "modules": [
+                {
+                  "id": "M4",
+                  "name": "TechniqueCard",
+                  "change": "modify"
+                }
+              ],
+              "techPoints": [
+                {
+                  "title": "DEFAULT_EXPANDED_TECHNIQUE_INDEX 控制",
+                  "moduleId": "M4",
+                  "bullets": [
+                    "首卡默认展开: index === 0",
+                    "通过 onExpandChange(index, isExpanded) 通知宿主",
+                    "支持折叠动画与高度自适应"
+                  ],
+                  "pseudoCode": "const [isExpanded, setIsExpanded] = useState(index === 0);\n+ const handleToggle = () => {\n+   setIsExpanded(v => !v);\n+   onExpandChange?.(index, !isExpanded);\n+ };",
+                  "codeLabel": "TypeScript"
+                }
+              ]
+            },
+            "apiChange": {
+              "heading": "explanation 契约",
+              "head": "TechniqueDetail.explanation · 关联 BE-F3-003",
+              "items": [
+                {
+                  "title": "展开正文字段",
+                  "beId": "BE-F3-003",
+                  "codeLabel": "Thrift / DTO",
+                  "code": "struct TechniqueDetail {\n  1: string tag;\n  2: string evidence;\n+ 3: optional string explanation; // Why It Works 正文\n}",
+                  "bullets": [
+                    "explanation 为可选字段，为空时前端跳过展开逻辑"
+                  ],
+                  "fields": [
+                    {
+                      "name": "technique_detail_list[].explanation",
+                      "type": "string?",
+                      "meaning": "Why It Works 折叠区正文，可为空",
+                      "target": "technique-card-1 technique-card-2"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "api": {
+            "summary": "展开行为只由前端状态驱动，不新增后端请求或字段。",
+            "fields": [
+              {
+                "name": "technique_detail_list[].explanation",
+                "type": "string?",
+                "meaning": "Why It Works 折叠区正文，可为空",
+                "target": "technique-card-1 technique-card-2"
+              }
+            ]
+          }
+        },
+        {
+          "id": "f3-contract-risk",
+          "title": "数组与单对象契约差异与风险",
+          "codePaths": [
+            "src/types/video.ts",
+            "src/components/video-techniques/VideoTechniques.tsx"
+          ],
+          "reviewBrief": {
+            "visibleChange": "保持契约防御与归一化",
+            "trigger": "数据解析阶段",
+            "status": "契约风险"
+          },
+          "requirement": "方案必须与正式生成类型一致，不能把数组契约描述成单对象。",
+          "change": "实施前需明确 show_video_technique[] 到 VideoTechniques(TechniqueData) 的归一化边界；当前 VideoSheet 取出的值是数组，而组件 props 声明是单个 TechniqueData，应作为契约风险保留。",
+          "trd": {
+            "productDesign": {
+              "heading": "契约防御与一致性",
+              "positioning": "保证前端组件在不同后端环境下的鲁棒性",
+              "sections": [
+                {
+                  "title": "数据边界",
+                  "moduleId": "M5",
+                  "items": [
+                    {
+                      "label": "来源",
+                      "text": "后端接口下发 <code>show_video_technique</code> 数组"
+                    },
+                    {
+                      "label": "兜底",
+                      "text": "组件 props 期望接收单个 <code>TechniqueData</code> 对象，前端在宿主做显式归一化"
+                    }
+                  ]
+                }
+              ]
+            },
+            "technical": {
+              "heading": "类型归一化与防御边界",
+              "modules": [
+                {
+                  "id": "M5",
+                  "name": "VideoTechniqueAdapter",
+                  "change": "modify"
+                }
+              ],
+              "techPoints": [
+                {
+                  "title": "数组转单对象防御",
+                  "moduleId": "M5",
+                  "bullets": [
+                    "VideoSheet 中取出 show_video_technique[0] 传入 VideoTechniques",
+                    "在 TypeScript 中显式声明兼容类型，避免隐式 any"
+                  ],
+                  "pseudoCode": "const currentTechnique: TechniqueData | undefined =\n+ Array.isArray(videoTechnique?.show_video_technique)\n+   ? videoTechnique.show_video_technique[0]\n+   : (videoTechnique?.show_video_technique as any);",
+                  "codeLabel": "TypeScript"
+                }
+              ]
+            },
+            "apiChange": {
+              "heading": "接口定义 vs Props 声明",
+              "head": "类型定义对比 · 关联 BE-F3-004",
+              "items": [
+                {
+                  "title": "类型不一致记录",
+                  "beId": "BE-F3-004",
+                  "codeLabel": "TypeScript DTO",
+                  "code": "// 后端真实返回:\ninterface VideoTechnique {\n+  show_video_technique?: TechniqueData[];\n}\n// 组件 Props 声明:\ninterface VideoTechniquesProps {\n+  videoTechnique?: TechniqueData;\n}",
+                  "bullets": [
+                    "真实 Ferry d.ts 与当前组件声明存在形状差异，展示页不替它隐式修正"
+                  ],
+                  "fields": [
+                    {
+                      "name": "VideoTechnique.show_video_technique",
+                      "type": "Array<TechniqueData>?",
+                      "meaning": "生成类型声明为数组",
+                      "target": "video-techniques"
+                    },
+                    {
+                      "name": "VideoTechniquesProps.videoTechnique",
+                      "type": "TechniqueData?",
+                      "meaning": "当前组件声明为单个阶段对象",
+                      "target": "video-techniques"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "api": {
+            "summary": "真实 Ferry d.ts 与当前组件声明存在形状差异，展示页不替它隐式修正。",
+            "fields": [
+              {
+                "name": "VideoTechnique.show_video_technique",
+                "type": "Array<TechniqueData>?",
+                "meaning": "生成类型声明为数组",
+                "target": "video-techniques"
+              },
+              {
+                "name": "VideoTechniquesProps.videoTechnique",
+                "type": "TechniqueData?",
+                "meaning": "当前组件声明为单个阶段对象",
+                "target": "video-techniques"
+              }
+            ]
+          },
+          "cross": {
+            "note": "F3 视频技巧模块涉及 D2C 结构重用，注意保持卡片外边距与 8px 灰底分割带统一。",
+            "flow": [
+              "VideoSheet 获取 video_technique 数据",
+              "适配器转换 show_video_technique[0] 为 TechniqueData",
+              "渲染 StageDivider 阶段标题",
+              "循环渲染 TechniqueCard 技巧卡列表",
+              "首卡默认展开，监听用户点击展开事件"
+            ],
+            "state": [
+              "expandedIndex: 当前处于展开状态的技巧卡",
+              "techniqueList: 当前阶段的技巧条目数组"
+            ],
+            "dataflow": [
+              "VideoInspirationItem.video_technique → TechniqueDataAdapter → VideoTechniques → TechniqueCard"
+            ],
+            "edge": [
+              "show_video_technique 为空数组时隐藏整块技巧区",
+              "explanation 字段为空时隐藏展开按钮",
+              "网络异常时展示重试占位"
+            ],
+            "files": [
+              "src/components/video-techniques/VideoTechniques.tsx",
+              "src/components/video-techniques/TechniqueCard.tsx",
+              "src/components/video-techniques/StageDivider.tsx",
+              "src/types/video.ts"
+            ]
+          }
+        }
+      ],
+      "evidence": [
+        "tech_design.md F3：明确数据来源为 VideoInspirationItem.video_technique。",
+        "Figma / history 走查：Video insights（脚本洞察）与 Video techniques（技巧卡）是平级不同模块。"
+      ]
+    }
+  ]
+}

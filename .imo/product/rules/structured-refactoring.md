@@ -56,7 +56,7 @@ answer:
   IO, or tests?
 - What validation command proves the implementation or split stayed correct?
 - Does the target surface belong to IMO-owned source, target-project source,
-  or external Trellis / host projection?
+  or an external provider / host projection?
 
 Prefer current repo evidence over assumptions from another project.
 
@@ -107,7 +107,26 @@ When applying the rule:
    - nearest tests when behavior-bearing code moved
    - syntax plus harmless `help`, `status`, or `--dry-run` for scripts
    - frontend type-check and build when route/page imports changed
-9. Commit one coherent module family at a time, without unrelated cleanup.
+9. When a commit is requested, commit one coherent module family at a time,
+   without unrelated cleanup. Implementation or validation does not imply
+   staging, commit, or push authorization.
+
+For local changes, select validation from the changed behavior and its
+dependency impact. Prefer affected-module tests and observable outcomes over
+constant-only assertions, duplicated harnesses, or tests that mirror the
+implementation. Expand to full regression only when explicitly requested,
+required by the repository, or justified by a changed shared boundary. After
+checks pass, repeat them only for a new change or unresolved failure. A test
+selection plan or cache hit is not a fresh test run; report the distinction.
+
+For integration behavior, use the real public entrypoint and actual peer
+modules. Stub nondeterministic/external boundaries such as model responses or
+network transport, not a second copy of the world, planner, database or domain
+algorithm under test. Missing peer code is an integration dependency, not a
+reason to fabricate it. Fixtures may arrange state without reimplementing its
+transition rules. Verify the changed user-visible outcome and a meaningful
+failure boundary; do not assert another module's constants or incidental read
+call order. If such tests appear, review the ownership and contract first.
 
 ## Allowed Exceptions
 
@@ -146,4 +165,4 @@ If any answer exposes drift, revise before reporting completion.
 - Do not wait for a dedicated refactor task before applying structure rules.
 - Do not move project-private facts into IMO product rules.
 - Do not replace Chameleon; local conventions still decide the exact shape.
-- Do not treat Trellis projection files as IMO product source.
+- Do not treat external host projection files as IMO product source.

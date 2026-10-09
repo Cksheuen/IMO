@@ -28,7 +28,7 @@ def main() -> int:
         for phrase in (
             "Prompt-time hooks must not scan the repository",
             "./imo profile refresh",
-            ".imo/.runtime/project-profile/current.json",
+            "~/.imo/projects/<project-id>/runtime/project-profile/current.json",
             "Chameleon may use the profile as a starting point",
         ):
             if phrase not in contract:

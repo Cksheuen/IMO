@@ -1,0 +1,45 @@
+{
+  "slug": "latam-video-conversion-upgrade",
+  "title": "LATAM 视频转化提升 · 视频拆解页评审",
+  "subtitle": "把 F3/F4 方案、页面改动点和现有后端契约放在同一条可追溯阅读链路里。点击彩框进入三联动，点击页面任意元素留下评论。",
+  "sourcePath": "/Users/bytedance/Documents/Projects/latam-c/tech_docs/latam-video-conversion-ui/tech_design.md",
+  "pageHtml": "<div class=\"page-header\" data-review-target=\"page-header\" data-review-label=\"VideoSheet 页面标题\"><div class=\"kicker\">INSPIRATION DETAIL / HTML PREVIEW</div><h2>Video breakdown</h2></div><div class=\"page-body\"><section class=\"preview-section\" data-component-id=\"video-sheet\" data-review-target=\"video-sheet\" data-review-label=\"VideoSheet 页面编排\"><h3 data-review-target=\"video-sheet-title\" data-review-label=\"VideoSheet 标题\">VideoSheet</h3><section class=\"preview-section\" data-component-id=\"performance-panel\" data-review-target=\"performance-panel\" data-review-label=\"Performance panel\"><h3>Performance panel</h3><div class=\"metric-grid\"><div class=\"metric\" data-review-target=\"metric-gmv\" data-review-label=\"GMV 指标（暂缓）\"><b>—</b><small>GMV · 契约待补</small></div><div class=\"metric\" data-review-target=\"metric-views\" data-review-label=\"Views\"><b>12.4K</b><small>Views</small></div><div class=\"metric\" data-review-target=\"metric-likes\" data-review-label=\"Likes\"><b>2.1K</b><small>Likes</small></div></div></section><section class=\"preview-section\" data-component-id=\"video-techniques\" data-review-target=\"video-techniques\" data-review-label=\"Video techniques\"><h3>Video techniques · Hook</h3><div class=\"tech-card\" data-review-target=\"technique-hook\" data-review-label=\"Hook / Open with the result\"><span class=\"tag\">Hook</span><div><strong>Open with the result</strong><div class=\"why\">Why it works? 先给结果，再补过程。</div></div><span>⌃</span></div><div class=\"tech-card\" data-review-target=\"technique-showcase\" data-review-label=\"Showcase / Demonstrate the product\"><span class=\"tag\">Showcase</span><div><strong>Demonstrate the product</strong><div class=\"why\">Why it works? 用可见证据降低理解成本。</div></div><span>⌄</span></div></section><section class=\"preview-section\" data-review-target=\"featured-product\" data-review-label=\"Featured product（复用）\"><h3>Featured product</h3><div class=\"product\"><div class=\"thumb\"></div><div><strong>Featured product</strong><small>现有商品卡 · 本轮复用</small></div></div></section><button class=\"cta\" data-review-target=\"cta\" data-review-label=\"继续查看视频\">Continue to video</button></section></div>",
+  "components": [
+    {
+      "id": "video-sheet",
+      "label": "VideoSheet 页面编排",
+      "kind": "composition",
+      "kindLabel": "页面编排 / 组件顺序",
+      "mapping": [
+        { "id": "f3-order", "requirement": "视频拆解页需要把 Performance panel → Video techniques → Featured product 组织成可读的连续页面。", "change": "以 orderedComponents 作为单一顺序源，并按 order 排序渲染三个页面模块。", "api": { "summary": "沿用视频拆解详情接口，不新增请求；页面组合只消费已解析的详情项。", "fields": [{ "name": "video_list[]", "type": "array", "meaning": "视频拆解详情中的视频数据容器" }] } },
+        { "id": "f3-props", "requirement": "改动组件应能被页面宿主控制，不能把页面跳转或请求逻辑藏进展示组件。", "change": "VideoSheet 通过 item、product、currentTime、scrollPercentage、onCardClick 等 props 接收数据与动作；VideoTechniques 继续通过 onExpandChange 上报展开状态。", "api": { "summary": "本行无新增后端字段；它约束前端组件边界，数据仍来自详情接口。", "fields": [{ "name": "video_list[].video_meta.video_id", "type": "string?", "meaning": "传入技巧组件和埋点上下文的视频 ID" }] } },
+        { "id": "f3-boundary", "requirement": "Video insights 与 Video techniques 必须保持为两个不同的页面模块，不能按名称合并。", "change": "保留 VideoSheet 的模块顺序和独立 VideoTechniques 渲染，不新增 Video insights 作为本轮视频技巧卡的别名。", "api": { "summary": "接口中的 video_inspiration_info_list 与 video_technique 是不同数据区域；本轮只消费 video_technique。", "fields": [{ "name": "video_inspiration_info_list[]", "type": "array?", "meaning": "脚本/洞察数据，不等同于技巧卡" }, { "name": "video_technique", "type": "object?", "meaning": "视频拍摄技巧数据入口" }] } }
+      ],
+      "evidence": ["tech_design.md：本轮范围只覆盖视频拆解页 UI 与页面内数据适配。", "Claude history：be9965b1… 的 Figma 走查明确区分 Video insights 与 Video techniques，不得按名称混为同一组件。"]
+    },
+    {
+      "id": "performance-panel",
+      "label": "Performance panel",
+      "kind": "deferred",
+      "kindLabel": "改动点 / 需求暂缓",
+      "mapping": [
+        { "id": "f4-gmv-intent", "requirement": "F4 需要把 GMV 指标前置展示，便于创作者先看到转化表现。", "change": "Performance panel 保留现有指标区；GMV 在展示页明确标为“契约待补”，不伪造数值。", "api": { "summary": "当前 VideoInspirationItem DTO 没有可消费的 GMV 字段。", "fields": [{ "name": "VideoInspirationItem.promote_gmv", "type": "missing", "meaning": "当前 Ferry 类型不存在，不能消费" }, { "name": "VideoInspirationItem.promote_gmv_range", "type": "missing", "meaning": "当前 Ferry 类型不存在，不能消费" }] } },
+        { "id": "f4-current-metrics", "requirement": "现有可用视频表现指标仍需正常展示，不能因 GMV 暂缓而删除整个 Performance panel。", "change": "继续将 video_counters.views/comments/likes/shares/saves 解析为 PerformancePanel 的 video_*_cnt props。", "api": { "summary": "PerformancePanel 当前真实消费的是 VideoInspirationItem.video_counters，而不是 GMV。", "fields": [{ "name": "video_counters.views", "type": "string?", "meaning": "观看次数，解析为 video_watch_cnt" }, { "name": "video_counters.likes", "type": "string?", "meaning": "点赞次数，解析为 video_like_cnt" }, { "name": "video_counters.comments", "type": "string?", "meaning": "评论次数，解析为 video_cmnt_cnt" }, { "name": "video_counters.shares / saves", "type": "string?", "meaning": "分享/收藏次数" }] } }
+      ],
+      "evidence": ["tech_design.md F4：明确标记为暂缓，当前 VideoInspirationItem 无 GMV 字段。", "页面预览中用“— / 契约待补”表达缺口，避免把未实现能力展示成真实指标。"]
+    },
+    {
+      "id": "video-techniques",
+      "label": "Video techniques",
+      "kind": "change",
+      "kindLabel": "改动点 / F3",
+      "mapping": [
+        { "id": "f3-stage", "requirement": "F3 需要展示每组技巧的 video_stage 阶段标题。", "change": "阶段标题渲染在分割线之间，不由组件自行猜测或拆分文本。", "api": { "summary": "当前生成类型把阶段放在 video_technique.show_video_technique[] / all_video_technique[] 的 TechniqueData 中。", "fields": [{ "name": "video_technique.show_video_technique[].video_stage", "type": "string", "meaning": "当前视频默认展示技巧组的阶段标题" }, { "name": "video_technique.all_video_technique[].video_stage", "type": "string", "meaning": "全部技巧组的阶段标题" }] } },
+        { "id": "f3-detail", "requirement": "每张技巧卡需要展示 tag 和 evidence，字段语义必须直接对应卡片内容。", "change": "TechniqueCard 直接渲染 TechniqueDetail.tag 与单个 evidence 字符串，不把 evidence 再猜测拆成额外字段。", "api": { "summary": "技巧明细位于 TechniqueData.technique_detail_list[]。", "fields": [{ "name": "technique_detail_list[].tag", "type": "string", "meaning": "卡片标签" }, { "name": "technique_detail_list[].evidence", "type": "string", "meaning": "卡片主说明" }] } },
+        { "id": "f3-expand", "requirement": "Why It Works explanation 可展开收起；第一张卡默认展开，空 explanation 不显示入口。", "change": "DEFAULT_EXPANDED_TECHNIQUE_INDEX 固定首卡默认展开；TechniqueCard 仅在 explanation 有值时显示展开入口，并通过 onExpandChange 上报。", "api": { "summary": "展开行为只由前端状态驱动，不新增后端请求或字段。", "fields": [{ "name": "technique_detail_list[].explanation", "type": "string?", "meaning": "Why It Works 折叠区正文，可为空" }] } },
+        { "id": "f3-contract-risk", "requirement": "方案必须与正式生成类型一致，不能把数组契约描述成单对象。", "change": "实施前需明确 show_video_technique[] 到 VideoTechniques(TechniqueData) 的归一化边界；当前 VideoSheet 取出的值是数组，而组件 props 声明是单个 TechniqueData，应作为契约风险保留。", "api": { "summary": "真实 Ferry d.ts 与当前组件声明存在形状差异，展示页不替它隐式修正。", "fields": [{ "name": "VideoTechnique.show_video_technique", "type": "Array<TechniqueData>?", "meaning": "生成类型声明为数组" }, { "name": "VideoTechniquesProps.videoTechnique", "type": "TechniqueData?", "meaning": "当前组件声明为单个阶段对象" }] } }
+      ],
+      "evidence": ["tech_design.md F3：明确数据来源为 VideoInspirationItem.video_technique。", "Figma / history 走查：Video insights（脚本洞察）与 Video techniques（技巧卡）是平级不同模块。"]
+    }
+  ]
+}

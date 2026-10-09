@@ -11,7 +11,7 @@ Project profiles cache low-frequency observations about the current repository:
 - command and verification style
 - validation and error-handling boundaries
 - testing conventions
-- IMO/Trellis ownership boundaries
+- IMO and external ownership boundaries
 - generic agent habits that local evidence should override
 
 Prompt-time hooks must not scan the repository. They may only read a bounded
@@ -26,13 +26,13 @@ Tracked source:
 - `.imo/product/scripts/project_profile.py`
 - profile contract and smoke checks wired into `./imo verify`
 
-Ignored local runtime state:
+Global project-scoped runtime state:
 
 ```text
-.imo/.runtime/project-profile/current.json
-.imo/.runtime/project-profile/summary.md
-.imo/.runtime/project-profile/manifest.json
-.imo/.runtime/project-profile/history/
+~/.imo/projects/<project-id>/runtime/project-profile/current.json
+~/.imo/projects/<project-id>/runtime/project-profile/summary.md
+~/.imo/projects/<project-id>/runtime/project-profile/manifest.json
+~/.imo/projects/<project-id>/runtime/project-profile/history/
 ```
 
 Generated profile state is rebuildable and must not become source-of-truth.
@@ -53,7 +53,7 @@ Rules:
 - `status` and `inspect` must not create runtime state.
 - `refresh` is the only default command that writes profile runtime state.
 - `clear` removes local profile runtime state only.
-- No profile command may write Trellis-owned files or host-output projections.
+- No profile command may write external files or host-output projections.
 - No prompt-time hook may call `refresh`.
 
 ## Status Model
@@ -85,7 +85,7 @@ Default evidence sources:
 - `.imo/product/rules/**`
 - `.imo/product/scripts/*`
 - `.imo/runtime/**` contracts
-- `.trellis/spec/**` contracts as data only
+- `.imo/KNOWLEDGE.md` and relevant `.imo/**` contracts
 - config and lock files when present
 
 ## Chameleon Interaction

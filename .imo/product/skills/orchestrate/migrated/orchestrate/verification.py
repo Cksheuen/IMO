@@ -21,9 +21,6 @@ class VerificationGate:
     Equivalent to CC's verification-gate.sh hook.
     """
 
-    def __init__(self, max_attempts: int = 3):
-        self.max_attempts = max_attempts
-
     def check(self, state: OrchestrateState) -> Dict[str, Any]:
         """
         Check if verification should block exit.
@@ -44,30 +41,16 @@ class VerificationGate:
                 "action": "spawn_reviewer"
             }
 
-        # Check for failed features under max_attempts
+        # Check for failed features
         failed = [
             f for f in state["features"]
             if f.get("passes") is False
-            and f.get("attempt_count", 0) < self.max_attempts
         ]
         if failed:
             return {
                 "block": True,
                 "reason": f"{len(failed)} features need fixing",
                 "action": "spawn_fixer"
-            }
-
-        # Check for exceeded max_attempts
-        exceeded = [
-            f for f in state["features"]
-            if f.get("passes") is False
-            and f.get("attempt_count", 0) >= self.max_attempts
-        ]
-        if exceeded:
-            return {
-                "block": False,  # Allow exit, but log warning
-                "reason": f"{len(exceeded)} features exceeded max attempts",
-                "action": "manual_intervention_required"
             }
 
         # All passed
@@ -81,8 +64,7 @@ class FixerLoop:
     Equivalent to CC's delta_context -> implementer loop.
     """
 
-    def __init__(self, max_iterations: int = 5):
-        self.max_iterations = max_iterations
+    def __init__(self):
         self.verification_gate = VerificationGate()
 
     def create_delta_context(
@@ -126,10 +108,9 @@ class FixerLoop:
         """Check if fixer loop should continue."""
         gate_result = self.verification_gate.check(state)
 
-        # Continue if blocked and under max iterations
+        # Continue if blocked with spawn_fixer action
         if gate_result.get("block") and gate_result.get("action") == "spawn_fixer":
-            iteration = state.get("fixer_iteration", 0)
-            return iteration < self.max_iterations
+            return True
 
         return False
 
@@ -137,8 +118,7 @@ class FixerLoop:
         """Get the next feature ID that needs fixing."""
         for feature in state.get("features", []):
             if feature.get("passes") is False:
-                if feature.get("attempt_count", 0) < self.max_iterations:
-                    return feature["id"]
+                return feature["id"]
         return None
 
 
@@ -239,16 +219,6 @@ def all_features_passed(state: OrchestrateState) -> bool:
     """Check if all features have passed."""
     summary = get_feature_summary(state)
     return summary["total"] > 0 and summary["pending"] == 0 and summary["failed"] == 0
-
-
-def get_exceeded_features(state: OrchestrateState, max_attempts: int = 3) -> List[str]:
-    """Get feature IDs that exceeded max attempts."""
-    return [
-        f["id"]
-        for f in state.get("features", [])
-        if f.get("passes") is False
-        and f.get("attempt_count", 0) >= max_attempts
-    ]
 
 
 # Integration with reviewer agent

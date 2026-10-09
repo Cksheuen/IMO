@@ -99,11 +99,10 @@ def should_run_fixer_loop(state: OrchestrateState) -> Literal["fix", "end"]:
     """Check if fixer loop should be activated."""
     features = state.get("features", [])
 
-    # Check for failed features that can be retried
+    # Check for failed features
     for feature in features:
         if feature.get("passes") is False:
-            if feature.get("attempt_count", 0) < feature.get("max_attempts", 3):
-                return "fix"
+            return "fix"
 
     # Check if fixer loop is explicitly active
     if state.get("fixer_loop_active"):

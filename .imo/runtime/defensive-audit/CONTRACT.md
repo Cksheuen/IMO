@@ -13,10 +13,9 @@ programming reports.
 ## Contract
 
 - The command is read-only and advisory.
-- It must not write source files, runtime files, host outputs, or Trellis files.
+- It must not write source files, runtime files, or host outputs.
 - Findings are not failures; only command errors or invalid output shape fail.
-- The scan scope is bounded to IMO-owned docs/scripts/runtime contracts plus
-  the Trellis IMO backend spec.
+- The scan scope is bounded to IMO-owned docs, scripts, and runtime contracts.
 - JSON output must include:
   - `schema_version`
   - `scan_scope`

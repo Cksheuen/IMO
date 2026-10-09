@@ -1,1 +1,1 @@
-"""Implementation modules for the repo-local IMO verification suite."""
+"""Implementation modules for the canonical IMO verification suite."""

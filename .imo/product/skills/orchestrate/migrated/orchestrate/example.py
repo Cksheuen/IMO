@@ -215,11 +215,9 @@ async def example_fixer_loop():
         feature_id="F001",
         description="Login tests pass",
         acceptance_criteria=["All tests pass"],
-        verification_method="unit",
-        max_attempts=3
+        verification_method="unit"
     )
     feature["passes"] = False
-    feature["attempt_count"] = 1
     feature["delta_context"] = {
         "problem_location": {
             "file": "tests/auth/login.test.ts",
@@ -239,8 +237,8 @@ async def example_fixer_loop():
     state["features"].append(feature)
 
     # Check verification gate
-    gate = VerificationGate(max_attempts=3)
-    fixer_loop = FixerLoop(max_iterations=3)
+    gate = VerificationGate()
+    fixer_loop = FixerLoop()
     gate_result = gate.check(state)
 
     print(f"Gate blocked: {gate_result.get('block')}")
@@ -407,7 +405,6 @@ def test_feature_creation():
 
     assert feature["id"] == "F001"
     assert feature["passes"] is None
-    assert feature["attempt_count"] == 0
     print("✓ test_feature_creation passed")
 
 
@@ -430,7 +427,7 @@ def test_subtask_creation():
 
 def test_verification_gate():
     """Test verification gate logic."""
-    gate = VerificationGate(max_attempts=3)
+    gate = VerificationGate()
 
     # No features = no block
     state = create_initial_state("Test", "test")

@@ -10,10 +10,11 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+import root_resolver
 
-ROOT = Path(__file__).resolve().parents[3]
-EVENTS_PATH = ROOT / ".imo/.runtime/learning/events.jsonl"
-EVENTS_DISPLAY_PATH = ".imo/.runtime/learning/events.jsonl"
+ROOT = root_resolver.project_root_or_source()
+EVENTS_PATH = root_resolver.project_runtime_root(ROOT) / "learning/events.jsonl"
+EVENTS_DISPLAY_PATH = root_resolver.project_runtime_display(ROOT, "learning/events.jsonl")
 EVENT_TYPES = {
     "signal_created",
     "activity_marked",

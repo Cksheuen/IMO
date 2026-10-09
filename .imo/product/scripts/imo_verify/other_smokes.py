@@ -6,7 +6,7 @@ import subprocess
 import sys
 import tempfile
 
-from .runner import ROOT, no_event_env
+from .runner import ROOT, fixture_runtime_root, no_event_env
 
 
 def _run_budget_audit_smoke() -> bool:
@@ -46,10 +46,6 @@ def _run_budget_audit_smoke() -> bool:
         return False
     if report.get("schema_version") != 1 or report.get("root") != str(ROOT):
         print("[imo verify] failed: budget audit contract shape", file=sys.stderr)
-        return False
-    trellis_info = report.get("trellis_integration")
-    if not isinstance(trellis_info, dict) or trellis_info.get("owner") != "external_trellis":
-        print("[imo verify] failed: budget audit Trellis integration metadata", file=sys.stderr)
         return False
     slices = report.get("slices")
     if not isinstance(slices, list) or not slices:
@@ -124,7 +120,7 @@ def _run_defensive_audit_smoke() -> bool:
 
 def _run_project_profile_smoke() -> bool:
     print("[imo verify] project profile behavior")
-    runtime_dir = ROOT / ".imo/.runtime/project-profile"
+    runtime_dir = fixture_runtime_root() / "project-profile"
     backup_dir: Path | None = None
 
     try:

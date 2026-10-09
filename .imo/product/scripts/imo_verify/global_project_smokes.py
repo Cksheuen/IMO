@@ -8,7 +8,7 @@ import subprocess
 import sys
 import tempfile
 
-from .runner import ROOT
+from .runner import ROOT, fixture_runtime_root
 
 
 def _write_digest(path: Path, digest_id: str, scope: str, summary: str) -> None:
@@ -40,10 +40,11 @@ def _write_digest(path: Path, digest_id: str, scope: str, summary: str) -> None:
 
 def _run_global_project_scope_smoke() -> bool:
     print("[imo verify] global/project scope behavior")
-    project_learning = ROOT / ".imo/.runtime/learning"
+    project_learning = fixture_runtime_root() / "learning"
     project_digest = project_learning / "digest.json"
     backup_dir: Path | None = None
     global_root = Path(tempfile.mkdtemp(prefix="imo-global-root-"))
+    codex_root = Path(tempfile.mkdtemp(prefix="imo-codex-root-"))
     try:
         if project_learning.exists():
             backup_dir = Path(tempfile.mkdtemp(prefix="imo-learning-backup-"))
@@ -95,29 +96,16 @@ def _run_global_project_scope_smoke() -> bool:
             print("[imo verify] failed: context digest precedence", file=sys.stderr)
             return False
 
-        graph = subprocess.run(
-            ["./imo", "task", "graph", "--json"],
-            cwd=ROOT,
-            env=env,
-            check=False,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        if graph.returncode != 0:
-            print("[imo verify] failed: project graph locality command", file=sys.stderr)
-            if graph.stderr:
-                print(graph.stderr, file=sys.stderr)
-            return False
-        if (global_root / "runtime/task-graph").exists():
-            print("[imo verify] failed: task graph wrote global runtime", file=sys.stderr)
-            return False
-
         custom_hook = global_root / "hooks/codex-context.sh"
         custom_hook.parent.mkdir(parents=True, exist_ok=True)
         custom_hook.write_text("#!/usr/bin/env bash\necho custom\n", encoding="utf-8")
         conflict = subprocess.run(
-            ["./imo", "global", "install", "--global-root", str(global_root), "--apply"],
+            [
+                "./imo", "global", "install",
+                "--global-root", str(global_root),
+                "--codex-root", str(codex_root),
+                "--apply",
+            ],
             cwd=ROOT,
             check=False,
             stdout=subprocess.PIPE,
@@ -131,14 +119,33 @@ def _run_global_project_scope_smoke() -> bool:
             return False
 
         installed = subprocess.run(
-            ["./imo", "global", "install", "--global-root", str(global_root), "--apply", "--force"],
+            [
+                "./imo", "global", "install",
+                "--global-root", str(global_root),
+                "--codex-root", str(codex_root),
+                "--apply", "--force",
+            ],
             cwd=ROOT,
             check=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
         )
-        if installed.returncode != 0 or not (global_root / "hooks/codex-context.sh").is_file():
+        installed_skill = codex_root / "skills/brainstorm"
+        hooks_file = codex_root / "hooks.json"
+        agents_link = codex_root / "AGENTS.md"
+        agents_file = global_root / "install/codex/AGENTS.md"
+        ownership_marker = global_root / "install/codex/ownership.json"
+        if (
+            installed.returncode != 0
+            or not (global_root / "hooks/codex-context.sh").is_file()
+            or not installed_skill.is_symlink()
+            or not agents_link.is_symlink()
+            or agents_link.resolve() != agents_file.resolve()
+            or not agents_file.is_file()
+            or not ownership_marker.is_file()
+            or "codex-context.sh" not in hooks_file.read_text(encoding="utf-8")
+        ):
             print("[imo verify] failed: global install shim", file=sys.stderr)
             if installed.stderr:
                 print(installed.stderr, file=sys.stderr)
@@ -198,3 +205,4 @@ def _run_global_project_scope_smoke() -> bool:
                 shutil.copytree(backup_learning, project_learning, dirs_exist_ok=True)
             shutil.rmtree(backup_dir, ignore_errors=True)
         shutil.rmtree(global_root, ignore_errors=True)
+        shutil.rmtree(codex_root, ignore_errors=True)

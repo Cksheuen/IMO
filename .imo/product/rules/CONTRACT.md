@@ -1,7 +1,7 @@
 # Product Rules Contract
 
 `product/rules/` is reserved for IMO-owned behavioral rules that guide agents
-and skills without taking over Trellis task flow.
+and skills without taking over repository or platform task workflows.
 
 ## Contract
 
@@ -24,10 +24,30 @@ and skills without taking over Trellis task flow.
 ## Current Rules
 
 - `chameleon`: adapt to established project conventions before coding new
-  modules, and override generic agent habits that conflict with local evidence.
+  modules; resolve the editable source, fix same-pattern defects within scope,
+  and preserve dirty work, stable artifact IDs, and human review state.
 - `structured-refactoring`: apply structure as a development standard, keeping
   modules focused during normal changes and using compatibility facades,
   responsibility-based placement, and bounded validation when refactoring
-  drifted code.
+  drifted code. Validate affected behavior without redundant full regressions.
+- `focused-context-reading`: search and filter large files, logs, generated
+  artifacts, and repository results before loading bounded, traceable slices
+  into context.
+- `delegated-coding-relay-safety`: proactively use Herdr for eligible bounded
+  execution, including small fixes, with `orchestrate` for coordination.
+  Native subagents are not the default or fallback; explicit user/host
+  overrides take precedence. Verify the actual backend and outcome. Relay
+  remains personal-coding only.
+- `evidence-first`: when something breaks, inspect the most complete available
+  runtime evidence relevant to the failure and sufficient to verify a
+  hypothesis (console error, logs, network trace) before forming one; when
+  evidence is incomplete, label the hypothesis and its gaps explicitly, and
+  never treat an unverified guess as a conclusion or edit code on top of it.
+  Completion requires evidence from the actual consumer, with configuration,
+  startup, tests, live behavior, and human acceptance reported separately.
 - `update-handoff`: keep `.imo/UPDATE.md` synchronized whenever IMO update,
   install, release, runtime-state, hook, or verification mechanics change.
+- `identity-veil`: route organization-marking CLIs and identity directories
+  exclusively through the local veil by neutral `--task` handles (from
+  `veil status`), consume only the graded redacted envelope, and never bypass
+  the gate or restate the real name/path it hid.

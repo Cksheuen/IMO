@@ -4,12 +4,12 @@
 
 只在以下情况读取：
 
-- 需要现成 PRD 模板
+- 需要现成的紧凑执行契约模板
 - 需要子任务分解表格模板
 - 需要 child prompt 模板
 - 需要 fixer loop / `delta_context` 的结构样例
 
-## PRD 最小模板
+## 执行契约最小模板
 
 ```markdown
 # {任务标题}
@@ -54,7 +54,7 @@
 ## 子任务分解模板
 
 ```markdown
-## Implementation Plan
+## Execution Map
 
 | # | 子任务 | Agent | 文件所有权 | 依赖 | 验收标准 |
 |---|--------|-------|-----------|------|----------|
@@ -138,9 +138,7 @@
 ### 使用规则
 
 - 新 implementer 只读取 `files_to_read`
-- 主 agent 不直接修代码
-- `attempt_count` 递增
-- 到达 `max_attempts` 后标记 `blocked`
+- 主 agent 下发有界修复并检查结果；仅用户明确要求直接执行或属于治理配置维护时直接处理
 
 ## 汇报模板
 
@@ -167,3 +165,17 @@
 ### 剩余风险
 - {风险}
 ```
+
+## Herdr 并行执行与回收规范
+
+细则以 [Herdr 执行规范](../../multi-model-agent/references/herdr-claude.md) 为唯一来源。
+
+- 先依主规范判断直接执行或委派；已选择的委派使用 Herdr，角色名不代表允许调用常规 subagent。没有强制委派要求的短闭环可以直接完成；路由变化记录原因并回收写集，不静默换 provider。
+- 使用当前任务明确选择的模型，启动显式 `--permission-mode auto`，核对模式和真实模型响应。
+- 全局复用 `codex-use`；每个 Codex 对话一个有名 workspace，每个 worker 一个按工作命名的 tab。
+- ownership/依赖先声明；无关任务并行并逐条验收推进，不等待所有 worker。全局租约仍须持有和续期，文件静默不是完成证据。
+- coordinator 必须持久运行并维护 event inbox、successor queue 和 return channel。`working`、`idle`、`done`、`blocked`、`unknown`、进程退出都要唤醒主会话；未验证回传链路不能声称常驻监听。
+- `done`、`idle` 或 `blocked` 不要求先有 diff、文件或 final summary 才能介入；这些只是后续验收证据。主会话先读取输出和阻塞原因，再决定 review、恢复、修复或后继。
+- 每个交付都必须 coordinator review；关键改动独立 reviewer，作者自测不能代替验收。报告区分规范、测试模型和真实入口。
+- 清理本对话已完成资源，保留 `codex-use` 和用户 `default`；旧废弃 session 经授权才 stop/delete，禁止直接删除 sessions 目录。
+- 操作探索者直接维护治理规范；追加消息须保留原任务目标，不误替换为新任务。

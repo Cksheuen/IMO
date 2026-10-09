@@ -8,7 +8,7 @@ import subprocess
 import sys
 import tempfile
 
-from .runner import ROOT
+from .runner import ROOT, fixture_runtime_root
 
 
 def _read_events(runtime_dir: Path) -> list[dict[str, object]]:
@@ -36,7 +36,7 @@ def _load_observability_helper():
 
 def _run_observability_smoke() -> bool:
     print("[imo verify] observability metrics")
-    runtime_dir = ROOT / ".imo/.runtime/observability"
+    runtime_dir = fixture_runtime_root() / "observability"
     backup_dir: Path | None = None
 
     try:

@@ -14,15 +14,22 @@ Use this skill to verify that Codex is consuming the same global configuration a
 - Codex global instruction entrypoint: `~/.codex/AGENTS.md`
 - Skill sync manifest: `~/.claude/shared-knowledge/sync-manifest.json`
 - Custom Claude skills under `~/.claude/skills/`
-- Corresponding Codex-visible skill links under `~/.codex/skills/`
+- Corresponding Codex-visible skill links under `~/.codex/skills/` for
+  Claude-owned skills
+- IMO-owned Codex projections declared by `imo global status --json`
 - Commands listed in manifest `synced_commands`
 
 ## Workflow
 
 1. Read the current state before changing anything.
-2. If the user changed a shared governance asset inside a project directory, first decide whether it should be promoted to `~/.claude/`.
-3. Promote project-local copies into the global Claude source of truth unless they are explicitly project-only.
-4. Run the report script:
+2. Run `imo global status --json` and record IMO-owned skill projections before
+   checking Claude/Codex alignment.
+3. If the user changed a shared governance asset inside a project directory,
+   first decide whether it should be promoted to `~/.claude/` or IMO's recorded
+   canonical source.
+4. Promote project-local copies into the appropriate global source of truth
+   unless they are explicitly project-only.
+5. Run the report script:
 
 ```bash
 bash ~/.claude/skills/codex-cc-sync-check/scripts/check_and_align.sh
@@ -37,8 +44,13 @@ bash ~/.claude/skills/codex-cc-sync-check/scripts/check_and_align.sh
 
 ## Report rules
 
-- Read `excluded_skills` and `synced_skills` from manifest as the expected skill scope.
-- List both `~/.claude/skills/` and `~/.codex/skills/`, exclude `excluded_skills`, and diff against manifest.
+- Read `excluded_skills` and `synced_skills` from manifest as the expected
+  Claude-owned skill scope.
+- Read IMO-owned skill names from `imo global status --json`; exclude those
+  names from the Claude↔Codex comparison and validate them against the IMO
+  global manifest instead.
+- List both `~/.claude/skills/` and `~/.codex/skills/`, excluding both scopes,
+  and diff against the Claude sync manifest.
 - Detect dangling symlinks under `~/.codex/skills/` with `test -L` and `! test -e`.
 - Only check commands listed in manifest `synced_commands`.
 - Treat command differences outside `synced_commands` as legal when they match `commands_divergence_policy`.
@@ -54,7 +66,9 @@ Report JSON with:
 
 ## Notes
 
-- This skill is specifically for global Codex/Claude alignment, not project-local repository setup.
+- This skill is specifically for global Codex/Claude alignment, not
+  project-local repository setup. IMO global projections are a separate,
+  source-root-backed adapter plane.
 - Project-local governance edits are temporary staging at most; unless clearly marked project-only, the durable source of truth should live under `~/.claude/`.
 - `synced_commands` is intentionally narrow. Most Codex commands are skill proxies; most Claude commands are CC-only control surfaces.
 - A running Codex session does not hot-reload the skill list in its prompt. After repairing links, start a new Codex session to observe newly added skills in the prompt context.

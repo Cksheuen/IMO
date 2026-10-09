@@ -196,6 +196,8 @@ def main() -> int:
         gate = level_by_id.get(level_id, {}).get("promotion_gate")
         if gate in (None, "none"):
             errors.append(f"{level_id} must require a promotion gate")
+    if level_by_id.get("candidate", {}).get("allowed_writers") != ["imo_learning_workflow"]:
+        errors.append("candidate level must be written only by imo_learning_workflow")
 
     privacy_classes = policy.get("privacy_classes")
     if not isinstance(privacy_classes, list):
@@ -250,21 +252,19 @@ def main() -> int:
         errors.append("public agents may only write raw_signal by default")
     if "active_digest" not in public_permissions.get("can_read_levels", []):
         errors.append("public agents must be able to read active_digest")
-
-    hermes_permissions = permissions.get("hermes_like_self_iteration", {})
-    if not isinstance(hermes_permissions, dict):
-        errors.append("agent_permissions.hermes_like_self_iteration must be an object")
-        hermes_permissions = {}
-    hermes_writes = set(hermes_permissions.get("can_write_levels", []))
-    if hermes_writes != {"candidate"}:
-        errors.append("Hermes-like self-iteration may only write candidates")
+    unknown_permission_actors = set(permissions) - {"public_agents"}
+    if unknown_permission_actors:
+        errors.append(
+            "unsupported learning permission actors: "
+            + ", ".join(sorted(unknown_permission_actors))
+        )
 
     safety = policy.get("safety_defaults")
     if not isinstance(safety, dict):
         errors.append("safety_defaults must be an object")
         safety = {}
-    if safety.get("candidate_only_self_iteration") is not True:
-        errors.append("candidate_only_self_iteration must be true")
+    if safety.get("background_prepare_candidate_only") is not True:
+        errors.append("background_prepare_candidate_only must be true")
     if safety.get("global_learning_requires_public_privacy") is not True:
         errors.append("global_learning_requires_public_privacy must be true")
     if safety.get("deferred_review_requires_explicit_command") is not True:

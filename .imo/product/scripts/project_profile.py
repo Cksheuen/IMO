@@ -13,25 +13,33 @@ import sys
 from typing import Any
 from uuid import uuid4
 
+import root_resolver
 
-ROOT = Path(__file__).resolve().parents[3]
-RUNTIME_DIR = ROOT / ".imo/.runtime/project-profile"
+SOURCE_ROOT = Path(__file__).resolve().parents[3]
+ROOT = root_resolver.project_root_or_source()
+RUNTIME_DIR = root_resolver.project_runtime_root(ROOT) / "project-profile"
 CURRENT_PATH = RUNTIME_DIR / "current.json"
 SUMMARY_PATH = RUNTIME_DIR / "summary.md"
 MANIFEST_PATH = RUNTIME_DIR / "manifest.json"
-DISPLAY_DIR = ".imo/.runtime/project-profile"
+DISPLAY_DIR = root_resolver.project_runtime_display(ROOT, "project-profile")
 SCHEMA_VERSION = 1
 MAX_CONTEXT_CHARS = 1400
 MAX_CONTEXT_LINES = 8
 PROFILE_TTL_DAYS = 14
 SELECTED_SOURCE_CANDIDATES = [
     "README.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "package.json",
+    "pyproject.toml",
+    "Cargo.toml",
+    "go.mod",
     ".gitignore",
     ".imo/README.md",
+    ".imo/KNOWLEDGE.md",
     ".imo/RUNBOOK.md",
     ".imo/ARCHITECTURE.md",
     ".imo/BOUNDARY.md",
-    ".imo/ROADMAP.md",
     ".imo/runtime/CONTRACT.md",
     ".imo/runtime/defensive-audit/CONTRACT.md",
     ".imo/runtime/IGNORE_BOUNDARY.md",
@@ -55,14 +63,6 @@ SELECTED_SOURCE_CANDIDATES = [
     ".imo/product/rules/rules.json",
     ".imo/learning/CONTRACT.md",
     ".imo/learning/schemas/event.schema.json",
-    ".trellis/spec/backend/imo-managed-outputs.md",
-    ".trellis/spec/backend/imo-managed-outputs/imo-three-plane-boundary-and-shared-learning-contract.md",
-    ".trellis/spec/backend/imo-managed-outputs/repo-local-codex-imo-context-hook-experiment.md",
-    ".trellis/spec/backend/imo-managed-outputs/repo-local-imo-verification-suite.md",
-    ".trellis/spec/backend/imo-managed-outputs/project-profile-convention-cache.md",
-    ".trellis/spec/backend/imo-managed-outputs/repo-local-ownership-audit-for-trellis-owned-host-surfaces.md",
-    ".trellis/spec/backend/index.md",
-    ".trellis/spec/guides/index.md",
 ]
 
 
@@ -169,8 +169,8 @@ def _profile_conventions() -> dict[str, list[str]]:
         "module_layout": [
             "IMO-owned product capabilities live under .imo/product/.",
             "Stable runtime contracts and shared helpers live under .imo/runtime/.",
-            "Generated high-churn state belongs under ignored .imo/.runtime/.",
-            "Trellis task/spec/workflow files remain outside IMO ownership.",
+            "Generated project state belongs under ~/.imo/projects/<project-id>/runtime/.",
+            "Repository task workflows and host configuration remain outside IMO ownership.",
         ],
         "command_surface": [
             "The repo-root ./imo command is the preferred user-facing entrypoint.",
@@ -187,8 +187,8 @@ def _profile_conventions() -> dict[str, list[str]]:
             "Read-only commands should handle missing runtime state as an empty or missing state, not as a crash.",
         ],
         "testing_style": [
-            "Verification favors direct-run smoke checks through ./imo or scripts/imo.sh.",
-            "Runtime-write smoke checks must back up and restore local .imo/.runtime state.",
+            "Verification favors canonical smoke checks through ./imo or the global imo command.",
+            "Runtime-write smoke checks isolate project runtime through explicit environment roots.",
         ],
         "abstraction_level": [
             "Keep root entrypoints thin and place canonical logic under .imo/product/scripts/.",
@@ -213,7 +213,7 @@ def _suppressed_habits() -> list[dict[str, str]]:
         },
         {
             "habit": "broad_rewrites",
-            "local_reason": "IMO/Trellis boundaries require narrow changes that do not claim Trellis-owned host outputs.",
+            "local_reason": "IMO ownership boundaries require narrow changes that do not claim external host outputs.",
         },
         {
             "habit": "prompt_time_repository_scan",
@@ -225,16 +225,11 @@ def _suppressed_habits() -> list[dict[str, str]]:
 def _evidence(paths: list[Path]) -> list[dict[str, str]]:
     reasons = {
         ".imo/ARCHITECTURE.md": "plane ownership and long-term IMO architecture",
-        ".imo/BOUNDARY.md": "runtime state and Trellis independence boundaries",
+        ".imo/BOUNDARY.md": "runtime state and external ownership boundaries",
+        ".imo/KNOWLEDGE.md": "stable decision and contract router",
         ".imo/product/scripts/CONTRACT.md": "CLI and verification script contract",
         ".imo/product/rules/chameleon.md": "local convention adaptation rule",
         ".imo/runtime/CONTRACT.md": "stable runtime source boundary",
-        ".trellis/spec/backend/imo-managed-outputs.md": "executable IMO/Trellis ownership contract index",
-        ".trellis/spec/backend/imo-managed-outputs/imo-three-plane-boundary-and-shared-learning-contract.md": "core IMO/Trellis plane boundary contract",
-        ".trellis/spec/backend/imo-managed-outputs/repo-local-codex-imo-context-hook-experiment.md": "Codex context injection contract",
-        ".trellis/spec/backend/imo-managed-outputs/repo-local-imo-verification-suite.md": "aggregate IMO verification contract",
-        ".trellis/spec/backend/imo-managed-outputs/project-profile-convention-cache.md": "project-profile runtime contract",
-        ".trellis/spec/backend/imo-managed-outputs/repo-local-ownership-audit-for-trellis-owned-host-surfaces.md": "host-surface ownership audit contract",
     }
     items: list[dict[str, str]] = []
     for path in paths:
@@ -258,8 +253,8 @@ def _evidence(paths: list[Path]) -> list[dict[str, str]]:
 def _summary_lines() -> list[str]:
     return [
         "IMO product source lives under .imo/product; root commands and scripts are thin compatibility entrypoints.",
-        "Stable runtime contracts live under .imo/runtime; generated local state belongs under ignored .imo/.runtime.",
-        "Trellis remains the task plane. IMO must not proxy Trellis or claim Trellis-owned host outputs by default.",
+        "Stable runtime contracts live under .imo/runtime; generated project state belongs under ~/.imo/projects/.",
+        "Repository task workflows and host outputs remain independent from IMO-owned capabilities.",
         "Prefer machine-readable contracts and ./imo verify checks over prose-only behavior claims.",
         "For new modules, match nearby scripts/contracts/tests before adding abstractions or defensive branches.",
         "Project-profile refresh is explicit; prompt-time context reads cached summaries and never rescans the repository.",
@@ -336,8 +331,8 @@ def _write_profile(profile: dict[str, Any]) -> None:
         "profile_id": profile["profile_id"],
         "generated_at": profile["generated_at"],
         "status_hint": "current",
-        "current_path": ".imo/.runtime/project-profile/current.json",
-        "summary_path": ".imo/.runtime/project-profile/summary.md",
+        "current_path": f"{DISPLAY_DIR}/current.json",
+        "summary_path": f"{DISPLAY_DIR}/summary.md",
     }
     _write_json(MANIFEST_PATH, manifest)
 

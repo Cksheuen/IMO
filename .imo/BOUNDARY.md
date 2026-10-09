@@ -1,129 +1,50 @@
-# IMO Boundary Model
+# IMO Boundaries
 
-IMO uses a plane-based architecture. It does not wrap or control Trellis by
-default.
+## Ownership
 
-## Planes
+- Canonical product source: `.imo/product/**`.
+- Stable runtime contracts: `.imo/runtime/**`.
+- Learning policy and schemas: `.imo/learning/**`.
+- Local mutable state: `~/.imo/runtime/**` and project namespaces under
+  `~/.imo/projects/<project-id>/runtime/**`.
+- Root wrappers and projections contain no competing implementation.
+- External providers, host configuration, and repository task workflows remain
+  independently owned.
 
-| Plane | Owner | Primary responsibility | Default relationship |
-| --- | --- | --- | --- |
-| Trellis Task Plane | Trellis | tasks, PRDs, specs, workflow, Trellis lifecycle | Independent |
-| IMO Capability Plane | IMO | repo-owned skills, rules, metrics, feedback, runtime helpers, adapter contracts | Independent |
-| IMO Learning Plane | IMO | shared learning signals, candidates, digests, user preference adaptation | Shared read/write layer for public agents |
-| External Provider Plane | Provider owner | third-party plugins, downloaded skills, model gateways, external frameworks | Optional integration only |
-| Host Output Plane | Host adapter | `.claude/`, `.codex/`, future host-visible projections | Generated output, not source |
+## Integration
 
-## Default Operating Model
+- Provider discovery is read-only.
+- Provider invocation is disabled by default and requires explicit ownership,
+  side-effect, and safe-mode metadata.
+- Provider failures degrade at the integration boundary and must not break IMO
+  native commands.
+- Codex integration owns only its exact hook registration and declared skill
+  symlinks; installation records prior projections so uninstall can restore them.
+- The identity veil is a separate opt-in integration. It owns, per selected
+  host, one PreToolUse gate registration and, by default, one SessionStart
+  handle-announcement registration, plus two generated hooks, all keyed by
+  their own command strings so third-party hooks coexist untouched. It uses a
+  dedicated manifest; default `global install` neither requires nor enables it.
+  The gate fails open, never logs argv or raw output, and its absence must not
+  break IMO-native or normal host commands.
 
-Trellis and IMO are independent in normal use:
+## Learning
 
-- Trellis continues to manage task flow.
-- IMO manages its own capabilities and learning assets.
-- IMO does not proxy Trellis commands by default.
-- Trellis does not call IMO by default.
-- Optional provider/callback integration is an advanced mode, not the core
-  architecture.
+- Agents may append raw signals and read reviewed active digests.
+- Candidate preparation does not imply promotion.
+- There is no autonomous active-digest or hard-rule promotion actor; background
+  work stops at candidate preparation and explicit review owns promotion.
+- Active digest and hard rule/skill changes require review, provenance, and a
+  rollback path.
+- Global learning excludes secrets and project-private facts.
+- Hard rule/skill promotion resolves the canonical `source_root` from the
+  global manifest. Package installs emit reviewed proposals instead of editing
+  package caches or host projections.
 
-This avoids coupling IMO correctness to Trellis internals or Trellis update
-behavior.
+## Runtime and verification
 
-## IMO Owned Core
-
-The IMO-owned boundary contains assets this repo intends to maintain as IMO
-source:
-
-- `.imo/product/`: IMO-owned product capabilities explicitly adopted by this
-  repo.
-- `.imo/runtime/`: stable runtime contracts, shared helpers, and dependency
-  entrypoints.
-- `.imo/learning/`: learning schemas, policies, and promotion contracts.
-- `.imo/adapters/`: host projection contracts and manifests.
-- `.imo/providers/`: optional provider discovery/integration contracts.
-
-High-churn state belongs under `.imo/.runtime/` and must remain rebuildable.
-
-## Trellis Boundary
-
-Trellis stays outside the IMO owned core.
-
-IMO must not implement itself by modifying:
-
-- Trellis source code
-- Trellis install directories
-- `.trellis/scripts/**`
-- `.trellis/workflow.md`
-- Trellis-owned generated `.claude/` / `.codex/` host files
-
-If a future task needs Trellis integration, use stable public surfaces only:
-
-- documented Trellis CLI commands
-- explicit Trellis configuration hooks
-- generated task/spec files as data, not implementation extension points
-
-Those integrations must stay optional and degrade cleanly.
-
-## Learning Boundary
-
-The learning plane prevents each agent ecosystem from adapting to the user in
-isolation.
-
-Public agents may:
-
-- read an active learning digest
-- write raw learning signals
-
-Only gated IMO learning workflows may:
-
-- promote signals to candidates
-- publish active digests
-- update hard rules or skill source
-
-Hermes-like self-iteration is a producer of learning candidates, not an
-unreviewed writer of active rules.
-
-## External Providers
-
-External providers include:
-
-- Trellis capabilities
-- Claude Code or Codex plugins
-- downloaded or marketplace skill packs
-- model/runtime gateways such as LiteLLM
-- local framework runtimes such as LangGraph-based systems
-
-They are not copied into `.imo/product/*` by default. IMO may document how to
-discover or call them, but provider source remains owned by the provider.
-
-Adopting an external capability into IMO-owned source requires a dedicated task
-that explains why external ownership is insufficient.
-
-## Host Outputs
-
-Host-visible files are generated or projected outputs.
-
-- `.claude/**` and `.codex/**` must not become source-of-truth for IMO.
-- Trellis-owned host files must not be claimed by IMO manifests.
-- Host adapter writes require ownership checks and dry-run/diff support before
-  becoming active.
-
-## Maintenance Guardrails
-
-- Learning items must be inspectable, disableable, and reversible.
-- Learning writes must carry source, scope, confidence, TTL, and privacy
-  metadata before automated promotion is allowed.
-- Active learning digests must carry id, version, scope, `last_updated`, and a
-  maximum length before public agents read them by default.
-- Provider discovery must be read-only before any invocation is added.
-- Provider failures must degrade to "capability unavailable" rather than
-  breaking IMO core.
-- Module classification must be machine-checkable; do not rely only on README
-  prose over time.
-- Product rules must be machine-checkable; do not let behavioral rules remain
-  prose-only without metadata and verification.
-- Project-profile refresh is low frequency and explicit; prompt-time context may
-  read a bounded cached summary but must not scan the repository.
-- Runtime logs and learning signals must rotate or summarize before they grow
-  without bound.
-- Trellis independence is a standing regression test: Trellis task flow must not
-  require IMO, and IMO native verification must not require Trellis provider
-  integration.
+- Prompt-time context reads cached state only.
+- Read-only commands treat missing runtime state as empty or missing.
+- Tests that write runtime state must back it up and restore it.
+- Durable behavioral guardrails should be schemas, metadata, or executable
+  checks rather than prose alone.

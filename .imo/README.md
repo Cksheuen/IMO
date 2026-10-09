@@ -1,222 +1,50 @@
-# IMO Framework Source Of Truth
+# IMO
 
-This directory is the source-of-truth workspace for the IMO framework.
+`.imo/` is the canonical source for IMO capabilities, stable runtime contracts,
+learning policy, and the global CLI. Consumer repositories need no local IMO
+installation; mutable state lives under `~/.imo/`.
 
-## Principles
-
-- `.imo/` is the only intended source of truth for future framework-owned assets.
-- IMO is not a default proxy for Trellis. Trellis task management and IMO
-  capability/learning management are independent planes.
-- Generated `.claude/` and `.codex/` content are adapter outputs, not truth.
-- Stable runtime contracts live in-repo under `.imo/runtime/`.
-- High-churn runtime state stays local under `.imo/.runtime/` and is ignored.
-- Existing root `skills/`, `scripts/`, `.agents/`, `.claude/`, and `.codex/` remain legacy/reference until each surface is explicitly migrated behind IMO-managed outputs.
-- External frameworks, downloaded plugins, and market skills stay outside the IMO owned core by default.
-- Shared learning belongs to the IMO learning plane so public agents do not
-  adapt to the user in isolated and conflicting ways.
-
-## Direct Run
-
-The current repo-local IMO command surface is:
+## Start here
 
 ```bash
 ./imo --help
-./imo audit all
 ./imo budget audit
 ./imo defensive audit
 ./imo profile status
-./imo profile refresh
 ./imo learning list
-./imo learning signal list
-./imo learning candidate list
-./imo learning activity status
-./imo learning review inbox
-./imo learning profile status
-./imo learning profile inspect
-./imo learning metrics summary
-./imo learning digest promote <candidate-id> --review-ref <ref> --rollback-id <id>
 ./imo metrics status
-./imo metrics summary
-./imo global status
-./imo global install --apply
-./imo init <target>
-./imo update <target> [--strict|--force]
-./imo uninstall <target>
 ./imo codex context --empty --stats
-./imo task graph
-./imo task graph show 05-22-imo-task-graph-references
-./imo task graph plan
 ./imo verify
 ```
 
-`./imo` is the preferred repo-root user entrypoint. It forwards to the
-canonical implementation at `.imo/product/scripts/imo.sh`. `scripts/imo.sh`
-remains only as a compatibility wrapper for existing local calls.
+The root `./imo` command and compatibility surfaces under `scripts/` and
+`skills/` are source-checkout entrypoints. `imo global install --apply` connects
+Codex through one bounded hook and lazy skill symlinks. `imo init <project>` is
+optional registration only and writes zero framework files into that project.
 
-## Local Package Link
+## Quality gates
 
-IMO also has a thin Node package wrapper for Trellis-like local link testing:
+- `./imo global status --json` — read-only state check.
+- `./imo global doctor --json` — exits nonzero when unhealthy.
+- `python3 .imo/product/scripts/check_tracked_references.py --require-tracked --json` — release gate.
+- `./imo verify` — runs verification.
 
-```bash
-npm link
-imo --help
-imo init /path/to/target-repo
-```
-
-The package wrapper exposes the `imo` bin from `bin/imo.js` and forwards into
-the same root `./imo` entrypoint. It is an install convenience only; framework
-behavior still lives in the repo-local direct-run assets under `.imo/`.
-
-## Global / Project State
-
-IMO can be installed globally while keeping Trellis-derived state local:
-
-- global state lives under `~/.imo/runtime/` by default and holds shared
-  learning digest state, global user profile state, and global hook shims
-- project state lives under `<project>/.imo/.runtime/` and holds project
-  profile, project-private learning, and task graph run summaries
-- `imo task graph` resolves the current project root from cwd and reads only
-  that project's `.trellis/tasks/`
-- `imo task graph run` writes only
-  `<project>/.imo/.runtime/task-graph/runs/`
-- `imo codex context` may merge project and global learning context, but
-  project digest entries precede global entries and the injected context stays
-  under the selected mode budget
+CI runs the strict tracked-reference checker, `verify`, and
+`npm pack --dry-run`. `verify` emits lifecycle events to the normal project
+runtime; all smoke fixture state uses a temporary runtime and never touches
+source `.imo/.runtime`.
 
 ## Layout
 
-- `ARCHITECTURE.md`: long-term plane architecture and implementation plan.
-- `BOUNDARY.md`: ownership, integration, learning, and maintenance guardrails.
-- `ORCHESTRATION.md`: observable worker progress protocol for delegated work.
-- `RUNBOOK.md`: final direct-run acceptance sequence.
-- `UPDATE.md`: cross-device update handoff and the rule for keeping update
-  instructions synchronized with release mechanics.
-- `product/`: reusable framework assets that will eventually replace legacy root sources.
-- `adapters/`: host-specific template boundaries for Claude Code and Codex outputs.
-- `learning/`: shared learning-plane contracts and promotion policy.
-- `providers/`: optional integration contracts for external frameworks, plugins,
-  skills, and runtimes.
-- `runtime/`: stable runtime contracts, schemas, and bootstrap expectations.
-- `ROADMAP.md`: current migration state, next work, blocked/deferred surfaces.
+- `KNOWLEDGE.md`: lazy-loaded router for stable decisions and contracts.
+- `ARCHITECTURE.md`: source, runtime, and integration boundaries.
+- `BOUNDARY.md`: ownership and safety invariants.
+- `RUNBOOK.md`: compact acceptance commands.
+- `UPDATE.md`: cross-device update and managed-file rules.
+- `product/`: canonical scripts, rules, and skills.
+- `learning/`: learning policy and schemas.
+- `providers/`: optional external capability metadata.
+- `runtime/`: stable contracts and shared runtime helpers.
 
-## Current Status
-
-- Product scripts, product rules, product skills, and shared runtime helpers now have canonical
-  source surfaces under `.imo/`.
-- The repo root has a direct `./imo` entrypoint for IMO-owned command surfaces.
-- Root `scripts/`, root `skills/`, and `skills/migrated/shared_runtime/` keep
-  compatibility projections for migrated surfaces.
-- Root compatibility and external-provider surfaces are declared in
-  `.imo/providers/root_surfaces.json` and checked by `./imo verify`.
-- The repo has a read-only ownership audit guardrail for Trellis-owned host
-  surfaces.
-- IMO does not project Trellis-owned Claude/Codex host files in this repo state.
-- `./imo audit [claude|codex|all]` verifies that IMO manifests do not claim host outputs still owned by Trellis.
-- `./imo budget audit [target-path]` reports visible local context slices,
-  approximate token ranges, controllability labels, owner labels, and
-  threshold-based IMO-facing recommendations without mutating source or runtime
-  state. Trellis surfaces are treated as external integration evidence, not
-  IMO-owned optimization targets.
-- `./imo defensive audit` reports necessary guardrails, simplification
-  candidates, prose-to-contract candidates, and blanket fallback anti-patterns
-  without mutating source or runtime state.
-- `./imo learning list` and `./imo learning inspect <id>`
-  read active learning digest state without mutating learning data.
-- `./imo learning list --scope project|global|merged` reads project, global,
-  or merged active digest state without mutating learning data.
-- `./imo learning signal list` reads raw signal state without mutating learning
-  data, and `./imo learning signal add --summary <text>` appends project-local
-  raw signals only.
-- `./imo learning candidate build/list/inspect/reject` manages candidate
-  lessons without mutating active digest state.
-- `./imo learning activity status/mark` manages ignored runtime activity state
-  under `.imo/.runtime/session/`. Activity state is an operational signal for
-  background candidate preparation, not proof that the user wants a learning
-  conversation.
-- `./imo learning review prepare/inbox/inspect/approve/reject` provides an
-  explicit deferred review inbox. `prepare` may build candidates only and skips
-  active or unknown activity unless forced; `approve` reuses the reviewed digest
-  promotion gate.
-- `./imo learning profile status/inspect/update/enable/disable/export/import`
-  manages a global, portable user profile under
-  `~/.imo/runtime/learning/user-profile.json`. The profile describes the user as
-  a person and helps interpret intent; it is not a project implementation rule
-  store.
-- `./imo learning metrics summary [--json]` reads compact local learning events
-  under `.imo/.runtime/learning/events.jsonl` and reports effectiveness and
-  safety counters without uploading data or changing learning state.
-- `./imo learning digest promote/disable/reset` manages reviewed active digest
-  entries with rollback metadata.
-- `./imo metrics status/summary/timeline/failures` reads compact unified
-  observability events under `.imo/.runtime/observability/events/`, bridges
-  existing learning counters, and treats missing runtime state as a clean empty
-  state.
-- `./imo init <target>`, `./imo update <target>`, and
-  `./imo uninstall <target>` manage the project-local IMO direct-run profile
-  in another repository. They install `.imo/`, root `imo`, root compatibility
-  surfaces, `.gitignore` whitelist markers, and managed hashes under
-  `.imo/.runtime/install/` without using Python package installation as the
-  framework boundary. `update` refreshes unchanged managed files, preserves
-  user-modified managed files by default, and leaves `.imo/.runtime/**`
-  learning/profile/task graph state untouched. Use `--strict` to refuse on
-  local managed-file edits, or `--force` to overwrite them.
-- `npm link` from this source repo exposes a global `imo` command for local
-  package testing. The linked command is a thin Node bin wrapper over the same
-  root `./imo` entrypoint.
-- `./imo global status/install/migrate/uninstall` manages the global IMO shim
-  and shared runtime root. Install and migrate are dry-run unless `--apply` is
-  explicit, and unmanaged shim files are refused unless `--force` is explicit.
-  The global Codex context hook skips projects that already declare a local IMO
-  context hook so prompt-time context is not injected twice.
-- `./imo profile refresh/status/inspect/clear` manages a local project
-  convention snapshot under `.imo/.runtime/project-profile/`. Context hooks may
-  read the bounded summary but never refresh it automatically.
-- `./imo task graph`, `./imo task graph show`, `./imo task graph read`, and
-  `./imo task graph plan` inspect the current project's Trellis task references
-  through an IMO-owned overlay. These commands are read-only: they do not mutate
-  Trellis task JSON and do not create `.imo/.runtime/task-graph/`.
-- `./imo task graph run <task-id-or-dir>` is explicit and gated by file
-  ownership, dependency validation, and writable-file conflict checks before a
-  local run summary may be written under `.imo/.runtime/task-graph/runs/`.
-- `./imo codex context` emits a short repo-local IMO context block for
-  experimental Codex hook injection, including enabled user-profile guidance and
-  active learning digest entries when present. The default `standard` mode is
-  capped at 2200 characters, with `compact` capped at 1200 and `full` capped at
-  4000; `--stats` reports read-only size and section data. It is informational
-  and does not replace Trellis workflow state; active digest injection may
-  append compact ignored telemetry.
-- `./imo verify` runs the current aggregate read-only IMO verification
-  suite, including rule contracts, module metadata, project-profile contracts,
-  learning policy, and provider registry contracts, plus root
-  compatibility-surface, package-wrapper, global/project scope, and install
-  lifecycle checks.
-- `.imo/UPDATE.md` is the tracked handoff for agents updating IMO on another
-  device or in another target repository. Any task that changes update, install,
-  global shim, history-reset, runtime-state, or verification mechanics must
-  update that file before release.
-- Machine-readable contract gates now exist for:
-  - `.imo/product/rules/rules.json`
-  - `.imo/runtime/project-profile/schema.json`
-  - `.imo/product/skills/modules.json`
-  - `.imo/learning/policy.json`
-  - `.imo/learning/schemas/event.schema.json`
-  - `.imo/providers/registry.json`
-  - `.imo/runtime/observability/event.schema.json`
-  - `.imo/runtime/task-graph/schema.json`
-- `./imo defensive audit --json` provides a stable advisory report shape for
-  defensive-programming review.
-- Delegated implementation now has a repo-local observability protocol in
-  `.imo/ORCHESTRATION.md`.
-- Adapter command/skill projection and host-output manifest takeover remain deferred.
-- Future host-output handoff is planned in `adapters/HOST_OUTPUT_CUTOVER.md`; it requires upstream Trellis ownership removal before any adapter manifest entries are reopened.
-- The current architecture direction is three-plane stabilization: Trellis task
-  plane, IMO capability plane, and IMO learning plane, with read-only contract
-  gates before write behavior.
-
-## Runtime State
-
-- In the current repo state, Trellis remains the active owner of the Trellis Claude/Codex host surfaces.
-- IMO remains the framework source-of-truth workspace for its own contracts, scripts, and future migrations; only projection into Trellis-owned host targets is disabled here.
-- Learning, provider discovery, and invocation state belongs under
-  `.imo/.runtime/` or `~/.imo/` depending on scope, and must not become tracked
-  source.
+Detailed knowledge is intentionally not injected on every prompt. The bounded
+`imo codex context` block routes an agent to these files only when relevant.

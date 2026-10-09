@@ -15,7 +15,7 @@ Apply this rule when a task changes any of these surfaces:
 - Git remote, default branch, history-reset, archive, or release strategy
 - `./imo init`, `./imo update`, `./imo uninstall`, or managed-file behavior
 - `./imo global install`, `global migrate`, `global uninstall`, or global shim behavior
-- project or global runtime-state layout under `.imo/.runtime/` or
+- project or global runtime-state layout under `~/.imo/projects/` or
   `~/.imo/runtime/`
 - Codex context hook install, dedupe, or invocation behavior
 - verification commands required for source checkouts or installed targets
@@ -44,7 +44,7 @@ Before finalizing an affected change, inspect enough local evidence to answer:
 
 - Did the task change update mechanics or only implementation internals?
 - Does `.imo/UPDATE.md` still describe the minimal safe update path?
-- Do `./imo init`, `./imo update`, `./imo uninstall`, and global commands still
+- Do zero-install registration, legacy uninstall, and global commands still
   match the documented safety rules?
 - Did the expected branch, remote, archive, or history strategy change?
 - Did verification requirements change for source checkouts or target projects?
@@ -64,7 +64,7 @@ Suppress these drift-prone habits unless the user explicitly requires them:
 - using destructive update commands before checking local dirty state
 - treating runtime state as disposable source files
 - documenting a manual step that is broader than the minimum safe update
-- hiding unmanaged global shim conflicts behind automatic force behavior
+- hiding unmanaged global hook or skill projection conflicts behind force behavior
 
 ## Implementation Behavior
 

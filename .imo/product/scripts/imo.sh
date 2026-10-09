@@ -7,12 +7,11 @@ OBSERVABILITY_SCRIPT="$REPO_ROOT/.imo/product/scripts/observability_events.py"
 
 print_placeholder() {
 cat <<'EOF'
-imo: repo-local IMO command surface
+imo: global-first IMO command surface
 
 Source of truth lives under `.imo/`.
 
 Usage:
-  ./imo audit [claude|codex|all]
   ./imo budget audit [--json] [target-path]
   ./imo defensive audit [--json]
   ./imo learning list
@@ -36,6 +35,7 @@ Usage:
   ./imo metrics timeline --trace <trace-id> [--json]
   ./imo metrics failures [--since <duration>] [--json]
   ./imo global status
+  ./imo global doctor [--json]
   ./imo global install [--apply] [--force]
   ./imo global migrate [--apply] [--force]
   ./imo global uninstall [--apply] [--force]
@@ -43,18 +43,22 @@ Usage:
   ./imo profile status
   ./imo profile inspect
   ./imo profile clear
+  ./imo veil gate
+  ./imo veil context
+  ./imo veil register
+  ./imo veil run --task <handle> [-- <args>]
+  ./imo veil run -- <generic-command> [args...]
+  ./imo veil read --task <handle> [--rel <path>]
+  ./imo veil read <generic-path>
+  ./imo veil check (--command <text> | --path <path>)
+  ./imo veil status [--reveal]
+  ./imo veil policy (path|init|show)
+  ./imo veil selftest
+  ./imo veil install [--apply] [--gate-only] [--host both|claude|codex]
+  ./imo veil uninstall [--apply] [--host both|claude|codex]
   ./imo init [target] [--force] [--dry-run]
   ./imo update [target] [--force] [--strict] [--dry-run]
   ./imo uninstall [target] [--force] [--dry-run]
-  ./imo task graph [--json]
-  ./imo task graph show <task-id-or-dir> [--json]
-  ./imo task graph read <task-id-or-dir> [--json]
-  ./imo task graph plan [--json]
-  ./imo task graph run <task-id-or-dir> [--json]
-  ./imo graph [--json]
-  ./imo show <task-id-or-dir>
-  ./imo read <task-id-or-dir>
-  ./imo plan [--json]
   ./imo codex context [--mode compact|standard|full] [--stats]
   ./imo verify
 
@@ -62,22 +66,19 @@ Compatibility:
   scripts/imo.sh forwards to the same canonical implementation.
 
 Common commands:
-  - `audit` is read-only and checks whether IMO reintroduces Trellis-owned
-    Claude/Codex host-surface management.
   - `budget audit` is read-only and measures visible local context slices such
-    as instruction files, Trellis specs/hooks, active tasks, and IMO context
-    stats. It reports approximate token ranges plus threshold-based follow-up
-    suggestions.
+    as instruction files, on-demand skills, and IMO context stats. It reports
+    approximate token ranges plus threshold-based follow-up suggestions.
   - `defensive audit` is read-only and separates necessary boundary guardrails
     from fallback code that should be simplified, contracted, or removed.
   - `learning list` and `learning inspect` read active learning digest state
     without creating or mutating digest data.
   - `learning signal list` reads raw signal state, and `learning signal add`
-    writes raw signals only under `.imo/.runtime/learning/`.
+    writes project-scoped signals under `~/.imo/projects/<project-id>/runtime/`.
   - `learning candidate build/list/inspect/reject` manages candidate lessons
-    under `.imo/.runtime/learning/` without mutating active digest state.
-  - `learning activity status/mark` manages ignored runtime activity state under
-    `.imo/.runtime/session/` so background preparation does not guess task
+    under the same project-scoped global runtime without mutating active digest.
+  - `learning activity status/mark` manages project runtime activity state so
+    background preparation does not guess task
     completion from conversation text.
   - `learning review prepare/inbox/inspect/approve/reject` provides an explicit
     deferred review inbox. Prepare may build candidates only; approve still
@@ -93,43 +94,45 @@ Common commands:
   - `metrics status/summary/timeline/failures` reads the unified local
     observability stream and bridges existing learning counters without
     mutating observability state.
-  - `global status/install/migrate/uninstall` manages the global IMO shim and
-    shared runtime root. Install and migrate are dry-run unless `--apply` is
-    explicit; project task graph state remains project-local.
-  - `profile refresh/status/inspect/clear` manages local project convention
-    snapshots under `.imo/.runtime/project-profile/`; prompt-time context reads
-    the cache and never refreshes it.
-  - `init/update/uninstall` manage the project-local IMO direct-run profile in
-    a target repository. They install `.imo/`, root `imo`, root compatibility
-    surfaces, and managed hashes without using Python package installation as
-    the framework boundary. `update` preserves user-modified managed files by
-    default; use `--strict` to refuse on local edits or `--force` to overwrite.
-  - `task graph`, `graph`, `show`, `read`, and `plan` inspect Trellis task
-    references through the IMO task graph overlay without mutating Trellis task
-    JSON or creating task graph runtime state.
-  - `task graph run` is explicit and gated by file ownership, dependency
-    validation, and conflict checks before any task graph run summary is written.
+  - `global status/doctor/install/migrate/uninstall` manages the global IMO runtime,
+    Codex UserPromptSubmit hook, and lazy skill projections under `~/.codex/`.
+    Install and migrate are dry-run unless `--apply` is explicit.
+  - `profile refresh/status/inspect/clear` manages project convention snapshots
+    under `~/.imo/projects/<project-id>/runtime/`; prompt-time context reads the
+    cache and never refreshes it.
+  - `veil` is the opt-in identity black box. `context` announces the available
+    neutral handles to a session, `gate` is the PreToolUse hook entry, and
+    `register` is an interactive local-only way to map a real CLI to a handle.
+    `run`/`read` execute registered commands and files by neutral `--task`
+    handle and return only graded, redacted envelopes that never carry the real
+    name, path, argv, or opaque bytes (self-names in help output are replaced by
+    the handle). Real mappings live only in the user policy, never in tracked
+    source. `veil install --apply` registers one bounded PreToolUse gate plus a
+    SessionStart announcement per selected host (`--gate-only` for just the
+    gate) and is independent of `global install`; the veil never logs argv or
+    raw output.
+  - `init/update` only register projects under `~/.imo/projects/`; they write no
+    framework files into repositories. `uninstall` also removes a legacy
+    direct-run profile when its managed manifest exists, preserving knowledge.
   - `verify` runs the current read-only IMO guardrail, wrapper, and runtime
     compatibility checks, including rule, module, learning, observability,
     project-profile, and provider contracts.
-  - `codex context` emits a budgeted repo-local IMO context block for
-    experimental Codex hook injection. Modes are `compact`, `standard`
+  - `codex context` emits a budgeted repo-aware IMO context block for global
+    Codex hook injection. Modes are `compact`, `standard`
     (default), and `full`; `--stats` reports read-only size and section data.
     Active digest injection may append compact ignored learning telemetry.
 
 Architecture:
-  - IMO does not proxy Trellis by default. Use Trellis directly for Trellis
-    task flow, and use IMO directly for IMO-owned capabilities and learning.
+  - IMO owns capability, learning, runtime contracts, and its global CLI.
+    Repository or platform-native task workflows remain independent.
   - External frameworks, plugins, and skills stay outside `.imo/product/*` by
     default.
 
 Advanced concepts:
   - Provider discovery/invocation is optional and disabled by default until a
     task adds explicit ownership and side-effect metadata.
-  - Same-path host adapter projection remains disabled for Trellis-owned host
-    surfaces; future IMO projections must use namespaced non-overlapping paths.
-  - `sync` / `generate` are intentionally not exposed in this repo because
-    Trellis remains the active owner of that host projection layer.
+  - Host projections are managed adapters. Canonical skills remain under the
+    recorded IMO source root and are loaded lazily by Codex.
 EOF
 }
 
@@ -223,9 +226,6 @@ case "${1}" in
     print_placeholder
     exit 0
     ;;
-  audit)
-    run_observed audit python3 "$REPO_ROOT/.imo/product/scripts/audit_managed_ownership.py" "${@:2}"
-    ;;
   budget)
     case "${2:-}" in
       audit)
@@ -253,27 +253,11 @@ case "${1}" in
   profile)
     run_observed profile python3 "$REPO_ROOT/.imo/product/scripts/project_profile.py" "${@:2}"
     ;;
+  veil)
+    run_observed veil python3 "$REPO_ROOT/.imo/product/scripts/identity_veil.py" "${@:2}"
+    ;;
   init|update|uninstall)
     run_observed "install_${1}" python3 "$REPO_ROOT/.imo/product/scripts/install.py" "$@"
-    ;;
-  task)
-    case "${2:-}" in
-      graph)
-        run_observed task_graph python3 "$REPO_ROOT/.imo/product/scripts/task_graph.py" "${@:3}"
-        ;;
-      *)
-        print_placeholder >&2
-        printf '\nUnsupported imo task command: %s\n' "${2:-}" >&2
-        exit 64
-        ;;
-    esac
-    ;;
-  # Contract marker: graph|show|read|plan aliases share task_graph.py.
-  graph)
-    run_observed task_graph python3 "$REPO_ROOT/.imo/product/scripts/task_graph.py" "${@:2}"
-    ;;
-  show|read|plan)
-    run_observed task_graph python3 "$REPO_ROOT/.imo/product/scripts/task_graph.py" "$@"
     ;;
   codex)
     case "${2:-}" in

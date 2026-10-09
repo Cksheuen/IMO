@@ -262,54 +262,6 @@ async def run_dual_review_loop(
 
     return result
 
-
-# Integration with feature-list.json (CC's verification-gate)
-
-def sync_with_feature_list(state: DualReviewState, feature_list_path: str) -> None:
-    """
-    Sync dual review results with feature-list.json.
-
-    Equivalent to CC's 与 feature-list.json 集成.
-
-    Rules:
-    - Codex review found critical/high → feature.passes = false
-    - CC implementer fixed → feature.passes = null (pending next round)
-    - Final pass → feature.passes = true
-    """
-    import json
-
-    try:
-        with open(feature_list_path, 'r') as f:
-            feature_list = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return
-
-    # Update features based on current state
-    review = state.get("current_codex_review")
-    fix = state.get("current_cc_fix")
-
-    if review and has_critical_or_high_findings(state):
-        # Mark related features as failed
-        for feature in feature_list.get("features", []):
-            # In production, would match findings to features
-            feature["passes"] = False
-
-    elif fix and fix.get("fixed", 0) > 0:
-        # Reset features for next round verification
-        for feature in feature_list.get("features", []):
-            if feature.get("passes") is False:
-                feature["passes"] = None  # Pending verification
-
-    elif state.get("status") == "passed":
-        # All features passed
-        for feature in feature_list.get("features", []):
-            feature["passes"] = True
-
-    # Write back
-    with open(feature_list_path, 'w') as f:
-        json.dump(feature_list, f, indent=2)
-
-
 def has_critical_or_high_findings(state: DualReviewState) -> bool:
     """Check if current review has critical or high findings."""
     from .state import has_critical_or_high_findings as check

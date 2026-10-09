@@ -248,119 +248,28 @@ def _is_safe_to_write(target: Path, old_metadata: dict[str, Any] | None, new_met
 
 
 def _install_or_update(args: argparse.Namespace, *, update: bool) -> int:
-    source_root = ROOT
     target_root = Path(args.target).expanduser().resolve()
-    target_root.mkdir(parents=True, exist_ok=True)
-
-    try:
-        old_manifest = _load_manifest(target_root)
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
-        print(f"[imo install] failed to read manifest: {exc}", file=sys.stderr)
+    if not target_root.is_dir():
+        print(f"[imo project] target directory does not exist: {target_root}", file=sys.stderr)
         return 1
-
-    old_files = old_manifest.get("files", {})
-    assert isinstance(old_files, dict)
-
-    entries = _iter_source_entries(source_root)
-    new_files: dict[str, Any] = {}
-    planned_writes: list[Path] = []
-    planned_removals: list[Path] = []
-    conflicts: list[Path] = []
-    preserved: list[Path] = []
-    write_project_marker = False
-
-    for relative in entries:
-        rel_key = _to_posix(relative)
-        target = target_root / relative
-        new_metadata = _source_metadata(source_root, relative)
-        old_metadata = old_files.get(rel_key) if isinstance(old_files.get(rel_key), dict) else None
-        if not args.force and not _is_safe_to_write(target, old_metadata, new_metadata):
-            if old_metadata:
-                new_files[rel_key] = old_metadata
-            if update and not args.strict:
-                preserved.append(relative)
-            else:
-                conflicts.append(relative)
-            continue
-        current = _current_hash(target)
-        if current != new_metadata["hash"]:
-            planned_writes.append(relative)
-        new_files[rel_key] = new_metadata
-
-    marker_key = _to_posix(PROJECT_MARKER_REL)
-    marker_target = target_root / PROJECT_MARKER_REL
-    marker_metadata = _project_marker_metadata(target_root)
-    marker_old_metadata = old_files.get(marker_key) if isinstance(old_files.get(marker_key), dict) else None
-    if not args.force and not _is_safe_to_write(marker_target, marker_old_metadata, marker_metadata):
-        if marker_old_metadata:
-            new_files[marker_key] = marker_old_metadata
-        if update and not args.strict:
-            preserved.append(PROJECT_MARKER_REL)
-        else:
-            conflicts.append(PROJECT_MARKER_REL)
-    else:
-        if _current_hash(marker_target) != marker_metadata["hash"]:
-            write_project_marker = True
-        new_files[marker_key] = marker_metadata
-
-    if update:
-        source_keys = {_to_posix(relative) for relative in entries}
-        source_keys.add(marker_key)
-        for rel_key, metadata in sorted(old_files.items()):
-            if rel_key in source_keys:
-                continue
-            if not isinstance(metadata, dict):
-                continue
-            target = target_root / rel_key
-            current = _current_hash(target)
-            if current is None:
-                continue
-            if current == metadata.get("hash"):
-                planned_removals.append(Path(rel_key))
-            else:
-                new_files[rel_key] = metadata
-                if not args.strict:
-                    preserved.append(Path(rel_key))
-                else:
-                    conflicts.append(Path(rel_key))
-
-    if conflicts:
-        print(
-            f"[imo install] refused to overwrite user-modified file(s): {_relative_list(conflicts)}",
-            file=sys.stderr,
-        )
-        print("[imo install] re-run with --force to overwrite", file=sys.stderr)
-        return 1
-
-    manifest = {
-        "files": new_files,
-        "gitignore": _ensure_gitignore(target_root, dry_run=args.dry_run),
+    state_root = root_resolver.project_state_root(target_root)
+    registration = state_root / "project.json"
+    payload = {
+        "schema_version": 1,
+        "project_id": root_resolver.project_id_for_path(target_root),
+        "project_root": str(target_root),
+        "install_mode": "global-zero-install",
+        "source": "imo",
     }
-
-    for relative in planned_writes:
-        _copy_entry(source_root, target_root, relative, dry_run=args.dry_run)
-
-    for relative in planned_removals:
-        if not args.dry_run:
-            target = target_root / relative
-            if target.is_symlink() or target.is_file():
-                target.unlink()
-
-    if write_project_marker:
-        _write_project_marker(target_root, dry_run=args.dry_run)
-
     if not args.dry_run:
-        _save_manifest(target_root, manifest)
-
+        state_root.mkdir(parents=True, exist_ok=True)
+        registration.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     action = "update" if update else "init"
-    print(f"[imo install] {action} complete: {target_root}")
-    print(
-        f"[imo install] files written: {len(planned_writes)}; "
-        f"files removed: {len(planned_removals)}; files preserved: {len(preserved)}"
-    )
-    if preserved:
-        print(f"[imo install] preserved user-modified file(s): {_relative_list(preserved)}")
-    print(f"[imo install] verify with: {target_root / 'imo'} verify")
+    mode = "dry-run" if args.dry_run else "complete"
+    print(f"[imo project] {action} {mode}: {target_root}")
+    print("[imo project] repository files written: 0")
+    print(f"[imo project] registration: {registration}")
+    print("[imo project] IMO is global; verify with: imo global status")
     return 0
 
 
@@ -387,9 +296,8 @@ def _uninstall(args: argparse.Namespace) -> int:
         return 1
 
     files = manifest.get("files", {})
-    if not isinstance(files, dict) or not files:
-        print(f"[imo install] no managed IMO install found: {target_root}", file=sys.stderr)
-        return 1
+    if not isinstance(files, dict):
+        files = {}
 
     conflicts: list[Path] = []
     removed = 0
@@ -415,28 +323,33 @@ def _uninstall(args: argparse.Namespace) -> int:
         print("[imo install] re-run uninstall with --force to remove them", file=sys.stderr)
         return 1
 
-    if not args.dry_run:
+    if not args.dry_run and files:
         _remove_gitignore_block(target_root, dry_run=False)
         manifest_path = target_root / MANIFEST_REL
         if manifest_path.exists():
             manifest_path.unlink()
         _cleanup_empty_dirs(target_root, [Path(".imo"), Path("scripts"), Path("skills")])
 
-    print(f"[imo install] uninstall complete: {target_root}")
-    print(f"[imo install] files removed: {removed}")
+    registration = root_resolver.project_state_root(target_root) / "project.json"
+    if not args.dry_run and registration.is_file():
+        registration.unlink()
+
+    print(f"[imo project] uninstall complete: {target_root}")
+    print(f"[imo project] legacy files removed: {removed}")
+    print("[imo project] runtime knowledge was preserved under ~/.imo/projects/")
     return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="imo install",
-        description="Install IMO direct-run framework assets into a target repository.",
+        description="Register projects for global IMO without installing repository-local framework assets.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     for name, help_text in (
-        ("init", "Install IMO into a target repository"),
-        ("update", "Refresh managed IMO files in a target repository"),
+        ("init", "Register a target repository with global IMO"),
+        ("update", "Refresh a target repository's global IMO registration"),
     ):
         sub = subparsers.add_parser(name, help=help_text)
         sub.add_argument("target", nargs="?", default=".", help="Target repository path")

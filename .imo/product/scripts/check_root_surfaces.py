@@ -167,6 +167,11 @@ def _check_skill_surfaces(contract: dict[str, Any]) -> list[str]:
         if not root_module.exists() and not root_module.is_symlink():
             errors.append(f"skills/{module}: missing root projection")
             continue
+        if root_module.is_symlink():
+            canonical_module = (product_source / module).resolve(strict=False)
+            if _link_target(root_module) != canonical_module:
+                errors.append(f"skills/{module}: module projection must point to {canonical_module}")
+            continue
         for canonical_file in sorted((product_source / module).rglob("*")):
             if canonical_file.is_dir():
                 continue

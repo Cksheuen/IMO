@@ -175,7 +175,6 @@ async def aggregate_node(state: OrchestrateState) -> Dict[str, Any]:
 |---------|----------------|
 | `verification-gate.sh` | `interrupt_before` + 条件边 |
 | `delta_context` 输出 | `state['delta_context']` 字段 |
-| `max_attempts` 保护 | `VerificationGate` 类 |
 
 **迁移代码**：
 ```python

@@ -1,5 +1,9 @@
 # IMO Prediction And Optimization Loop
 
+> Status: The cycles described here are historical context, not a forward plan.
+> Current truth is the KNOWLEDGE graph and contracts. Retired task framework
+> and host adapter projections are not roadmap.
+
 This document records the architecture prediction loop for the IMO three-plane
 design.
 
@@ -14,15 +18,14 @@ points, and deferred implementation gates.
 
 ## Baseline Architecture
 
-The expected completed architecture is:
+The current architecture is:
 
-- Trellis Task Plane remains independent.
-- IMO Capability Plane owns IMO-native skills, rules, metrics, feedback,
-  runtime helpers, and adapter contracts.
-- IMO Learning Plane owns shared learning signals, candidates, digests, user
-  preference adaptation, and Hermes-like self-iteration outputs.
-- External provider integration is optional.
-- Host adapter projection is gated by ownership and dry-run/diff checks.
+- Repo workflows are independent and self-contained; no host adapter is required.
+- Capability owns scripts, rules, skills, and verification for its scope.
+- Learning owns signals, candidates, reviewed digests, and profile updates.
+- Providers are optional integrations, not core dependencies.
+- Only IMO-owned Codex global hook, AGENTS, and skill links are managed, with
+  manifest, conflict detection, and doctor support.
 
 ## Cycle 1: Prediction
 
@@ -32,11 +35,11 @@ The expected completed architecture is:
 | --- | --- | --- |
 | Learning noise pool | raw signals become too numerous to interpret | growing `signals.jsonl`, repeated near-duplicate records |
 | Preference overfitting | temporary instruction becomes global behavior | agents apply a preference outside the original scope |
-| Self-iteration drift | Hermes-like loop reinforces its own incorrect candidates | candidate lineage mostly cites self-generated evidence |
+| Candidate drift | Background preparation reinforces its own incorrect candidates | candidate lineage mostly cites self-generated evidence |
 | Digest inconsistency | public agents read different digest versions | agent behavior differs without an explicit task reason |
 | Module classification drift | `native`, `provider-backed`, and `extension-candidate` labels stop matching dependencies | provider calls appear in native modules without metadata |
-| Provider optionality regression | optional provider integration becomes expected path | docs or scripts imply Trellis must go through IMO |
-| Host ownership conflict | `.claude/` / `.codex/` outputs are claimed by multiple owners | IMO manifest target overlaps Trellis template hashes |
+| Provider optionality regression | optional provider integration becomes expected path | docs or scripts imply external tools must go through IMO |
+| Host ownership conflict | host outputs are claimed by multiple owners | IMO manifest targets overlap an existing owner |
 | Global learning leakage | project-private facts enter `~/.imo/learning` | global digest contains project names, paths, or business facts |
 | CLI sprawl | users cannot tell which IMO command is normal vs advanced | command docs mix learning/provider/adapter flows together |
 | Maintenance paralysis | contributors fear editing because every plane appears coupled | small changes require reasoning across all planes |
@@ -49,14 +52,14 @@ The expected completed architecture is:
 | --- | --- |
 | Learning noise pool | require dedupe, TTL, confidence, source agent, scope, and promotion thresholds before automated promotion |
 | Preference overfitting | enforce priority: current user instruction > project rules > active digest > candidates > raw signals |
-| Self-iteration drift | Hermes-like loop may produce candidates only; active digest/rule updates require review |
+| Candidate drift | Background preparation may produce candidates only; active digest/rule updates require review |
 | Digest inconsistency | require digest id, version, scope, and `last_updated` before public-agent integration |
 | Module classification drift | require future machine-readable module metadata checked by `imo verify` |
-| Provider optionality regression | document Trellis and provider integration as optional advanced modes |
+| Provider optionality regression | document provider integration as an optional advanced mode |
 | Host ownership conflict | keep ownership audit, dry-run/diff, rollback, and dual-platform cutover requirements |
 | Global learning leakage | forbid project-private facts in global learning state by default |
 | CLI sprawl | separate common IMO commands from advanced provider/adapter commands |
-| Maintenance paralysis | preserve the plane decision rule: task -> Trellis, capability -> IMO, learning -> IMO Learning, external tool -> optional provider, host file -> adapter |
+| Maintenance paralysis | preserve the decision rule: task workflow -> repository/platform, capability -> IMO, learning -> IMO Learning, external tool -> optional provider |
 
 ## Cycle 2: Prediction
 
@@ -97,7 +100,7 @@ Future `imo verify` should grow in this order:
 3. Check learning schemas and promotion policy files exist before learning write
    commands are enabled.
 4. Check provider discovery is read-only.
-5. Check host adapter manifests do not overlap Trellis ownership.
+5. Check any managed output does not overlap another owner.
 6. Check runtime logs have rotation or size controls.
 
 ## Cycle 3: Prediction
@@ -125,7 +128,7 @@ These rules turn the remaining risks into review checklists:
 | Privacy | ambiguous facts stay project-local; global learning stores user behavior preferences, not project facts |
 | Advanced docs | provider and adapter docs stay separate from common IMO usage docs |
 | Review fatigue | promotion batches should be small and rejectable item-by-item |
-| Independence | test Trellis direct flow and IMO native verify separately before adding integrations |
+| Independence | test external tools directly and IMO native verification separately before adding integrations |
 | Red-team cadence | rerun this prediction loop before learning writes, provider invocation, or host adapter writes ship |
 
 ### Digest Quality Rubric
@@ -158,6 +161,17 @@ Global learning must not store:
 
 If scope is ambiguous, keep the item project-local.
 
+## Current capability correction
+
+The current IMO implementation has a learning CLI and deferred review workflow;
+it does not have a separate autonomous promotion actor. Compare delegation
+against direct execution using observed quality, latency, and context cost;
+model capability claims alone do not justify retiring a control. Routing is a
+task-shaping decision: pure explanation, planning, and bounded reads stay in
+the main session; small bounded implementation fixes may use one Herdr worker
+by default, while larger mechanical work may be split. In both cases the same
+source, runtime, staging, and verification boundaries apply.
+
 ## Cycle 4: Prediction
 
 After Cycle 3 optimization, remaining risks are mostly process risks.
@@ -176,14 +190,11 @@ No remaining risk currently requires changing the core three-plane architecture.
 
 The current design is sufficiently complete when these conditions hold:
 
-- Trellis can run without IMO.
-- IMO native verification can run without Trellis provider integration.
-- Learning influence is inspectable, disableable, and reversible.
-- Hermes-like self-iteration cannot mutate active rules or skill source directly.
-- External providers remain optional and degrade cleanly.
-- Host writes remain gated by ownership, dry-run/diff, and rollback.
-- Module classification has a path from prose to machine-checkable metadata.
-- Active digest quality and privacy classification have review rubrics.
+- All changes have strict tracked sources in KNOWLEDGE/contracts.
+- Diagnostic states are explicit and recorded.
+- Learning review is explicit before digest/profile changes are accepted.
+- Verification runs in an isolated lifecycle and passes before completion.
+- No future host adapters or task framework work is implied or required.
 
 If a future prediction loop finds a risk that violates one of these conditions,
 open a new architecture task before implementation continues.

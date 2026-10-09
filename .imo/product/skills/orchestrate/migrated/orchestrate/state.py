@@ -1,7 +1,7 @@
 """
 State definitions for Orchestrate LangGraph migration.
 
-Maps CC feature-list.json and PRD to LangGraph State.
+Defines the runtime state used by the optional LangGraph executor.
 """
 from typing import TypedDict, Annotated, Optional, List, Dict, Any
 from datetime import datetime
@@ -54,7 +54,7 @@ class OrchestrateState(TypedDict):
     """
     Main state for the orchestrate LangGraph.
 
-    Corresponds to CC's feature-list.json + PRD + runtime state.
+    Carries execution items, verification results, and runtime coordination state.
     """
     # Task metadata
     task_id: str
@@ -137,8 +137,7 @@ def create_feature(
     feature_id: str,
     description: str,
     acceptance_criteria: List[str],
-    verification_method: str = "manual",
-    max_attempts: int = 3
+    verification_method: str = "manual"
 ) -> Feature:
     """Create a new feature."""
     return Feature(
@@ -149,8 +148,6 @@ def create_feature(
         verification_method=verification_method,
         passes=None,
         verified_at=None,
-        attempt_count=0,
-        max_attempts=max_attempts,
         notes="",
         delta_context=None
     )
@@ -262,10 +259,8 @@ def update_feature_result(
             updated_feature["verified_at"] = datetime.now().isoformat()
             updated_feature["notes"] = notes
             if passes:
-                updated_feature["attempt_count"] = 1
                 updated_feature["delta_context"] = None
             else:
-                updated_feature["attempt_count"] = f["attempt_count"] + 1
                 updated_feature["delta_context"] = delta_context
             features.append(updated_feature)
         else:

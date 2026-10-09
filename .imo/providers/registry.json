@@ -6,7 +6,6 @@
     "external_source_policy": "do-not-vendor-by-default"
   },
   "categories": [
-    "task-provider",
     "plugin-provider",
     "skill-provider",
     "runtime-provider",
@@ -19,28 +18,6 @@
     "ok"
   ],
   "providers": [
-    {
-      "id": "trellis",
-      "name": "Trellis",
-      "category": "task-provider",
-      "ownership": {
-        "owned_by_imo": false,
-        "source_policy": "external",
-        "normal_use": "direct"
-      },
-      "discovery": {
-        "read_only": true,
-        "inputs": [".trellis/"]
-      },
-      "invocation": {
-        "default_enabled": false,
-        "requires_explicit_task": true
-      },
-      "health": {
-        "default_status": "not_installed",
-        "missing_is_failure": false
-      }
-    },
     {
       "id": "claude-code-plugins",
       "name": "Claude Code Plugins",
@@ -153,4 +130,3 @@
     }
   ]
 }
-

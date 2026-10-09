@@ -39,7 +39,7 @@ CC 实现 → Codex review → 有问题？→ Codex rescue 诊断 → CC review
 
 ### Step 0: 初始化审查报告
 
-创建或更新 `dual-review-report.json`（位于当前项目 task 目录，若无 task 则放在 cwd）：
+创建或更新 `dual-review-report.json`（位于用户或仓库指定的报告目录；未指定时放在 cwd）：
 
 ```json
 {
@@ -184,16 +184,6 @@ current_round < max_rounds？
     │
     └─ 否 → 输出最终报告 → 标记 status = "max_rounds_reached" → 结束
 ```
-
-## 与 feature-list.json 集成
-
-如果当前 task 目录存在 `feature-list.json`，每轮结束后同步更新：
-
-- Codex review 发现的 critical/high 问题 → 对应 feature 的 `passes` 设为 `false`
-- CC implementer 修复后 → 对应 feature 的 `passes` 重置为 `null`（等待下轮验证）
-- 最终通过 → 对应 feature 的 `passes` 设为 `true`
-
-这确保 verification-gate 的 Stop hook 能感知双重审查的状态。
 
 ## 最终报告格式
 

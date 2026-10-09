@@ -12,10 +12,10 @@ The learning plane manages:
 - correction signals
 - recurring failure patterns
 - lesson candidates
-- Hermes-like self-iteration outputs
+- model-assisted candidate preparation outputs
 - active learning digests consumed by agents
 
-It does not own Trellis tasks, provider source, or host-generated files.
+It does not own repository task state, provider source, or host-generated files.
 
 ## Storage Boundaries
 
@@ -34,16 +34,16 @@ Durable protocol and policy:
   policies/
 ```
 
-Project-local runtime state:
+Global project-scoped runtime state:
 
 ```text
-.imo/.runtime/learning/
+~/.imo/projects/<project-id>/runtime/learning/
   signals.jsonl
   candidates.jsonl
   digest.json
   events.jsonl
 
-.imo/.runtime/session/
+~/.imo/projects/<project-id>/runtime/session/
   activity.json
 ```
 
@@ -93,7 +93,7 @@ verification command validates it through
 | Level | Description | Writer | Promotion gate |
 | --- | --- | --- | --- |
 | Raw signal | Single correction, failure, preference hint, or behavior observation | Any public agent | None |
-| Candidate | Aggregated or high-value lesson proposal | IMO learning workflow or Hermes-like loop | Required before digest |
+| Candidate | Aggregated or high-value lesson proposal | IMO learning workflow | Required before digest |
 | Active digest | Short behavior guidance read by public agents | IMO learning workflow | Required |
 | Hard rule / skill update | Long-lived rule, skill, or source change | Explicit task/review | Required |
 
@@ -146,11 +146,9 @@ Public agents must not:
 
 Public agents include:
 
-- Trellis implement/check/research agents
 - Claude Code main agents
 - Codex main/review agents
 - IMO native skills
-- Hermes-like self-iteration agents
 - dual-review-loop
 - orchestrate
 - multi-model-agent
@@ -183,8 +181,8 @@ current explicit user instruction
 - Ambiguous privacy scope defaults to project-local.
 - Dedupe should run before candidate generation.
 - Digest generation should enforce max length and scope filtering.
-- Hermes-like self-iteration may propose candidates but must not directly change
-  active rules or skill source.
+- Background candidate preparation may propose candidates but must not directly
+  change active rules or skill source. There is no autonomous promotion path.
 - Conflicting candidates must remain unresolved until reviewed or enough
   evidence separates them.
 - Runtime activity state is only an operational signal. It must not be treated
@@ -211,7 +209,8 @@ explicit review command
 
 `active`, `post_turn`, and `quiescent` are runtime states for hooks and CLI
 commands. They are not task-completion proof. Only explicit review commands with
-review and rollback metadata may promote an item into the active digest.
+review and rollback metadata may promote an item into the active digest. The
+current implementation does not provide an autonomous promotion actor.
 
 ## Digest Quality Rubric
 
@@ -311,7 +310,8 @@ imo learning list --scope project|global|merged
 imo learning inspect <id>
 ```
 
-These commands read `.imo/.runtime/learning/digest.json` when present. They must
+These commands read the active project runtime `learning/digest.json` when
+present. They must
 not create runtime files or mutate learning state.
 
 The scoped list form reads project digest state from the current project,
@@ -326,7 +326,7 @@ imo learning signal list
 imo learning signal add --summary <text>
 ```
 
-`signal list` reads `.imo/.runtime/learning/signals.jsonl` when present and
+`signal list` reads the project runtime `learning/signals.jsonl` when present and
 must not create runtime files. `signal add` appends a raw signal only; it must
 not create candidates, active digests, hard rules, skill changes, provider
 changes, or host-output changes.
@@ -340,8 +340,8 @@ imo learning candidate inspect <id>
 imo learning candidate reject <id> --reason <text>
 ```
 
-Candidate commands read raw signals and write
-`.imo/.runtime/learning/candidates.jsonl` only. They must not mutate active
+Candidate commands read raw signals and write the project runtime
+`learning/candidates.jsonl` only. They must not mutate active
 digest state.
 
 Current activity CLI support:
@@ -351,7 +351,7 @@ imo learning activity status
 imo learning activity mark --state active|post_turn|quiescent
 ```
 
-`activity status` reads `.imo/.runtime/session/activity.json` when present and
+`activity status` reads the project runtime `session/activity.json` when present and
 must not create runtime files. `activity mark` writes session activity state
 only; it must not create candidates, active digests, hard rules, skill changes,
 provider changes, or host-output changes.
@@ -397,7 +397,7 @@ imo learning metrics summary
 imo learning metrics summary --json
 ```
 
-Metrics commands read `.imo/.runtime/learning/events.jsonl` when present and
+Metrics commands read the project runtime `learning/events.jsonl` when present and
 must not create runtime files. Missing events are a clean zero summary. They
 report aggregate event counts, candidate creation/update counts, review
 decisions, digest controls, context digest injection counts, and explicit safety

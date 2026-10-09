@@ -1,8 +1,9 @@
 # Runtime Ignore Boundary
 
-The runtime model follows the Trellis-style hybrid split:
+The runtime model uses a source/state split:
 
 - Stable logic, schemas, and documented contracts stay versioned under `.imo/runtime/`.
-- High-churn local state stays under `.imo/.runtime/`.
-- `.imo/.gitignore` ignores `.imo/.runtime/` so session pointers, caches, locks, and other local state do not enter source control.
-- The current repo does not allow IMO runtime state to drive Trellis-owned host projection. If future IMO-native runtime state appears under `.imo/.runtime/`, it must remain ignored and non-authoritative.
+- Source-checkout verification fixtures may use ignored `.imo/.runtime/`.
+- Normal operation stores project state under
+  `~/.imo/projects/<project-id>/runtime/`, so consumer repositories stay clean.
+- Runtime state must remain ignored, rebuildable where possible, and non-authoritative for versioned product behavior.

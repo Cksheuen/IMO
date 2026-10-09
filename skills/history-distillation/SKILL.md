@@ -1,0 +1,1 @@
+../../.imo/product/skills/history-distillation/SKILL.md

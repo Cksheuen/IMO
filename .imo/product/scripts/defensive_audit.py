@@ -19,9 +19,7 @@ SCAN_SCOPE = [
     ".imo/BOUNDARY.md",
     ".imo/README.md",
     ".imo/RUNBOOK.md",
-    ".imo/ROADMAP.md",
     ".imo/product/scripts/CONTRACT.md",
-    ".imo/product/scripts/audit_managed_ownership.py",
     ".imo/product/scripts/check_project_profile_contracts.py",
     ".imo/product/scripts/codex_context.py",
     ".imo/product/scripts/learning.py",
@@ -30,9 +28,6 @@ SCAN_SCOPE = [
     ".imo/runtime/CONTRACT.md",
     ".imo/runtime/defensive-audit/CONTRACT.md",
     ".imo/runtime/project-profile/CONTRACT.md",
-    ".trellis/spec/backend/imo-managed-outputs.md",
-    ".trellis/spec/backend/imo-managed-outputs/repo-local-defensive-programming-audit.md",
-    ".trellis/spec/backend/imo-managed-outputs/repo-local-imo-verification-suite.md",
 ]
 
 
@@ -152,7 +147,7 @@ def _build_findings() -> list[dict[str, Any]]:
                 category="keep",
                 severity="info",
                 match=match,
-                reason="External providers are optional and must not break IMO native commands or Trellis task flow.",
+                reason="External providers are optional and must not break IMO native commands or repository workflows.",
                 recommendation="Keep provider degradation at provider boundaries, not inside core command logic.",
             )
         )

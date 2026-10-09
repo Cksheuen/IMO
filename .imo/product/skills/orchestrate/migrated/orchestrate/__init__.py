@@ -71,7 +71,6 @@ from .verification import (
     has_pending_features,
     has_failed_features,
     all_features_passed,
-    get_exceeded_features,
     reviewer_verify_feature,
 )
 
@@ -119,6 +118,5 @@ __all__ = [
     "has_pending_features",
     "has_failed_features",
     "all_features_passed",
-    "get_exceeded_features",
     "reviewer_verify_feature",
 ]

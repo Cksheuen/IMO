@@ -32,24 +32,17 @@ class DeltaContext(TypedDict):
     files_to_skip: List[str]
 
 
-class RetryableFeature(TypedDict):
-    """Minimal feature shape that supports iterative execution."""
+class ReviewableFeature(TypedDict):
+    """Feature shape used by verification-oriented runtimes."""
 
     id: str
     category: str
     description: str
     passes: Optional[bool]
     notes: str
-    attempt_count: int
-
-
-class ReviewableFeature(RetryableFeature):
-    """Feature shape used by verification-oriented runtimes."""
-
     acceptance_criteria: List[str]
     verification_method: str
     verified_at: Optional[str]
-    max_attempts: int
 
 
 class ProgressEvent(TypedDict):

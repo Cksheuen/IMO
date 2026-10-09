@@ -1,0 +1,10 @@
+project/node_modules/
+project/dist/
+test-results/
+coverage/
+playwright-report/
+*.log
+*.tmp
+*.temp
+.DS_Store
+.eslintcache
