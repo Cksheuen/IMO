@@ -9,7 +9,9 @@ import tempfile
 
 
 ROOT = Path(__file__).resolve().parents[4]
-PYCACHE_PREFIX = Path(os.environ.get("PYTHONPYCACHEPREFIX", "/private/tmp/cc-codex-framework-pycache"))
+PYCACHE_PREFIX = Path(
+    os.environ.get("PYTHONPYCACHEPREFIX", str(Path(tempfile.gettempdir()) / "imo-pycache"))
+)
 
 
 def fixture_runtime_root() -> Path:

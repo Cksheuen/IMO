@@ -39,6 +39,21 @@ jobs:
       - name: python3 .imo/product/scripts/check_tracked_references.py --require-tracked --json
         run: python3 .imo/product/scripts/check_tracked_references.py --require-tracked --json
       - name: ./imo verify
-        run: ./imo verify
+        run: |
+          set -o pipefail
+          ./imo verify 2>&1 | tee "$RUNNER_TEMP/imo-verify.log"
+      - name: Report verification failures
+        if: failure()
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          log = Path(os.environ["RUNNER_TEMP"]) / "imo-verify.log"
+          if log.exists():
+              failures = [line for line in log.read_text().splitlines() if "[imo verify] failed" in line]
+              for line in failures[:20]:
+                  escaped = line.replace("%", "%25").replace("\r", "%0D")
+                  print(f"::error::{escaped}")
+          PY
       - name: npm pack --dry-run
         run: npm pack --dry-run
