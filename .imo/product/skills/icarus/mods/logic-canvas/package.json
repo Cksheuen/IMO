@@ -1,0 +1,15 @@
+{
+  "name": "@imo/icarus-mod-logic-canvas",
+  "version": "0.2.15",
+  "type": "module",
+  "description": "logic-canvas migrated from current David source",
+  "files": [
+    "mod.json",
+    "dist/index.mjs"
+  ],
+  "exports": "./dist/index.mjs",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "license": "MIT"
+}

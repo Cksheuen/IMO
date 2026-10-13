@@ -1,0 +1,40 @@
+{
+  "name": "@imo/icarus",
+  "version": "0.4.2",
+  "type": "module",
+  "description": "Framework-independent HTML review and portable hot-pluggable mods",
+  "bin": {
+    "icarus": "scripts/cli.mjs"
+  },
+  "files": [
+    "SKILL.md",
+    "agents",
+    "assets/runtime",
+    "scripts",
+    "references",
+    "mod-catalog.json",
+    "mods"
+  ],
+  "dependencies": {
+    "es-module-lexer": "^1.7.0",
+    "fflate": "^0.8.2",
+    "parse5": "^7.3.0",
+    "semver": "^7.7.2",
+    "tar-stream": "^3.1.7",
+    "esbuild": "^0.25.12",
+    "postcss": "^8.5.6",
+    "postcss-selector-parser": "^7.1.0"
+  },
+  "engines": {
+    "node": ">=20.11"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "check": "node scripts/check.mjs",
+    "test": "node --test --test-concurrency=1 tests/*.test.mjs"
+  }
+}

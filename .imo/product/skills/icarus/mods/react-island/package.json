@@ -1,0 +1,15 @@
+{
+  "name": "@imo/icarus-mod-react-island",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "宿主提供 React 与真实组件的独立渲染岛",
+  "files": [
+    "mod.json",
+    "index.mjs"
+  ],
+  "exports": "./index.mjs",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "license": "MIT"
+}

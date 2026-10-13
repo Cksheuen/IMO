@@ -1,0 +1,22 @@
+{
+  "schema": "icarus-mod/v1",
+  "id": "code-flow",
+  "version": "0.2.15",
+  "apiVersion": 1,
+  "entry": "dist/index.mjs",
+  "description": "code-flow migrated from current David source",
+  "files": [
+    "dist/index.mjs"
+  ],
+  "requires": {
+    "react-runtime": "^0.1.0"
+  },
+  "detect": [
+    {
+      "tag": "div",
+      "attributes": [
+        "data-icarus-code-flow"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "icarus-mod/v1",
+  "id": "resource-cards",
+  "version": "0.1.1",
+  "apiVersion": 1,
+  "entry": "dist/index.mjs",
+  "description": "Traceable service and configuration cards with deployment evidence",
+  "files": [
+    "dist/index.mjs"
+  ],
+  "requires": {
+    "react-runtime": "^0.1.0"
+  },
+  "detect": [
+    {
+      "tag": "div",
+      "attributes": [
+        "data-icarus-resource-cards"
+      ]
+    }
+  ]
+}

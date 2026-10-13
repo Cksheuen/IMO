@@ -145,6 +145,17 @@ and hooks JSON preflight without writes. After apply, run
 `imo global doctor --json`; a nonzero exit or any `missing`, `modified`,
 `stale`, or `conflict` state means stop and inspect the reported surface.
 
+## Icarus Runtime Adoption
+
+IMO includes the Icarus skill and 19 bundled mod runtime packages. After
+updating the checkout, run `npm ci --ignore-scripts --registry https://registry.npmjs.org`
+inside `.imo/product/skills/icarus`, then `npm run check` and `npm test`.
+The root skill projection is installed by the existing global install flow.
+An existing unmanaged global Icarus directory must be backed up and explicitly
+migrated before replacing it with a projection; do not overwrite it with force.
+Runtime data and running services remain unchanged. See the skill's
+`references/imo-distribution.md` for the runtime snapshot and source-build boundary.
+
 ## Consumer Projects
 
 Consumer projects require no framework installation. IMO resolves a project

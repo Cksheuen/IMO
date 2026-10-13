@@ -1,0 +1,14 @@
+{
+  "name": "@imo/icarus-mod-parameter-lab",
+  "version": "0.1.0",
+  "type": "module",
+  "files": [
+    "mod.json",
+    "index.mjs"
+  ],
+  "exports": "./index.mjs",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "license": "MIT"
+}
