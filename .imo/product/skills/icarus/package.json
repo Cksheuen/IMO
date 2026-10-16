@@ -13,7 +13,8 @@
     "scripts",
     "references",
     "mod-catalog.json",
-    "mods"
+    "mods",
+    "project"
   ],
   "dependencies": {
     "es-module-lexer": "^1.7.0",

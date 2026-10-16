@@ -1,0 +1,5 @@
+node_modules/
+mods/*/dist/
+artifacts/
+*.tsbuildinfo
+.icarus-david.local.json

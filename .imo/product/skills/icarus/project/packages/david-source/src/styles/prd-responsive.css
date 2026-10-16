@@ -1,0 +1,34 @@
+@container prd (max-width: 719px) {
+  .inspector-shell .trd-cells-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .inspector-shell .trd-table-head {
+    display: none;
+  }
+}
+
+/* A stacked inspector row uses natural content height, including at wide desktop viewports. */
+.inspector-shell .trd-cells-grid {
+  align-items: start;
+}
+.inspector-shell .trd-cells-grid > .trd-cell {
+  min-height: 0;
+  height: auto;
+}
+.inspector-shell .disclosure-cell {
+  min-height: 0;
+}
+.disclosure-inline-content:empty {
+  display: none;
+}
+.disclosure-inline-content .trd-sections-list,
+.disclosure-inline-content .trd-circ {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+.disclosure-bullets {
+  list-style: decimal;
+}
+.disclosure-bullet-subs {
+  list-style: lower-alpha;
+}

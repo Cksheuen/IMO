@@ -1,0 +1,16 @@
+{
+  "schema": "icarus-mod/v1",
+  "id": "code-notes",
+  "version": "0.1.0",
+  "apiVersion": 1,
+  "entry": "index.mjs",
+  "description": "可卸载的代码说明",
+  "files": ["index.mjs"],
+  "requires": {},
+  "detect": [
+    {
+      "tag": "pre",
+      "attributes": ["data-code-note"]
+    }
+  ]
+}

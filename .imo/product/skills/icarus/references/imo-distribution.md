@@ -6,9 +6,11 @@
 
 首次使用，在本目录运行 `npm ci --ignore-scripts --registry https://registry.npmjs.org`，随后执行 `npm run check` 和 `npm test`。`node scripts/cli.mjs mod list` 应能在空的 `ICARUS_MODS_DIR` 下列出全部内置 mod。使用 `ICARUS_RUNTIME_DIR` 和 `ICARUS_MODS_DIR` 隔离测试数据。
 
-`mods/` 是经过校验的运行包快照，不包含原开发 workspace 的 TSX 源码，也不宣称可以重建这些预编译模块。保留包内第三方许可证注释。通用 `mod init/build/pack` 功能继续可用；涉及 `@david` 源码组合、原 workspace 的 catalog/contribute 操作，需要单独提供文档中约定的完整 Icarus 开发 workspace。不要直接修改预编译模块来修功能。
+`mods/` 保留已验证的运行包，React/TSX、CSS、共享适配层和离线 David 组件快照已收录在 [project/](../project/README.md)。该 workspace 直接复用本 skill 的编译器与评论内核，没有第二份 core 实现。在 `project/` 安装依赖后可以类型检查、构建 15 个编译型 mod、检查模块边界并执行源码测试；另外两个 mod 直接使用 ESM 源码。保留所有第三方许可证注释。
 
-维护 core 时修改本目录的源码。更新内置 mod 时，从可信开发 workspace 重新 build/pack 后导入完整运行包、执行脱敏，再运行 `node scripts/check.mjs --write-catalog` 和测试。注册信息位于 IMO modules registry；仓库根 `skills/icarus` 是兼容链接。
+源码导入于 2026-10-16，版本对应关系和原始文件摘要在 `source-import-manifest.json`。研究工作台和富文本源码比已导入的运行包更新，构建仅写 `project/mods/*/dist/`，不会把这些源码版本自动发布为运行包。`parameter-lab` 与 `terrain-view` 的可读 ESM 源码已随原运行包收录。原 marketplace 的 catalog/contribute 布局与此嵌入式源码 workspace 不同；IMO 更新运行包时按下一段流程操作。
+
+维护 core 时修改本目录的源码，维护 React/mod 时进入 `project/` 的对应模块。更新内置 mod 时，先在源码 workspace 重新 build，再用本 skill 的 `mod pack` 导出完整运行包、验证并执行脱敏，最后显式导入上层 `mods/`、运行 `node scripts/check.mjs --write-catalog` 和测试。注册信息位于 IMO modules registry；仓库根 `skills/icarus` 是兼容链接。
 
 导入时发现全局说明领先于全局运行代码：`feedback context/maintain/restore` 出现在帮助和文档，但对应 CLI/API 尚未实现；拆分 archive、transactions 的维护逻辑也没有包含在全局安装包中。当前使用 `feedback get/list` 读取完整评论和选区，支持现有回复与 task 队列；不要按较新说明手工迁移存储。本次保留全局实际实现，未混入另一个开发目录的存储迁移代码。这些未实现命令不计入通过的验证范围。
 

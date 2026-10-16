@@ -156,6 +156,13 @@ migrated before replacing it with a projection; do not overwrite it with force.
 Runtime data and running services remain unchanged. See the skill's
 `references/imo-distribution.md` for the runtime snapshot and source-build boundary.
 
+React/TSX mod sources, shared adapters, and the offline David component snapshot
+are included in `.imo/product/skills/icarus/project`. After the parent skill's
+dependencies are installed, run `npm ci --ignore-scripts --registry https://registry.npmjs.org`,
+`npm run typecheck`, `npm run build`, `npm run check`, and `npm test` in that
+directory. Builds use the tracked snapshot and leave the bundled runtime mods
+unchanged. See the project's README for the source/runtime version mapping.
+
 ## Consumer Projects
 
 Consumer projects require no framework installation. IMO resolves a project

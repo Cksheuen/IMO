@@ -31,6 +31,14 @@ jobs:
           npm ci --ignore-scripts --registry https://registry.npmjs.org --no-audit --no-fund
           npm run check
           npm test
+      - name: Verify Icarus React sources
+        working-directory: .imo/product/skills/icarus/project
+        run: |
+          npm ci --ignore-scripts --registry https://registry.npmjs.org --no-audit --no-fund
+          npm run typecheck
+          npm run build
+          npm run check
+          npm test
       - name: Check whitespace in pull request
         if: github.event_name == 'pull_request'
         env:

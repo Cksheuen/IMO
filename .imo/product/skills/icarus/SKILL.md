@@ -7,6 +7,8 @@ description: 在任意本地 HTML TRD 上添加选区评论与默认本机 Agent
 
 IMO 收录版包含可离线加载的 mod 运行包。首次安装、升级或维护前读 [IMO 分发与维护](references/imo-distribution.md)；包名不表示已发布到公共 npm。该说明记录了导入时全局文档领先于运行代码的边界，涉及 `context/maintain/restore` 和存储迁移时优先遵循该说明。
 
+查看或修改 React/TSX、mod 组件及共享 David 组件时，从 [源码目录与构建指南](project/README.md) 进入；源码位于 `project/mods/` 和 `project/packages/`，上层 `mods/` 是已发布到本仓库的运行快照。
+
 以原 HTML 为可编辑来源，生成独立 review HTML。框选、完整选区文字、评论、草稿、本机持久化与 Agent 读写始终内置；它们不能作为可关闭的 mod。独立使用，不替换其他 Skill 的事实源或审批流程。
 
 `<skill>` 是本 SKILL.md 所在目录。Node >=20.11；首次使用若缺依赖，在此目录运行 `npm install --ignore-scripts`。npm 安装用户可直接使用 `icarus`，其他环境把下文命令中的 `icarus` 替换为 `node <skill>/scripts/cli.mjs`，不假设系统已存在同名命令。

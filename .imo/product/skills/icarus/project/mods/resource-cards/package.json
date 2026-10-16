@@ -1,0 +1,24 @@
+{
+  "name": "@imo/icarus-mod-resource-cards",
+  "version": "0.1.1",
+  "type": "module",
+  "description": "Traceable service and configuration cards with deployment evidence",
+  "scripts": {
+    "build": "node ../../../scripts/mod.mjs build ."
+  },
+  "files": [
+    "mod.json",
+    "dist/index.mjs"
+  ],
+  "exports": "./dist/index.mjs",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "license": "MIT",
+  "icarusBuild": {
+    "entry": "src/index.tsx",
+    "sharedReact": true,
+    "davidSource": true,
+    "publicEntry": "src/public.ts"
+  }
+}

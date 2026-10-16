@@ -1,0 +1,12 @@
+.icarus-rich-document { font-size: 14px; line-height: 1.75; }
+.icarus-rich-document .icarus-document-section { margin: 24px 0; }
+.icarus-rich-document h3 { font-size: 15px; line-height: 1.5; margin: 0 0 10px; }
+.icarus-rich-document p { margin: 8px 0; }
+.icarus-rich-document ul { padding-left: 20px; margin: 8px 0; }
+.icarus-rich-document li { margin: 6px 0; }
+.icarus-rich-document code { font: .88em/1.6 ui-monospace, monospace; background: #94734b12; border-radius: 3px; padding: 1px 3px; overflow-wrap: anywhere; }
+.icarus-document-table { width: 100%; overflow-x: auto; }
+.icarus-rich-document table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; }
+.icarus-rich-document th, .icarus-rich-document td { padding: 10px 12px; border-bottom: 1px solid var(--line, #ddcdb4); vertical-align: top; text-align: left; overflow-wrap: anywhere; }
+.icarus-rich-document th { background: #94734b0c; font-weight: 600; }
+.icarus-rich-document a { color: var(--accent, #985132); text-underline-offset: 3px; }

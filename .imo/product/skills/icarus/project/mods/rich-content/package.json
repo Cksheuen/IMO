@@ -1,0 +1,24 @@
+{
+  "name": "@imo/icarus-mod-rich-content",
+  "version": "0.2.16",
+  "type": "module",
+  "description": "rich-content migrated from current David source",
+  "scripts": {
+    "build": "node ../../../scripts/mod.mjs build ."
+  },
+  "files": [
+    "mod.json",
+    "dist/index.mjs"
+  ],
+  "exports": "./dist/index.mjs",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "license": "MIT",
+  "icarusBuild": {
+    "entry": "src/index.tsx",
+    "sharedReact": true,
+    "davidSource": true,
+    "publicEntry": "src/public.tsx"
+  }
+}

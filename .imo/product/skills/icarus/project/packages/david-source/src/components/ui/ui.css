@@ -1,0 +1,274 @@
+/*
+ * david shared UI primitives (contract: ui component library).
+ * Class names are prefixed with `dv-ui-` to stay isolated from the
+ * existing trd- and comment-rail- style surfaces; colors reuse the page
+ * theme tokens defined in src/styles/index.css so the components match the
+ * paper/ink palette (and the dark source-code surfaces where embedded).
+ */
+
+.dv-ui-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 1px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.dv-ui-chip > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dv-ui-chip--accent {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--card));
+}
+
+.dv-ui-chip--gold {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 10%, var(--card));
+}
+
+.dv-ui-chip--muted {
+  border-color: var(--line);
+  color: var(--muted);
+  background: transparent;
+}
+
+.dv-ui-chip--danger {
+  border-color: #9c3d2e;
+  color: #9c3d2e;
+  background: color-mix(in srgb, #9c3d2e 8%, var(--card));
+}
+
+.dv-ui-chip--success {
+  border-color: #2f7a58;
+  color: #2f7a58;
+  background: color-mix(in srgb, #2f7a58 8%, var(--card));
+}
+
+.dv-ui-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    border-color 160ms var(--ease-motion),
+    background-color 160ms var(--ease-motion),
+    color 160ms var(--ease-motion);
+}
+
+.dv-ui-icon-button:hover:not(:disabled),
+.dv-ui-icon-button:focus-visible:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--hover-soft);
+  color: var(--accent);
+  outline: none;
+}
+
+.dv-ui-icon-button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--card));
+  color: var(--accent);
+}
+
+.dv-ui-icon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dv-ui-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dv-ui-toolbar-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dv-ui-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(43, 30, 16, 0.45);
+  animation: dv-ui-fade-in 180ms var(--ease-motion) both;
+}
+
+.dv-ui-modal {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  animation: dv-ui-rise-in 220ms var(--ease-motion) both;
+}
+
+.dv-ui-modal--wide {
+  width: min(920px, 100%);
+}
+
+@keyframes dv-ui-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dv-ui-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dv-ui-modal-backdrop,
+  .dv-ui-modal {
+    animation: none;
+  }
+}
+
+.dv-ui-disclosure {
+  margin: 0;
+}
+
+.dv-ui-disclosure > summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  list-style: none;
+  border-radius: 6px;
+}
+
+.dv-ui-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.dv-ui-disclosure > summary:focus-visible {
+  outline: 2px solid var(--hover-outline);
+  outline-offset: 2px;
+}
+
+.dv-ui-disclosure > summary .dv-ui-disclosure-marker {
+  flex: none;
+  font-size: 10px;
+  color: var(--muted);
+  transition: transform 160ms var(--ease-motion);
+}
+
+.dv-ui-disclosure[open] > summary .dv-ui-disclosure-marker {
+  transform: rotate(90deg);
+}
+
+.dv-ui-disclosure-body {
+  margin-top: 6px;
+}
+
+/* Supporting material panels stay below comments (45) and capture (10000+). */
+.dv-ui-panel-host {
+  z-index: 44;
+  pointer-events: none;
+  background: transparent;
+  padding: 16px;
+}
+.dv-ui-panel-host > .dv-ui-modal {
+  pointer-events: auto;
+}
+@media (min-width: 981px) {
+  body.comment-rail-open .dv-ui-panel-host {
+    right: calc(clamp(240px, 24vw, 320px) + clamp(8px, 2vw, 16px) + 8px);
+  }
+  body.comment-rail-collapsed .dv-ui-panel-host {
+    right: 60px;
+  }
+}
+
+.dv-ui-chevron {
+  display: block;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  transition: transform 200ms var(--ease-motion);
+}
+.dv-ui-collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    grid-template-rows 200ms var(--ease-motion),
+    opacity 160ms ease,
+    visibility 0s;
+}
+.dv-ui-collapse[data-open="false"] {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition-delay: 0s, 0s, 200ms;
+}
+.dv-ui-collapse-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.inspector-shell[data-navigation="direct"] .dv-ui-collapse,
+.inspector-shell[data-navigation="direct"] .dv-ui-chevron {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dv-ui-collapse,
+  .dv-ui-chevron {
+    transition: none;
+  }
+}
+.dv-ui-auto-textarea {
+  box-sizing: border-box;
+  width: 100%;
+  max-height: 100dvh;
+  flex-shrink: 0;
+  overflow-y: auto;
+  transition: height 180ms var(--ease-motion, ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dv-ui-auto-textarea {
+    transition: none;
+  }
+}
