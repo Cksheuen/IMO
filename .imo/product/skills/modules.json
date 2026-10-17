@@ -318,20 +318,6 @@
         "read_digest": true,
         "write_signals": true
       }
-    },
-    {
-      "id": "icarus",
-      "name": "icarus",
-      "classification": "native",
-      "owner_surface": ".imo/product/skills/icarus",
-      "lifecycle": "adopted",
-      "default_enabled": true,
-      "allowed_integration_modes": ["direct", "extension"],
-      "external_dependencies": [],
-      "learning_access": {
-        "read_digest": false,
-        "write_signals": true
-      }
     }
   ]
 }

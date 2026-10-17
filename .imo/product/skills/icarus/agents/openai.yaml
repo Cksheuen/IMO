@@ -1,4 +1,0 @@
-interface:
-  display_name: "Icarus / 伊卡洛斯"
-  short_description: "任意 HTML 的选区评论、本机 Agent 通道与独立 ZIP/npm 热插拔模块"
-  default_prompt: "使用 $icarus 为本地 HTML 添加选区评论，并按内容需要安装与热加载独立 mod。"

@@ -145,23 +145,10 @@ and hooks JSON preflight without writes. After apply, run
 `imo global doctor --json`; a nonzero exit or any `missing`, `modified`,
 `stale`, or `conflict` state means stop and inspect the reported surface.
 
-## Icarus Runtime Adoption
+## Icarus
 
-IMO includes the Icarus skill and 19 bundled mod runtime packages. After
-updating the checkout, run `npm ci --ignore-scripts --registry https://registry.npmjs.org`
-inside `.imo/product/skills/icarus`, then `npm run check` and `npm test`.
-The root skill projection is installed by the existing global install flow.
-An existing unmanaged global Icarus directory must be backed up and explicitly
-migrated before replacing it with a projection; do not overwrite it with force.
-Runtime data and running services remain unchanged. See the skill's
-`references/imo-distribution.md` for the runtime snapshot and source-build boundary.
-
-React/TSX mod sources, shared adapters, and the offline David component snapshot
-are included in `.imo/product/skills/icarus/project`. After the parent skill's
-dependencies are installed, run `npm ci --ignore-scripts --registry https://registry.npmjs.org`,
-`npm run typecheck`, `npm run build`, `npm run check`, and `npm test` in that
-directory. Builds use the tracked snapshot and leave the bundled runtime mods
-unchanged. See the project's README for the source/runtime version mapping.
+Icarus now lives in its own repository: https://github.com/Cksheuen/icarus.
+IMO no longer bundles it. Install it from that repository as described in its README.
 
 ## Consumer Projects
 
