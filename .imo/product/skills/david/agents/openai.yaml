@@ -1,4 +1,0 @@
-interface:
-  display_name: "David / 思考者"
-  short_description: "JSON 驱动评审页：整页外观捕获反馈、渐进披露钻取、三列 TRD 与本地评论"
-  default_prompt: "使用 $david 生成可整页捕获外观反馈、渐进披露钻取、可评论的交互式技术评审页面。"
