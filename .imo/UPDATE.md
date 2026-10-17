@@ -117,7 +117,12 @@ projections:
 imo global status
 ```
 
-`global install --apply` also establishes Codex host ownership under
+`global install --apply` defaults to both Claude Code and Codex; use `--host`
+to select one. It registers SessionStart hooks, projects skills, and adds the
+Codex `imo-worker` profile. Status, doctor, and uninstall default to recorded
+hosts. Test with `--global-root`, `--codex-root`, and `--claude-home`.
+
+It also establishes Codex host ownership under
 `~/.imo/install/codex/`: `AGENTS.md` is rendered by IMO and linked from
 `~/.codex/AGENTS.md`, while `ownership.json` records the managed Codex
 surfaces. Do not use `--force` for an unrelated unmanaged Codex `AGENTS.md`;

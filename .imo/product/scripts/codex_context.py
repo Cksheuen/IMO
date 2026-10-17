@@ -79,6 +79,11 @@ def _validate_args(args: list[str]) -> str | None:
         if arg in {"--empty", "--stats"}:
             index += 1
             continue
+        if arg == "--event":
+            if index + 1 >= len(args) or args[index + 1] not in {"SessionStart", "UserPromptSubmit"}:
+                return "--event must be SessionStart or UserPromptSubmit"
+            index += 2
+            continue
         if arg == "--mode":
             if index + 1 >= len(args) or args[index + 1].startswith("--"):
                 return "--mode requires a value"
@@ -447,7 +452,7 @@ def main() -> int:
             pass
     output = {
         "hookSpecificOutput": {
-            "hookEventName": "UserPromptSubmit",
+            "hookEventName": _arg_value(args, "--event") or "UserPromptSubmit",
             "additionalContext": context,
         }
     }

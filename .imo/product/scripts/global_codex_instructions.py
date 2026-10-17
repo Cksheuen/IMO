@@ -23,7 +23,7 @@ This block is managed by IMO at {source_root}.
   and MCP) is not a Codex instruction source.
 - Codex configuration, agents, hooks, plugins, and MCP servers are Codex-owned.
 - IMO is the shared governance layer: its global hook injects only the bounded
-  context needed for the current prompt; detailed skills and project rules are
+  context once per session; detailed skills and project rules are
   loaded on demand.
 - Do not import or mirror Claude Code MCP servers, plugin settings, commands,
   or generated AGENTS files unless the user explicitly asks for a migration.

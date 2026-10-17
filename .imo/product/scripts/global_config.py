@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install IMO's global runtime shim and Codex-facing lazy projections."""
+"""Install IMO global context hooks and skill projections for both hosts."""
 
 from __future__ import annotations
 
@@ -9,8 +9,10 @@ import json
 import os
 from pathlib import Path
 import sys
+import tempfile
 from typing import Any
 
+import global_claude
 import global_codex_instructions
 import root_resolver
 
@@ -20,10 +22,22 @@ HOOK_REL = Path("hooks/codex-context.sh")
 MANIFEST_REL = Path("install/managed-hashes.json")
 MODULES_PATH = SOURCE_ROOT / ".imo/product/skills/modules.json"
 CODEX_HOOKS_REL = Path("hooks.json")
-CODEX_SKILLS_REL = Path("skills")
 CODEX_AGENTS_REL = Path("install/codex/AGENTS.md")
 CODEX_OWNERSHIP_REL = Path("install/codex/ownership.json")
 CODEX_AGENTS_LINK_REL = Path("AGENTS.md")
+WORKER_REL = Path("imo-worker.config.toml")
+WORKER_TEXT = """# Lean startup for delegated Codex workers: codex --profile imo-worker
+# Layers on top of config.toml; the user's own sessions are unchanged.
+[features]
+memories = false
+multi_agent = false
+plugins = false
+remote_plugin = false
+apps = false
+
+[skills]
+max_context_tokens = 1
+"""
 
 
 def _hook_text(source_root: Path = SOURCE_ROOT) -> str:
@@ -50,11 +64,11 @@ if [[ -n "${local_hook_file}" ]] && grep -q "imo codex context" "${local_hook_fi
 fi
 
 if command -v imo >/dev/null 2>&1; then
-  exec imo codex context
+  exec imo codex context --event SessionStart
 fi
 
 if [[ -x "__IMO_SOURCE_ROOT__/imo" ]]; then
-  exec "__IMO_SOURCE_ROOT__/imo" codex context
+  exec "__IMO_SOURCE_ROOT__/imo" codex context --event SessionStart
 fi
 
 exit 0
@@ -69,7 +83,7 @@ def _codex_ownership_text(global_root: Path, codex_root: Path) -> str:
             "scope": "codex-global-host-surfaces",
             "global_root": str(global_root),
             "codex_root": str(codex_root),
-            "managed_surfaces": ["AGENTS.md", "hooks.json", "skills/"],
+            "managed_surfaces": ["AGENTS.md", "hooks.json", "skills/", "imo-worker.config.toml"],
         },
         ensure_ascii=False,
         indent=2,
@@ -100,30 +114,6 @@ def _managed_file_state(path: Path, desired_hash: str, manifest_hash: str | None
     return "missing" if current is None else "present" if current == desired_hash else "modified" if manifest_hash is not None and current == manifest_hash else "conflict"
 
 
-def _manifest_state(global_root: Path, codex_root: Path, manifest: dict[str, Any]) -> str:
-    manifest_path = global_root / MANIFEST_REL
-
-    if not manifest_path.exists():
-        return "missing"
-
-    if not manifest:
-        return "conflict"
-
-    expected_values = {
-        "global_root": str(global_root),
-        "codex_root": str(codex_root),
-        "source_root": str(SOURCE_ROOT),
-        "source_mode": _source_mode(),
-    }
-
-    for key, expected in expected_values.items():
-        value = manifest.get(key)
-        if not isinstance(value, str) or value != expected:
-            return "stale"
-
-    return "present"
-
-
 def _manifest_file_hash(manifest: dict[str, Any], relative: Path) -> str | None:
     files = manifest.get("files")
     if not isinstance(files, dict):
@@ -137,23 +127,8 @@ def _manifest_file_hash(manifest: dict[str, Any], relative: Path) -> str | None:
     return file_hash
 
 
-def _manifest_hook_command(manifest: dict[str, Any]) -> str | None:
-    hooks = manifest.get("codex_hooks")
-    if not isinstance(hooks, dict):
-        return None
-    command = hooks.get("command")
-    if not isinstance(command, str):
-        return None
-    return command
-
-
 def _global_root(args: argparse.Namespace) -> Path:
     return Path(args.global_root).expanduser().resolve() if args.global_root else root_resolver.resolve_global_root()
-
-
-def _codex_root(args: argparse.Namespace) -> Path:
-    raw = args.codex_root or os.environ.get("CODEX_HOME") or "~/.codex"
-    return Path(raw).expanduser().resolve()
 
 
 def _load_manifest(global_root: Path) -> dict[str, Any]:
@@ -185,74 +160,51 @@ def _source_mode() -> str:
     return "linked-checkout" if (SOURCE_ROOT / ".git").exists() else "package"
 
 
-def _hook_registration(global_root: Path) -> dict[str, Any]:
-    return {
-        "hooks": [
-            {
-                "type": "command",
-                "command": str(global_root / HOOK_REL),
-                "timeout": 5,
-            }
-        ]
-    }
-
-
-def _hook_command(entry: Any) -> str | None:
-    if not isinstance(entry, dict):
-        return None
-    hooks = entry.get("hooks")
-    if not isinstance(hooks, list) or len(hooks) != 1 or not isinstance(hooks[0], dict):
-        return None
-    command = hooks[0].get("command")
-    return command if isinstance(command, str) else None
-
-
-def _load_codex_hooks(path: Path) -> dict[str, Any]:
-    if not path.is_file():
+def _load_hook_settings(path: Path) -> dict[str, Any]:
+    if not path.exists() and not path.is_symlink():
         return {"hooks": {}}
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
-        raise ValueError("Codex hooks root must be an object")
+        raise ValueError("Hook settings root must be an object")
     hooks = data.setdefault("hooks", {})
     if not isinstance(hooks, dict):
-        raise ValueError("Codex hooks field must be an object")
+        raise ValueError("Hook settings field must be an object")
     return data
 
 
-def _hook_registration_state(hooks_path: Path, desired_command: str, manifest_command: str | None) -> str:
+def _commands(entries):
+    return [hook.get("command") for entry in entries if isinstance(entry, dict)
+            for hook in entry.get("hooks", []) if isinstance(hook, dict)]
+
+
+def _hook_registration_state(hooks_path, desired_command, manifest_command):
     if not hooks_path.exists():
         return "missing"
     try:
-        hooks = _load_codex_hooks(hooks_path)
-    except FileNotFoundError:
-        return "missing"
-    except Exception:
+        hooks = _load_hook_settings(hooks_path)["hooks"]
+        session = hooks.get("SessionStart", [])
+        prompt = hooks.get("UserPromptSubmit", [])
+        if not isinstance(session, list) or not isinstance(prompt, list):
+            return "conflict"
+        if desired_command in _commands(prompt) or (manifest_command and manifest_command in _commands(prompt)):
+            return "stale"
+        if desired_command in _commands(session):
+            return "present"
+        return "stale" if session else "missing"
+    except (OSError, ValueError, TypeError):
         return "conflict"
 
-    if not isinstance(hooks, dict):
-        return "conflict"
 
-    entries = hooks.get("hooks", {}).get("UserPromptSubmit", [])
-    if entries is None or entries == []:
-        return "missing"
-    if not isinstance(entries, list):
-        return "conflict"
-
-    try:
-        commands = [_hook_command(entry) for entry in entries]
-    except Exception:
-        return "conflict"
-
-    if any(command is None for command in commands):
-        return "conflict"
-    if any(command == desired_command for command in commands):
-        return "present"
-    if manifest_command is not None and any(command == manifest_command for command in commands):
-        return "modified"
-    return "stale"
+def _stale_skills(skill_root):
+    current = {module["name"] for module in _load_modules()}
+    source = (SOURCE_ROOT / ".imo/product/skills").resolve()
+    if not skill_root.is_dir():
+        return []
+    return [path for path in skill_root.iterdir() if path.name not in current
+            and path.is_symlink() and _resolved_link(path).is_relative_to(source)]
 
 
-def _skill_projection_state(codex_root: Path, manifest: dict[str, Any]) -> tuple[str, int, int]:
+def _skill_projection_state(skill_root: Path, manifest: dict[str, Any]) -> tuple[str, int, int]:
     del manifest
 
     modules = _load_modules()
@@ -263,7 +215,7 @@ def _skill_projection_state(codex_root: Path, manifest: dict[str, Any]) -> tuple
     any_path = False
 
     for module in modules:
-        link = codex_root / CODEX_SKILLS_REL / module["name"]
+        link = skill_root / module["name"]
         desired = (SOURCE_ROOT / module["owner_surface"]).resolve(strict=False)
         any_path = any_path or link.is_symlink() or link.exists()
 
@@ -275,7 +227,9 @@ def _skill_projection_state(codex_root: Path, manifest: dict[str, Any]) -> tuple
         elif link.exists():
             conflict = True
 
-    if conflict:
+    if _stale_skills(skill_root):
+        state = "stale"
+    elif conflict:
         state = "conflict"
     elif modified:
         state = "modified"
@@ -289,95 +243,45 @@ def _skill_projection_state(codex_root: Path, manifest: dict[str, Any]) -> tuple
     return state, present_count, total
 
 
-def _diagnostic_states(global_root, codex_root, manifest):
-    skill_state, count, total = _skill_projection_state(codex_root, manifest)
-    states = {
-        "manifest": _manifest_state(global_root, codex_root, manifest),
-        "codex_context_hook": _managed_file_state(
-            global_root / HOOK_REL,
-            _hash_text(_hook_text(SOURCE_ROOT)),
-            _manifest_file_hash(manifest, HOOK_REL),
-        ),
-        "codex_hook_registration": _hook_registration_state(
-            codex_root / CODEX_HOOKS_REL,
-            str(global_root / HOOK_REL),
-            _manifest_hook_command(manifest),
-        ),
-        "codex_instructions": global_codex_instructions.instructions_state(
-            global_root / CODEX_AGENTS_REL,
-            codex_root / CODEX_AGENTS_LINK_REL,
-            SOURCE_ROOT,
-            manifest,
-            CODEX_AGENTS_REL,
-        ),
-        "codex_ownership_marker": _managed_file_state(
-            global_root / CODEX_OWNERSHIP_REL,
-            _hash_text(_codex_ownership_text(global_root, codex_root)),
-            _manifest_file_hash(manifest, CODEX_OWNERSHIP_REL),
-        ),
-        "codex_skill_projections": skill_state,
-    }
-    return states, count, total
-
-
-def _diagnostic_source(manifest: dict[str, Any]) -> tuple[str, str]:
-    source_root = manifest.get("source_root")
-    source_mode = manifest.get("source_mode")
-    return (
-        source_root if isinstance(source_root, str) else str(SOURCE_ROOT),
-        source_mode if isinstance(source_mode, str) else _source_mode(),
-    )
-
-
-def _diagnose(global_root: Path, codex_root: Path) -> dict[str, Any]:
-    manifest = _load_manifest(global_root)
-    states, count, total = _diagnostic_states(global_root, codex_root, manifest)
-    source_root, source_mode = _diagnostic_source(manifest)
-    project = root_resolver.resolve_project_root()
-    issues = sorted(k for k, v in states.items() if v != "present")
-
-    return {
-        "healthy": not issues,
-        "issues": issues,
-        "states": states,
-        "global_root": str(global_root),
-        "codex_root": str(codex_root),
-        "source_root": str(source_root),
-        "source_mode": source_mode,
-        "project_root": str(project) if project else "not detected",
-        "codex_skill_projections": count,
-        "codex_skill_expected": total,
-    }
-
-
-def _write_codex_hooks(path: Path, data: dict[str, Any]) -> None:
+def _write_hook_settings(path: Path, data: dict[str, Any]) -> None:
+    # Write through a symlinked settings file instead of replacing the link.
+    path = path.resolve() if path.is_symlink() else path
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    fd, temporary = tempfile.mkstemp(prefix=".imo-", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
 
 
-def _add_hook_registration(path: Path, global_root: Path) -> None:
-    data = _load_codex_hooks(path)
-    entries = data["hooks"].setdefault("UserPromptSubmit", [])
-    if not isinstance(entries, list):
-        raise ValueError("Codex UserPromptSubmit hooks must be a list")
-    command = str(global_root / HOOK_REL)
-    entries[:] = [entry for entry in entries if _hook_command(entry) != command]
-    entries.append(_hook_registration(global_root))
-    _write_codex_hooks(path, data)
-
-
-def _remove_hook_registration(path: Path, global_root: Path) -> None:
-    if not path.is_file():
-        return
-    data = _load_codex_hooks(path)
-    entries = data["hooks"].get("UserPromptSubmit")
-    if not isinstance(entries, list):
-        return
-    command = str(global_root / HOOK_REL)
-    entries[:] = [entry for entry in entries if _hook_command(entry) != command]
-    if not entries:
-        data["hooks"].pop("UserPromptSubmit", None)
-    _write_codex_hooks(path, data)
+def _edit_hook_registration(path, command, *, install):
+    data = _load_hook_settings(path)
+    for event in ("SessionStart", "UserPromptSubmit"):
+        entries = data["hooks"].get(event, [])
+        if not isinstance(entries, list):
+            raise ValueError(f"{event} hooks must be a list")
+        kept = []
+        for entry in entries:
+            if isinstance(entry, dict) and isinstance(entry.get("hooks"), list):
+                remaining = [hook for hook in entry["hooks"]
+                             if not (isinstance(hook, dict) and hook.get("command") == command)]
+                if len(remaining) != len(entry["hooks"]):
+                    if remaining:
+                        kept.append({**entry, "hooks": remaining})
+                    continue
+            kept.append(entry)
+        if kept != entries:
+            if kept:
+                data["hooks"][event] = kept
+            else:
+                data["hooks"].pop(event, None)
+    if install:
+        data["hooks"].setdefault("SessionStart", []).append(
+            {"hooks": [{"type": "command", "command": command, "timeout": 5}]})
+    _write_hook_settings(path, data)
 
 
 def _symlink_metadata(path: Path) -> dict[str, str] | None:
@@ -397,57 +301,35 @@ def _resolved_link(path: Path) -> Path | None:
     return target.resolve(strict=False)
 
 
-def _is_host_skill_projection(path: Path, name: str) -> bool:
-    resolved = _resolved_link(path)
-    expected = (Path.home() / ".claude/skills" / name).resolve(strict=False)
-    return resolved == expected
-
-
-def _codex_ownership_conflict(global_root: Path, codex_root: Path, old_manifest: dict[str, Any]) -> bool:
-    path = global_root / CODEX_OWNERSHIP_REL
-    current = _entry_hash(path)
-    if current is None:
-        return False
-    desired = _hash_text(_codex_ownership_text(global_root, codex_root))
-    files = old_manifest.get("files", {})
-    managed = files.get(CODEX_OWNERSHIP_REL.as_posix(), {}) if isinstance(files, dict) else {}
-    managed_hash = managed.get("hash") if isinstance(managed, dict) else None
-    return current not in {desired, managed_hash}
-
-
-def _install_codex_ownership(global_root: Path, codex_root: Path) -> Path:
-    path = global_root / CODEX_OWNERSHIP_REL
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(_codex_ownership_text(global_root, codex_root), encoding="utf-8")
-    return path
-
-
-def _skill_conflicts(codex_root: Path, old_manifest: dict[str, Any]) -> list[Path]:
+def _skill_conflicts(skill_root: Path, old_skills: dict[str, Any]) -> list[Path]:
     conflicts: list[Path] = []
-    old_skills = old_manifest.get("codex_skills", {})
     if not isinstance(old_skills, dict):
         old_skills = {}
     for module in _load_modules():
         name = module["name"]
-        path = codex_root / CODEX_SKILLS_REL / name
+        path = skill_root / name
         desired = (SOURCE_ROOT / module["owner_surface"]).resolve(strict=False)
         current = _resolved_link(path)
         old = old_skills.get(name)
         old_target = Path(old.get("target")).resolve(strict=False) if isinstance(old, dict) and isinstance(old.get("target"), str) else None
         if not path.exists() and not path.is_symlink():
             continue
-        if current in {desired, old_target} or _is_host_skill_projection(path, name):
+        if current is not None and current in {desired, old_target}:
             continue
         conflicts.append(path)
     return conflicts
 
 
-def _install_skill_links(codex_root: Path, old_manifest: dict[str, Any]) -> dict[str, Any]:
-    old_skills = old_manifest.get("codex_skills", {})
+def _install_skill_links(skill_root: Path, old_skills: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(old_skills, dict):
         old_skills = {}
-    skill_root = codex_root / CODEX_SKILLS_REL
     skill_root.mkdir(parents=True, exist_ok=True)
+    names = {module["name"] for module in _load_modules()}
+    retired = {name: entry for name, entry in old_skills.items() if name not in names
+               and isinstance(entry, dict) and isinstance(entry.get("target"), str)
+               and (skill_root / name).is_symlink()
+               and _resolved_link(skill_root / name) == Path(entry["target"]).resolve(strict=False)}
+    _restore_skill_links(skill_root, retired, force=False)
     installed: dict[str, Any] = {}
     for module in _load_modules():
         name = module["name"]
@@ -468,15 +350,14 @@ def _install_skill_links(codex_root: Path, old_manifest: dict[str, Any]) -> dict
     return installed
 
 
-def _restore_skill_links(codex_root: Path, manifest: dict[str, Any], *, force: bool) -> list[Path]:
+def _restore_skill_links(skill_root: Path, skills: dict[str, Any], *, force: bool) -> list[Path]:
     conflicts: list[Path] = []
-    skills = manifest.get("codex_skills", {})
     if not isinstance(skills, dict):
         return conflicts
     for name, metadata in skills.items():
         if not isinstance(metadata, dict):
             continue
-        path = codex_root / CODEX_SKILLS_REL / name
+        path = skill_root / name
         target = metadata.get("target")
         current = _resolved_link(path)
         expected = Path(target).resolve(strict=False) if isinstance(target, str) else None
@@ -490,56 +371,6 @@ def _restore_skill_links(codex_root: Path, manifest: dict[str, Any], *, force: b
             path.parent.mkdir(parents=True, exist_ok=True)
             os.symlink(previous["target"], path)
     return conflicts
-
-
-def _manifest(
-    global_root: Path,
-    codex_root: Path,
-    codex_skills: dict[str, Any],
-    codex_agents: dict[str, Any],
-    ownership_path: Path,
-) -> dict[str, Any]:
-    agents_path = global_root / CODEX_AGENTS_REL
-    return {
-        "schema_version": 4,
-        "install_mode": "global-first",
-        "global_root": str(global_root),
-        "codex_root": str(codex_root),
-        "source_root": str(SOURCE_ROOT),
-        "source_mode": _source_mode(),
-        "managed_files": [
-            HOOK_REL.as_posix(),
-            CODEX_AGENTS_REL.as_posix(),
-            CODEX_OWNERSHIP_REL.as_posix(),
-        ],
-        "files": {
-            HOOK_REL.as_posix(): {
-                "kind": "file",
-                "hash": _hash_text(_hook_text(SOURCE_ROOT)),
-                "executable": True,
-            },
-            CODEX_AGENTS_REL.as_posix(): {
-                "kind": "file",
-                "hash": _file_hash(agents_path),
-                "managed_hash": global_codex_instructions.managed_hash(SOURCE_ROOT),
-            },
-            CODEX_OWNERSHIP_REL.as_posix(): {
-                "kind": "file",
-                "hash": _file_hash(ownership_path),
-            },
-        },
-        "codex_hooks": {
-            "path": str(codex_root / CODEX_HOOKS_REL),
-            "event": "UserPromptSubmit",
-            "command": str(global_root / HOOK_REL),
-        },
-        "codex_agents": codex_agents,
-        "codex_ownership": {
-            "path": str(ownership_path),
-            "owner": "imo",
-        },
-        "codex_skills": codex_skills,
-    }
 
 
 def _write_manifest(global_root: Path, payload: dict[str, Any]) -> None:
@@ -558,20 +389,11 @@ def _print_diagnostic(title: str, payload: dict[str, Any], as_json: bool) -> Non
     for name in sorted(payload.get("states", {})):
         print(f"{name}: {payload['states'][name]}")
 
-    print(
-        "codex_skill_projections: "
-        f"{payload.get('codex_skill_projections', 0)}/"
-        f"{payload.get('codex_skill_expected', 0)}"
-    )
-
-    for key in (
-        "global_root",
-        "codex_root",
-        "source_root",
-        "source_mode",
-        "project_root",
-    ):
-        print(f"{key}: {payload.get(key)}")
+    for host in payload.get("hosts", []):
+        print(f"{host}_skill_projections: {payload[host + '_skill_projections']}/{payload[host + '_skill_expected']}")
+    for key in ("global_root", "codex_root", "claude_home", "source_root", "source_mode", "project_root"):
+        if key in payload:
+            print(f"{key}: {payload[key]}")
 
     issues = payload.get("issues", [])
     print(f"issues: {', '.join(issues) if issues else 'none'}")
@@ -579,165 +401,214 @@ def _print_diagnostic(title: str, payload: dict[str, Any], as_json: bool) -> Non
     print(f"healthy: {'yes' if payload.get('healthy') else 'no'}")
 
 
-def _status(args: argparse.Namespace) -> int:
-    payload = _diagnose(_global_root(args), _codex_root(args))
-    _print_diagnostic("IMO global status", payload, bool(args.json))
+def _targets(args, manifest):
+    selected = args.host or ("both" if args.command in {"install", "migrate"} else None)
+    hosts = ["codex", "claude"] if selected == "both" else [selected] if selected else manifest.get("hosts", ["codex"])
+    codex = Path(args.codex_root or manifest.get("codex_root") or os.environ.get("CODEX_HOME") or "~/.codex").expanduser().resolve()
+    claude = global_claude.home(args.claude_home or manifest.get("claude_home"))
+    root = _global_root(args)
+    surfaces = {
+        "codex": {"root": codex, "hook": root / HOOK_REL, "hook_rel": HOOK_REL,
+                  "text": _hook_text(), "settings": codex / CODEX_HOOKS_REL},
+        "claude": global_claude.surfaces(root, claude, SOURCE_ROOT),
+    }
+    return {host: surfaces[host] for host in hosts}
+
+
+def _managed_surfaces(global_root, targets):
+    result = {}
+    for host, surface in targets.items():
+        result[surface["hook_rel"].as_posix()] = (surface["hook"], surface["text"], host)
+        if host == "codex":
+            result["codex/" + WORKER_REL.as_posix()] = (surface["root"] / WORKER_REL, WORKER_TEXT, host)
+            result[CODEX_OWNERSHIP_REL.as_posix()] = (
+                global_root / CODEX_OWNERSHIP_REL,
+                _codex_ownership_text(global_root, surface["root"]), host)
+    return result
+
+
+def _diagnose_args(args):
+    root = _global_root(args)
+    manifest = _load_manifest(root)
+    targets = _targets(args, manifest)
+    states = {"manifest": "present" if manifest else "conflict" if (root / MANIFEST_REL).exists() else "missing"}
+    if manifest and (manifest.get("source_root") != str(SOURCE_ROOT)
+                     or manifest.get("global_root") != str(root)
+                     or manifest.get("source_mode") != _source_mode()):
+        states["manifest"] = "stale"
+    payload = {"global_root": str(root), "source_root": str(SOURCE_ROOT),
+               "source_mode": _source_mode(), "hosts": list(targets),
+               "project_root": str(root_resolver.resolve_project_root() or "not detected")}
+    extra_issues = []
+    for host, surface in targets.items():
+        host_root = surface["root"]
+        root_key = "codex_root" if host == "codex" else "claude_home"
+        payload[root_key] = str(host_root)
+        if manifest and (host not in manifest.get("hosts", ["codex"]) or manifest.get(root_key) != str(host_root)):
+            states["manifest"] = "stale"
+        states[host + "_context_hook"] = _managed_file_state(
+            surface["hook"], _hash_text(surface["text"]), _manifest_file_hash(manifest, surface["hook_rel"]))
+        recorded = manifest.get(host + "_hooks")
+        states[host + "_hook_registration"] = _hook_registration_state(
+            surface["settings"], str(surface["hook"]), recorded.get("command") if isinstance(recorded, dict) else None)
+        state, count, total = _skill_projection_state(host_root / "skills", manifest)
+        states[host + "_skill_projections"] = state
+        payload[host + "_skill_projections"] = count
+        payload[host + "_skill_expected"] = total
+        extra_issues.extend(str(path) for path in _stale_skills(host_root / "skills"))
+        if host == "codex":
+            states["codex_instructions"] = global_codex_instructions.instructions_state(
+                root / CODEX_AGENTS_REL, host_root / CODEX_AGENTS_LINK_REL, SOURCE_ROOT, manifest, CODEX_AGENTS_REL)
+            for key, relative, text, path in (
+                ("codex_worker_profile", Path("codex") / WORKER_REL, WORKER_TEXT, host_root / WORKER_REL),
+                ("codex_ownership_marker", CODEX_OWNERSHIP_REL, _codex_ownership_text(root, host_root), root / CODEX_OWNERSHIP_REL),
+            ):
+                states[key] = _managed_file_state(path, _hash_text(text), _manifest_file_hash(manifest, relative))
+    issues = sorted([key for key, value in states.items() if value != "present"] + extra_issues)
+    return {**payload, "states": states, "issues": issues, "healthy": not issues}
+
+
+def _status(args):
+    _print_diagnostic("IMO global status", _diagnose_args(args), bool(args.json))
     return 0
 
 
-def _doctor(args: argparse.Namespace) -> int:
-    payload = _diagnose(_global_root(args), _codex_root(args))
+def _doctor(args):
+    payload = _diagnose_args(args)
     _print_diagnostic("IMO global doctor", payload, bool(args.json))
     return 0 if payload["healthy"] else 1
 
 
-def _install(args: argparse.Namespace) -> int:
-    global_root = _global_root(args)
-    codex_root = _codex_root(args)
-    hook_path = global_root / HOOK_REL
-    manifest_path = global_root / MANIFEST_REL
-    hooks_path = codex_root / CODEX_HOOKS_REL
-    agents_path = global_root / CODEX_AGENTS_REL
-    ownership_path = global_root / CODEX_OWNERSHIP_REL
-    apply = bool(args.apply)
-    action = "install" if args.command == "install" else "migrate"
-    print(f"[imo global] {action} {'apply' if apply else 'dry-run'}: {global_root}")
-    print(f"[imo global] Codex root: {codex_root}")
+def _preflight_settings(path):
+    data = _load_hook_settings(path)
+    for event in ("SessionStart", "UserPromptSubmit"):
+        if not isinstance(data["hooks"].get(event, []), list):
+            raise ValueError(f"{path}: {event} hooks must be a list")
+
+
+def _install(args):
+    root = _global_root(args)
+    old = _load_manifest(root)
+    targets = _targets(args, old)
+    managed = _managed_surfaces(root, targets)
+    print(f"[imo global] install {'apply' if args.apply else 'dry-run'}: {root}")
     print(f"[imo global] source: {SOURCE_ROOT} ({_source_mode()})")
-    print(
-        f"[imo global] would manage: {hook_path}, {hooks_path}, {agents_path}, "
-        f"{len(_load_modules())} lazy skill projection(s), and the Codex ownership marker"
-    )
-    old_manifest = _load_manifest(global_root)
-    current_hook = _entry_hash(hook_path)
-    managed_hook = old_manifest.get("files", {}).get(HOOK_REL.as_posix(), {}) if isinstance(old_manifest.get("files"), dict) else {}
-    managed_hash = managed_hook.get("hash") if isinstance(managed_hook, dict) else None
-    desired_hash = _hash_text(_hook_text(SOURCE_ROOT))
-    if current_hook not in {None, desired_hash, managed_hash} and not args.force:
-        print(f"[imo global] refused to overwrite unmanaged file: {hook_path}", file=sys.stderr)
-        return 1
-    if global_codex_instructions.file_conflict(
-        agents_path, SOURCE_ROOT, old_manifest, CODEX_AGENTS_REL
-    ) and not args.force:
-        print(f"[imo global] refused to overwrite unmanaged file: {agents_path}", file=sys.stderr)
-        return 1
-    if _codex_ownership_conflict(global_root, codex_root, old_manifest) and not args.force:
-        print(f"[imo global] refused to overwrite unmanaged file: {ownership_path}", file=sys.stderr)
-        return 1
-    if global_codex_instructions.link_conflict(
-        codex_root / CODEX_AGENTS_LINK_REL,
-        global_root / CODEX_AGENTS_REL,
-        old_manifest,
-    ) and not args.force:
-        print(f"[imo global] refused unmanaged Codex AGENTS path: {codex_root / CODEX_AGENTS_LINK_REL}", file=sys.stderr)
-        return 1
-    conflicts = _skill_conflicts(codex_root, old_manifest)
-    if conflicts and not args.force:
-        print("[imo global] refused unmanaged Codex skill path(s): " + ", ".join(str(path) for path in conflicts), file=sys.stderr)
-        return 1
+    for host, surface in targets.items():
+        extra = ", AGENTS.md, imo-worker profile" if host == "codex" else ""
+        print(f"[imo global] {host}: {surface['root']} -> {len(_load_modules())} skill links, "
+              f"SessionStart hook in {surface['settings'].name}{extra}")
     try:
-        _load_codex_hooks(hooks_path)
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
-        print(f"[imo global] invalid Codex hooks file: {exc}", file=sys.stderr)
+        for key, (path, text, host) in managed.items():
+            if _entry_hash(path) not in {None, _hash_text(text), _manifest_file_hash(old, Path(key))} and not args.force:
+                raise ValueError(f"refused to overwrite unmanaged file: {path}")
+        for host, surface in targets.items():
+            host_root = surface["root"]
+            _preflight_settings(surface["settings"])
+            conflicts = _skill_conflicts(host_root / "skills", old.get(host + "_skills", {}))
+            if conflicts and not args.force:
+                raise ValueError("refused unmanaged skill paths: " + ", ".join(map(str, conflicts)))
+            if any(path.is_dir() and not path.is_symlink() for path in conflicts):
+                raise ValueError("refused to replace unmanaged skill directories")
+            if host == "codex" and not args.force:
+                if global_codex_instructions.file_conflict(root / CODEX_AGENTS_REL, SOURCE_ROOT, old, CODEX_AGENTS_REL):
+                    raise ValueError(f"refused to overwrite unmanaged file: {root / CODEX_AGENTS_REL}")
+                if global_codex_instructions.link_conflict(host_root / CODEX_AGENTS_LINK_REL, root / CODEX_AGENTS_REL, old):
+                    raise ValueError("refused unmanaged Codex AGENTS path")
+        if not args.apply:
+            print("[imo global] pass --apply to write managed global files")
+            return 0
+        payload = dict(old)
+        files = dict(old.get("files", {}))
+        for key, (path, text, host) in managed.items():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            if path.is_symlink():
+                path.unlink()
+            path.write_text(text, encoding="utf-8")
+            if path == targets[host]["hook"]:
+                path.chmod(0o755)
+            files[key] = {"kind": "file", "hash": _hash_text(text), "host": host}
+        for host, surface in targets.items():
+            host_root = surface["root"]
+            payload["codex_root" if host == "codex" else "claude_home"] = str(host_root)
+            payload[host + "_skills"] = _install_skill_links(host_root / "skills", old.get(host + "_skills", {}))
+            _edit_hook_registration(surface["settings"], str(surface["hook"]), install=True)
+            payload[host + "_hooks"] = {"path": str(surface["settings"]), "event": "SessionStart", "command": str(surface["hook"])}
+            if host == "codex":
+                agents = root / CODEX_AGENTS_REL
+                payload["codex_agents"] = global_codex_instructions.install_agents(
+                    agents, host_root / CODEX_AGENTS_LINK_REL, SOURCE_ROOT, old, CODEX_AGENTS_REL, force=bool(args.force))
+                files[CODEX_AGENTS_REL.as_posix()] = {"kind": "file", "hash": _file_hash(agents),
+                    "managed_hash": global_codex_instructions.managed_hash(SOURCE_ROOT), "host": host}
+                payload["codex_ownership"] = {"path": str(root / CODEX_OWNERSHIP_REL), "owner": "imo"}
+        payload.update(schema_version=5, install_mode="global-first", global_root=str(root),
+                       source_root=str(SOURCE_ROOT), source_mode=_source_mode(), files=files,
+                       managed_files=list(files), hosts=sorted(set(old.get("hosts", ["codex"] if old else [])) | set(targets)))
+        _write_manifest(root, payload)
+    except (OSError, ValueError) as exc:
+        print(f"[imo global] {exc}", file=sys.stderr)
         return 1
-
-    if not apply:
-        print("[imo global] pass --apply to write managed global files")
-        return 0
-
-    hook_path.parent.mkdir(parents=True, exist_ok=True)
-    if hook_path.is_symlink() or hook_path.is_file():
-        hook_path.unlink()
-    hook_path.write_text(_hook_text(SOURCE_ROOT), encoding="utf-8")
-    hook_path.chmod(0o755)
-    codex_agents = global_codex_instructions.install_agents(
-        agents_path,
-        codex_root / CODEX_AGENTS_LINK_REL,
-        SOURCE_ROOT,
-        old_manifest,
-        CODEX_AGENTS_REL,
-        force=bool(args.force),
-    )
-    ownership_path = _install_codex_ownership(global_root, codex_root)
-    codex_skills = _install_skill_links(codex_root, old_manifest)
-    _add_hook_registration(hooks_path, global_root)
-    _write_manifest(global_root, _manifest(global_root, codex_root, codex_skills, codex_agents, ownership_path))
-    print(f"[imo global] {action} complete")
-    print(f"[imo global] manifest: {manifest_path}")
+    print("[imo global] install complete")
     return 0
 
 
-def _uninstall(args: argparse.Namespace) -> int:
-    global_root = _global_root(args)
-    manifest = _load_manifest(global_root)
-    recorded_codex = manifest.get("codex_root")
-    codex_root = Path(recorded_codex).resolve() if isinstance(recorded_codex, str) and not args.codex_root else _codex_root(args)
-    manifest_path = global_root / MANIFEST_REL
-    hook_path = global_root / HOOK_REL
-    hooks_path = codex_root / CODEX_HOOKS_REL
-    agents_path = global_root / CODEX_AGENTS_REL
-    ownership_path = global_root / CODEX_OWNERSHIP_REL
-    apply = bool(args.apply)
-    print(f"[imo global] uninstall {'apply' if apply else 'dry-run'}: {global_root}")
-    print(f"[imo global] would restore Codex skill projections under: {codex_root / CODEX_SKILLS_REL}")
-    print(f"[imo global] would restore Codex AGENTS path: {codex_root / CODEX_AGENTS_LINK_REL}")
-    print(f"[imo global] runtime state under {global_root / 'runtime'} and {global_root / 'projects'} is preserved")
-    if not apply:
-        print("[imo global] pass --apply to remove managed global files")
-        return 0
-
-    current_hook = _entry_hash(hook_path)
-    desired_hash = _hash_text(_hook_text(SOURCE_ROOT))
-    managed = manifest.get("files", {}).get(HOOK_REL.as_posix(), {}) if isinstance(manifest.get("files"), dict) else {}
-    managed_hash = managed.get("hash") if isinstance(managed, dict) else None
-    if current_hook not in {None, desired_hash, managed_hash} and not args.force:
-        print(f"[imo global] refused to remove unmanaged file: {hook_path}", file=sys.stderr)
+def _uninstall(args):
+    root = _global_root(args)
+    manifest = _load_manifest(root)
+    targets = _targets(args, manifest)
+    managed = _managed_surfaces(root, targets)
+    if "codex" in targets:
+        managed[CODEX_AGENTS_REL.as_posix()] = (root / CODEX_AGENTS_REL, "", "codex")
+    print(f"[imo global] uninstall {'apply' if args.apply else 'dry-run'}: {root}")
+    try:
+        for key, (path, text, host) in managed.items():
+            current = _entry_hash(path)
+            if current not in {None, _manifest_file_hash(manifest, Path(key))} and not args.force:
+                raise ValueError(f"refused to remove unmanaged file: {path}")
+        for surface in targets.values():
+            _preflight_settings(surface["settings"])
+        if not args.apply:
+            print("[imo global] pass --apply to remove managed global files")
+            return 0
+        for host, surface in targets.items():
+            if host == "codex":
+                conflicts = global_codex_instructions.restore_agents(surface["root"] / CODEX_AGENTS_LINK_REL, manifest, force=bool(args.force))
+                if conflicts:
+                    raise ValueError(f"kept modified Codex AGENTS paths: {conflicts}")
+            conflicts = _restore_skill_links(surface["root"] / "skills", manifest.get(host + "_skills", {}), force=bool(args.force))
+            if conflicts:
+                raise ValueError(f"kept modified skill paths: {conflicts}")
+            if surface["settings"].exists():
+                _edit_hook_registration(surface["settings"], str(surface["hook"]), install=False)
+        files = dict(manifest.get("files", {}))
+        for key, (path, text, host) in managed.items():
+            # Profiles are removed only while unchanged, even with --force.
+            unchanged = _entry_hash(path) == _manifest_file_hash(manifest, Path(key))
+            if key == "codex/" + WORKER_REL.as_posix() and not unchanged:
+                continue
+            external = global_codex_instructions.external_content(path) if key == CODEX_AGENTS_REL.as_posix() else ""
+            if external.strip():
+                path.write_text(external, encoding="utf-8")
+            elif path.exists() or path.is_symlink():
+                path.unlink()
+            files.pop(key, None)
+        remaining = set(manifest.get("hosts", ["codex"])) - set(targets)
+        if remaining:
+            manifest.update(hosts=sorted(remaining), files=files, managed_files=list(files))
+            for host in targets:
+                for suffix in ("_skills", "_hooks", "_agents", "_ownership"):
+                    manifest.pop(host + suffix, None)
+            _write_manifest(root, manifest)
+        elif (root / MANIFEST_REL).exists():
+            (root / MANIFEST_REL).unlink()
+    except (OSError, ValueError) as exc:
+        print(f"[imo global] {exc}", file=sys.stderr)
         return 1
-    files = manifest.get("files", {})
-    for managed_rel, path in (
-        (CODEX_AGENTS_REL, agents_path),
-        (CODEX_OWNERSHIP_REL, ownership_path),
-    ):
-        metadata = files.get(managed_rel.as_posix(), {}) if isinstance(files, dict) else {}
-        managed_hash = metadata.get("hash") if isinstance(metadata, dict) else None
-        current = _entry_hash(path)
-        if current not in {None, managed_hash} and not args.force:
-            print(f"[imo global] refused to remove unmanaged file: {path}", file=sys.stderr)
-            return 1
-    agent_conflicts = global_codex_instructions.restore_agents(
-        codex_root / CODEX_AGENTS_LINK_REL,
-        manifest,
-        force=bool(args.force),
-    )
-    if agent_conflicts:
-        print("[imo global] kept modified Codex AGENTS path(s): " + ", ".join(str(path) for path in agent_conflicts), file=sys.stderr)
-        return 1
-    conflicts = _restore_skill_links(codex_root, manifest, force=bool(args.force))
-    if conflicts:
-        print("[imo global] kept modified Codex skill path(s): " + ", ".join(str(path) for path in conflicts), file=sys.stderr)
-        return 1
-    _remove_hook_registration(hooks_path, global_root)
-    external_agents = global_codex_instructions.external_content(agents_path)
-    if external_agents.strip():
-        agents_path.write_text(external_agents, encoding="utf-8")
-        print(f"[imo global] preserved non-IMO Codex instructions at: {agents_path}")
-    removable = [hook_path, ownership_path, manifest_path]
-    if not external_agents.strip():
-        removable.append(agents_path)
-    for path in removable:
-        if path.exists() or path.is_symlink():
-            path.unlink()
-    for directory in (hook_path.parent, agents_path.parent, ownership_path.parent, manifest_path.parent):
-        try:
-            directory.rmdir()
-        except OSError:
-            pass
-    print("[imo global] uninstall complete")
+    print("[imo global] uninstall complete; runtime state preserved")
     return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Manage global IMO runtime and Codex lazy projections.")
+    parser = argparse.ArgumentParser(description="Manage global IMO hooks and skill projections for Claude Code and Codex.")
     subparsers = parser.add_subparsers(dest="command", required=True)
     for command, handler in (
         ("status", _status),
@@ -748,6 +619,8 @@ def build_parser() -> argparse.ArgumentParser:
     ):
         sub = subparsers.add_parser(command)
         sub.add_argument("--global-root", help="Override IMO state root; defaults to IMO_GLOBAL_ROOT or ~/.imo")
+        sub.add_argument("--host", choices=("both", "claude", "codex"))
+        sub.add_argument("--claude-home", help="Override Claude home; defaults to CLAUDE_HOME or ~/.claude")
         sub.add_argument("--codex-root", help="Override Codex root; defaults to CODEX_HOME or ~/.codex")
         if command in {"status", "doctor"}:
             sub.add_argument("--json", action="store_true", help="Print machine-readable status")

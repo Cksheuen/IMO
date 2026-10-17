@@ -22,8 +22,9 @@ Acceptance criteria:
 - root wrappers delegate to `.imo/product/**`;
 - context modes stay within `1200 / 2200 / 4000` characters;
 - status and audit commands do not create missing runtime state;
-- global install registers one Codex hook and lazy canonical skill symlinks;
-- `global doctor` reports six explicit states and exits nonzero when unhealthy;
+- global install defaults to both hosts: SessionStart hooks and skill symlinks,
+  plus Codex’s `imo-worker` profile; `--host claude|codex` selects one;
+- `global doctor` reports states for the selected hosts and exits nonzero when unhealthy;
 - dry-run global install preflights conflicts without writes;
 - project init/update write zero framework files into consumer repositories;
 - legacy uninstall removes only hash-matched managed files and preserves runtime;

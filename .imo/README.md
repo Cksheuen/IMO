@@ -19,8 +19,10 @@ installation; mutable state lives under `~/.imo/`.
 
 The root `./imo` command and compatibility surfaces under `scripts/` and
 `skills/` are source-checkout entrypoints. `imo global install --apply` connects
-Codex through one bounded hook and lazy skill symlinks. `imo init <project>` is
-optional registration only and writes zero framework files into that project.
+Claude Code and Codex through SessionStart hooks and skill symlinks; use
+`--host claude|codex` for one host. Codex also gets the `imo-worker` profile.
+`imo init <project>` is optional registration only and writes zero framework
+files into that project.
 
 ## Quality gates
 

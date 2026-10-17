@@ -17,13 +17,14 @@ Delegate when the task fits in a short spec file, the files it may touch are cle
 test "$HERDR_ENV" = 1 || echo "not inside Herdr"
 herdr pane layout --pane "$HERDR_PANE_ID"            # pick direction: right if wide, down if narrow
 herdr pane split --current --direction down --cwd <repo> --no-focus      # -> .result.pane.pane_id
-herdr agent start <name> --kind codex --pane <pane_id> -- \
+herdr agent start <name> --kind codex --pane <pane_id> -- --profile imo-worker \
   -m gpt-6-astra -c model_reasoning_effort=medium -s workspace-write -a never
 herdr agent send-keys <name> esc
 ```
 
 - `gpt-6-astra` at medium effort is the user's chosen worker model. Use `-s read-only` for scans and reviews.
-- The `esc` closes Codex's startup "hooks need review" screen, which otherwise swallows the first prompt. Never approve hooks for the user.
+- `--profile imo-worker` (installed by `imo global install`) turns off plugins, memories and the skill list for the worker: startup measured 24,241 -> 7,966 tokens. Drop it if the profile is missing.
+- The `esc` closes Codex's startup "hooks need review" screen if one appears (it otherwise swallows the first prompt) and is harmless if none does. Never approve hooks for the user.
 - The sandbox blocks writes outside `<repo>`. If a check must write elsewhere, add `-c 'sandbox_workspace_write.writable_roots=["<dir>"]'`.
 - For large or risky changes, give the worker a git worktree so the user's live files stay untouched.
 

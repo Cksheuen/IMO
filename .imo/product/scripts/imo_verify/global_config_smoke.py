@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -31,6 +32,8 @@ def _run(
             str(global_root),
             "--codex-root",
             str(codex_root),
+            "--claude-home",
+            str(codex_root.parent / (codex_root.name + "-claude")),
         ],
         cwd=ROOT,
         capture_output=True,
@@ -115,6 +118,118 @@ def _assert_uninstall_preserves_user_content(global_root: Path, codex_root: Path
     assert text == prefix, "managed block was not removed cleanly"
 
 
+def _assert_both_hosts(base: Path) -> None:
+    base = base.resolve()
+    global_root, codex_root = base / "global", base / "codex"
+    claude = base / "codex-claude"
+    claude.mkdir(parents=True)
+    other = {"hooks": [{"type": "command", "command": "echo unrelated"}]}
+    settings = {"theme": "dark", "hooks": {"SessionStart": [other], "UserPromptSubmit": []}}
+    (claude / "settings.json").write_text(json.dumps(settings))
+    codex_root.mkdir()
+    command = str(global_root / "hooks/codex-context.sh")
+    (codex_root / "hooks.json").write_text(json.dumps({"hooks": {"UserPromptSubmit": [
+        {"hooks": [{"type": "command", "command": command}, {"type": "command", "command": "echo prompt"}]}]}}))
+    proc = _run(global_root, codex_root, "install", "--host", "both", "--apply")
+    assert proc.returncode == 0, proc.stderr
+    for root in (codex_root, claude):
+        assert len(list((root / "skills").iterdir())) == 6
+        assert all(path.is_symlink() for path in (root / "skills").iterdir())
+    hooks = json.loads((codex_root / "hooks.json").read_text())["hooks"]
+    assert hooks["SessionStart"][0]["hooks"][0]["command"] == command
+    assert hooks["UserPromptSubmit"] == [{"hooks": [{"type": "command", "command": "echo prompt"}]}]
+    assert (codex_root / "imo-worker.config.toml").is_file()
+    assert not (claude / "CLAUDE.md").exists()
+    assert _run(global_root, codex_root, "doctor", "--json").returncode == 0
+    manifest_path = global_root / "install/managed-hashes.json"
+    manifest = json.loads(manifest_path.read_text())
+    assert manifest["codex_hooks"]["event"] == "SessionStart"
+    for host, root in (("codex", codex_root), ("claude", claude)):
+        target = ROOT / ".imo/product/skills/retired-test-skill"
+        link = root / "skills/retired-test-skill"
+        link.symlink_to(target)
+        manifest[host + "_skills"][link.name] = {"target": str(target), "previous": None}
+    manifest_path.write_text(json.dumps(manifest))
+    doctor = _run(global_root, codex_root, "doctor", "--json")
+    assert doctor.returncode == 1
+    data = json.loads(doctor.stdout)
+    assert data["states"]["codex_skill_projections"] == "stale"
+    assert data["states"]["claude_skill_projections"] == "stale"
+    assert any("retired-test-skill" in issue for issue in data["issues"])
+    assert _run(global_root, codex_root, "install", "--apply").returncode == 0
+    for root in (codex_root, claude):
+        assert not (root / "skills/retired-test-skill").is_symlink()
+    assert _run(global_root, codex_root, "doctor", "--json").returncode == 0
+    profile = codex_root / "imo-worker.config.toml"
+    original = profile.read_text()
+    profile.write_text("# user modified\n")
+    assert _run(global_root, codex_root, "install", "--apply").returncode == 1
+    assert _run(global_root, codex_root, "uninstall", "--apply").returncode == 1
+    profile.write_text(original)
+    proc = _run(global_root, codex_root, "uninstall", "--apply")
+    assert proc.returncode == 0, proc.stderr
+    for root in (codex_root, claude):
+        assert not list((root / "skills").iterdir())
+    assert not profile.exists()
+    assert json.loads((claude / "settings.json").read_text()) == settings
+    assert "SessionStart" not in json.loads((codex_root / "hooks.json").read_text())["hooks"]
+    env = {**os.environ, "IMO_GLOBAL_ROOT": str(global_root), "CODEX_HOME": str(codex_root), "CLAUDE_HOME": str(claude)}
+    proc = subprocess.run(["./imo", "codex", "context", "--event", "SessionStart", "--empty"], cwd=ROOT, env=env, capture_output=True, text=True)
+    assert proc.returncode == 0, proc.stderr
+    assert json.loads(proc.stdout)["hookSpecificOutput"]["hookEventName"] == "SessionStart"
+
+
+def _assert_host_boundaries(base: Path) -> None:
+    base = base.resolve()
+    global_root, codex = base / "global", base / "codex"
+    claude = base / "codex-claude"
+    claude.mkdir(parents=True)
+    settings = claude / "settings.json"
+    settings.write_text("invalid JSON")
+    assert _run(global_root, codex, "install", "--apply").returncode == 1
+    assert not global_root.exists() and not codex.exists()
+    settings.write_text("{}")
+    proc = _run(global_root, codex, "install", "--host", "claude", "--apply")
+    assert proc.returncode == 0, proc.stderr
+    assert not codex.exists()
+    data = json.loads(_run(global_root, codex, "doctor", "--json").stdout)
+    assert data["healthy"] and data["hosts"] == ["claude"]
+    assert not any(key.startswith("codex") for key in data["states"])
+    assert _run(global_root, codex, "install", "--host", "codex", "--apply").returncode == 0
+    assert _run(global_root, codex, "uninstall", "--host", "claude", "--apply").returncode == 0
+    data = json.loads(_run(global_root, codex, "doctor", "--json").stdout)
+    assert data["healthy"] and data["hosts"] == ["codex"]
+    # Simulate an old manifest and a pre-SessionStart hook registration.
+    manifest_path = global_root / "install/managed-hashes.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest.pop("hosts")
+    manifest["schema_version"] = 4
+    manifest["codex_hooks"]["event"] = "UserPromptSubmit"
+    manifest_path.write_text(json.dumps(manifest))
+    hooks_path = codex / "hooks.json"
+    hooks = json.loads(hooks_path.read_text())
+    hooks["hooks"]["UserPromptSubmit"] = hooks["hooks"].pop("SessionStart")
+    hooks_path.write_text(json.dumps(hooks))
+    doctor = _run(global_root, codex, "doctor", "--json")
+    assert doctor.returncode == 1
+    data = json.loads(doctor.stdout)
+    assert data["hosts"] == ["codex"]
+    assert data["states"]["codex_hook_registration"] == "stale"
+    assert _run(global_root, codex, "install", "--host", "codex", "--apply").returncode == 0
+    assert "UserPromptSubmit" not in json.loads(hooks_path.read_text())["hooks"]
+    # Retired projections restore the original symlink, including dangling links.
+    manifest = json.loads(manifest_path.read_text())
+    link = codex / "skills/retired"
+    target = ROOT / ".imo/product/skills/retired"
+    link.symlink_to(target)
+    manifest["codex_skills"]["retired"] = {"target": str(target), "previous": {"kind": "symlink", "target": "../original"}}
+    manifest_path.write_text(json.dumps(manifest))
+    assert _run(global_root, codex, "install", "--host", "codex", "--apply").returncode == 0
+    assert os.readlink(link) == "../original"
+    assert _run(global_root, codex, "uninstall", "--apply").returncode == 0
+    assert os.readlink(link) == "../original"
+
+
 def _run_global_config_smoke() -> bool:
     print("[imo verify] global config diagnostics")
     try:
@@ -122,6 +237,8 @@ def _run_global_config_smoke() -> bool:
             base = Path(raw)
             global_root = base / "global"
             codex_root = base / "codex"
+            _assert_both_hosts(base / "both")
+            _assert_host_boundaries(base / "boundaries")
             _assert_installed(global_root, codex_root)
             _assert_managed_block_boundary(global_root, codex_root)
             _assert_uninstall_preserves_user_content(
