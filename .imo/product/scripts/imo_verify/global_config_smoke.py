@@ -161,6 +161,11 @@ def _assert_both_hosts(base: Path) -> None:
         assert not (root / "skills/retired-test-skill").is_symlink()
     assert _run(global_root, codex_root, "doctor", "--json").returncode == 0
     profile = codex_root / "imo-worker.config.toml"
+    # Codex writes its own state into the active profile; that must stay healthy and kept.
+    profile.write_text(profile.read_text() + '\n[tui.model_availability_nux]\n"some-model" = 4\n')
+    assert _run(global_root, codex_root, "doctor", "--json").returncode == 0
+    assert _run(global_root, codex_root, "install", "--apply").returncode == 0
+    assert "[tui.model_availability_nux]" in profile.read_text()
     original = profile.read_text()
     profile.write_text("# user modified\n")
     assert _run(global_root, codex_root, "install", "--apply").returncode == 1

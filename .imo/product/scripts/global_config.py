@@ -38,6 +38,40 @@ apps = false
 [skills]
 max_context_tokens = 1
 """
+WORKER_SETTINGS = {
+    "features": {"memories": False, "multi_agent": False, "plugins": False,
+                 "remote_plugin": False, "apps": False},
+    "skills": {"max_context_tokens": 1},
+}
+WORKER_KEY = "codex/" + WORKER_REL.as_posix()
+
+
+def _worker_values(path: Path) -> dict[str, dict[str, Any]]:
+    """Read only IMO's keys: Codex writes its own state (e.g. [tui.*]) into the active profile."""
+    values: dict[str, dict[str, Any]] = {table: {} for table in WORKER_SETTINGS}
+    table = ""
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.split("#", 1)[0].strip()
+        if line.startswith("[") and line.endswith("]"):
+            table = line.strip("[]").strip()
+        elif "=" in line and table in WORKER_SETTINGS:
+            key, value = (part.strip() for part in line.split("=", 1))
+            if key in WORKER_SETTINGS[table]:
+                values[table][key] = {"true": True, "false": False}.get(
+                    value, int(value) if value.isdigit() else value)
+    return values
+
+
+def _worker_state(path: Path, manifest: dict[str, Any]) -> str:
+    if not path.exists() and not path.is_symlink():
+        return "missing"
+    try:
+        values = _worker_values(path)
+    except (OSError, UnicodeDecodeError):
+        return "conflict"
+    entry = manifest.get("files", {}).get(WORKER_KEY) if isinstance(manifest.get("files"), dict) else None
+    recorded = entry.get("settings") if isinstance(entry, dict) else None
+    return "present" if values == WORKER_SETTINGS else "modified" if values == recorded else "conflict"
 
 
 def _hook_text(source_root: Path = SOURCE_ROOT) -> str:
@@ -420,7 +454,6 @@ def _managed_surfaces(global_root, targets):
     for host, surface in targets.items():
         result[surface["hook_rel"].as_posix()] = (surface["hook"], surface["text"], host)
         if host == "codex":
-            result["codex/" + WORKER_REL.as_posix()] = (surface["root"] / WORKER_REL, WORKER_TEXT, host)
             result[CODEX_OWNERSHIP_REL.as_posix()] = (
                 global_root / CODEX_OWNERSHIP_REL,
                 _codex_ownership_text(global_root, surface["root"]), host)
@@ -459,11 +492,10 @@ def _diagnose_args(args):
         if host == "codex":
             states["codex_instructions"] = global_codex_instructions.instructions_state(
                 root / CODEX_AGENTS_REL, host_root / CODEX_AGENTS_LINK_REL, SOURCE_ROOT, manifest, CODEX_AGENTS_REL)
-            for key, relative, text, path in (
-                ("codex_worker_profile", Path("codex") / WORKER_REL, WORKER_TEXT, host_root / WORKER_REL),
-                ("codex_ownership_marker", CODEX_OWNERSHIP_REL, _codex_ownership_text(root, host_root), root / CODEX_OWNERSHIP_REL),
-            ):
-                states[key] = _managed_file_state(path, _hash_text(text), _manifest_file_hash(manifest, relative))
+            states["codex_worker_profile"] = _worker_state(host_root / WORKER_REL, manifest)
+            states["codex_ownership_marker"] = _managed_file_state(
+                root / CODEX_OWNERSHIP_REL, _hash_text(_codex_ownership_text(root, host_root)),
+                _manifest_file_hash(manifest, CODEX_OWNERSHIP_REL))
     issues = sorted([key for key, value in states.items() if value != "present"] + extra_issues)
     return {**payload, "states": states, "issues": issues, "healthy": not issues}
 
@@ -510,6 +542,8 @@ def _install(args):
             if any(path.is_dir() and not path.is_symlink() for path in conflicts):
                 raise ValueError("refused to replace unmanaged skill directories")
             if host == "codex" and not args.force:
+                if _worker_state(host_root / WORKER_REL, old) == "conflict":
+                    raise ValueError(f"refused to overwrite unmanaged file: {host_root / WORKER_REL}")
                 if global_codex_instructions.file_conflict(root / CODEX_AGENTS_REL, SOURCE_ROOT, old, CODEX_AGENTS_REL):
                     raise ValueError(f"refused to overwrite unmanaged file: {root / CODEX_AGENTS_REL}")
                 if global_codex_instructions.link_conflict(host_root / CODEX_AGENTS_LINK_REL, root / CODEX_AGENTS_REL, old):
@@ -540,6 +574,12 @@ def _install(args):
                 files[CODEX_AGENTS_REL.as_posix()] = {"kind": "file", "hash": _file_hash(agents),
                     "managed_hash": global_codex_instructions.managed_hash(SOURCE_ROOT), "host": host}
                 payload["codex_ownership"] = {"path": str(root / CODEX_OWNERSHIP_REL), "owner": "imo"}
+                profile = host_root / WORKER_REL
+                if _worker_state(profile, old) != "present":
+                    if profile.is_symlink():
+                        profile.unlink()
+                    profile.write_text(WORKER_TEXT, encoding="utf-8")
+                files[WORKER_KEY] = {"kind": "settings", "settings": WORKER_SETTINGS, "host": host}
         payload.update(schema_version=5, install_mode="global-first", global_root=str(root),
                        source_root=str(SOURCE_ROOT), source_mode=_source_mode(), files=files,
                        managed_files=list(files), hosts=sorted(set(old.get("hosts", ["codex"] if old else [])) | set(targets)))
@@ -564,8 +604,10 @@ def _uninstall(args):
             current = _entry_hash(path)
             if current not in {None, _manifest_file_hash(manifest, Path(key))} and not args.force:
                 raise ValueError(f"refused to remove unmanaged file: {path}")
-        for surface in targets.values():
+        for host, surface in targets.items():
             _preflight_settings(surface["settings"])
+            if host == "codex" and _worker_state(surface["root"] / WORKER_REL, manifest) == "conflict" and not args.force:
+                raise ValueError(f"refused to remove unmanaged file: {surface['root'] / WORKER_REL}")
         if not args.apply:
             print("[imo global] pass --apply to remove managed global files")
             return 0
@@ -580,11 +622,13 @@ def _uninstall(args):
             if surface["settings"].exists():
                 _edit_hook_registration(surface["settings"], str(surface["hook"]), install=False)
         files = dict(manifest.get("files", {}))
+        if "codex" in targets:
+            # The profile is removed only while IMO's keys are unchanged, even with --force.
+            profile = targets["codex"]["root"] / WORKER_REL
+            if _worker_state(profile, manifest) in {"present", "modified"}:
+                profile.unlink()
+            files.pop(WORKER_KEY, None)
         for key, (path, text, host) in managed.items():
-            # Profiles are removed only while unchanged, even with --force.
-            unchanged = _entry_hash(path) == _manifest_file_hash(manifest, Path(key))
-            if key == "codex/" + WORKER_REL.as_posix() and not unchanged:
-                continue
             external = global_codex_instructions.external_content(path) if key == CODEX_AGENTS_REL.as_posix() else ""
             if external.strip():
                 path.write_text(external, encoding="utf-8")
