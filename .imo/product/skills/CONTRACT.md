@@ -20,8 +20,6 @@ source and must not become a second implementation source.
 - `SKILL.md` is a compact trigger, decision, workflow, and boundary entrypoint.
 - Long examples, mappings, templates, and volatile provider configuration live
   in `references/` and are read only when needed.
-- Migrated runtime code, comparison reports, and fixtures are implementation or
-  verification assets; they are never prompt-time context by default.
 - A skill should not restate global tool behavior or generic model knowledge.
 - Skill promotion must resolve the global manifest `source_root`; package-mode
   installs generate reviewable outbox proposals instead of editing projections.
@@ -32,6 +30,4 @@ source and must not become a second implementation source.
 - `check_skill_semantics.py` validates classification, maturity, integration
   mode, owner surface, and graceful optional-provider degradation; unavailable
   optional providers warn but do not fail native verification.
-- A migrated family also needs a real user-facing behavior check appropriate
-  to the capability; file equality alone is insufficient.
 - Optional provider absence must not fail IMO-native verification.

@@ -1,1 +1,0 @@
-../../.imo/product/skills/cc-to-framework-migration/SKILL.md

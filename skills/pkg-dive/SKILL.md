@@ -1,1 +1,0 @@
-../../.imo/product/skills/pkg-dive/SKILL.md

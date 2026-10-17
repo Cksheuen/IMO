@@ -1,1 +1,0 @@
-../../.imo/product/skills/locate/SKILL.md

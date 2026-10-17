@@ -1,1 +1,0 @@
-../../.imo/product/skills/functional-test-chain/SKILL.md

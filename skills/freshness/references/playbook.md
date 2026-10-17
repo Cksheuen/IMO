@@ -1,1 +1,0 @@
-../../../.imo/product/skills/freshness/references/playbook.md

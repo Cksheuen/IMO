@@ -23,8 +23,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install migrated runtime dependencies
-        run: python -m pip install -r .imo/runtime/requirements.txt
       - name: Check whitespace in pull request
         if: github.event_name == 'pull_request'
         env:

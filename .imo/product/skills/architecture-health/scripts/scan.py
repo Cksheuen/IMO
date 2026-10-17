@@ -5,6 +5,8 @@ import json
 import os
 import re
 import sys
+import subprocess
+from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -40,25 +42,6 @@ THRESHOLDS: Dict[str, Dict[str, Dict[str, int]]] = {
         "max_imports_per_file": {"growth": 30, "structured": 100},
     },
 }
-RECOMMENDATIONS: Dict[str, Dict[str, str]] = {
-    "max_file_lines": {
-        "growth": "Monitor large files; split cohesive sections before review becomes hard.",
-        "structured": "Refactor oversized files into smaller, focused modules.",
-    },
-    "max_functions_per_file": {
-        "growth": "Review files with many functions and group related responsibilities.",
-        "structured": "Extract cohesive functions/services from files with too many functions.",
-    },
-    "duplicate_function_name_count": {
-        "growth": "Review repeated function names and clarify module boundaries.",
-        "structured": "Resolve duplicated function names by renaming or consolidating implementations.",
-    },
-    "max_imports_per_file": {
-        "growth": "Inspect files with many imports for hidden coupling.",
-        "structured": "Reduce import density by extracting cohesive modules and facades.",
-    },
-}
-
 JS_FUNC_DECL_RE = re.compile(r"\bfunction\s*\*?\s*([A-Za-z_$][\w$]*)")
 JS_ARROW_RE = re.compile(
     r"\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?"
@@ -107,6 +90,54 @@ def update_max(
         metrics[path_key] = rel
 
 
+def project_files(root: Path):
+    """Use Git's candidate list, including untracked but non-ignored files."""
+    try:
+        probe = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--is-inside-work-tree"],
+            capture_output=True, check=False,
+        )
+    except FileNotFoundError:
+        probe = None
+    if probe is not None and probe.returncode != 0:
+        message = os.fsdecode(probe.stderr).strip()
+        # Only "not a repository" means outside Git; other errors (e.g. safe.directory) must not
+        # silently widen the scan to ignored files.
+        if "not a git repository" not in message.lower():
+            raise RuntimeError("git cannot read this repository: " + message)
+    if probe is not None and probe.returncode == 0 and probe.stdout.strip() == b"true":
+        result = subprocess.run(
+            ["git", "-C", str(root), "ls-files", "--cached", "--others",
+             "--exclude-standard", "-z", "--", "."], capture_output=True,
+        )
+        if result.returncode:
+            raise RuntimeError("git ls-files failed: " + os.fsdecode(result.stderr).strip())
+        for name in sorted(set(result.stdout.split(b"\0")) - {b""}):
+            path = root / os.fsdecode(name)
+            if path.is_file():
+                yield path
+        return
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = sorted(d for d in dirnames if d not in EXCLUDE_DIRS)
+        for filename in sorted(filenames):
+            yield Path(dirpath) / filename
+
+
+def file_hint(key: str, names: List[str], text: str) -> str:
+    if key == "duplicate_function_name_count":
+        repeated = [name for name, count in Counter(names).items() if count > 1]
+        return "Check scopes of repeated definitions: " + ", ".join(repeated[:5]) + "; rename only unintended collisions."
+    if key == "max_imports_per_file":
+        imports = [line.strip() for line in text.splitlines()
+                   if line.lstrip().startswith(("import ", "from ")) or "require(" in line]
+        sample = "; ".join(imports[:2])[:180]
+        return "Review dependency grouping around " + (sample or "dynamic imports") + "; extract a module only if those dependencies serve one responsibility."
+    sample = ", ".join(names[:3]) or "top-level statements"
+    if key == "max_functions_per_file":
+        return "Review whether " + sample + " belong together; extract a cohesive function group."
+    return "Inspect the responsibilities around " + sample + "; separate a focused section if it has independent callers."
+
+
 def scan_project(root: Path) -> Tuple[Dict[str, Any], str]:
     metrics: Dict[str, Any] = {
         "max_file_lines": 0,
@@ -118,54 +149,65 @@ def scan_project(root: Path) -> Tuple[Dict[str, Any], str]:
         "max_imports_per_file_path": None,
         "scanned_files": 0,
     }
+    metrics["top_files"] = {key: [] for key in METRIC_KEYS}
     seen_files: set[Path] = set()
     python_files = 0
     js_files = 0
 
-    for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = sorted(d for d in dirnames if d not in EXCLUDE_DIRS)
-        for filename in sorted(filenames):
-            path = Path(dirpath) / filename
-            if path.suffix.lower() not in CODE_EXTENSIONS:
+    for path in project_files(root):
+        if path.suffix.lower() not in CODE_EXTENSIONS:
+            continue
+        # Canonical code may intentionally live under a hidden directory
+        # such as `.imo/`.  Scan it, but count compatibility symlinks only
+        # once so root projections do not inflate architecture metrics.
+        resolved = path.resolve(strict=False)
+        if resolved in seen_files:
+            continue
+        seen_files.add(resolved)
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        metrics["scanned_files"] += 1
+        if path.suffix.lower() == ".py":
+            python_files += 1
+        else:
+            js_files += 1
+        rel = str(path.relative_to(root))
+        lines = len(text.splitlines())
+        if path.suffix.lower() == ".py":
+            functions, imports, names = analyze_python(text)
+        else:
+            functions, imports, names = analyze_js(text)
+        update_max(metrics, "max_file_lines", "max_file_lines_path", lines, rel)
+        update_max(
+            metrics,
+            "max_functions_per_file",
+            "max_functions_per_file_path",
+            functions,
+            rel,
+        )
+        update_max(
+            metrics,
+            "max_imports_per_file",
+            "max_imports_per_file_path",
+            imports,
+            rel,
+        )
+        metrics["duplicate_function_name_count"] += len(names) - len(set(names))
+
+        values = (lines, functions, len(names) - len(set(names)), imports)
+        for key, value in zip(METRIC_KEYS, values):
+            if value <= 0:
                 continue
-            # Canonical code may intentionally live under a hidden directory
-            # such as `.imo/`.  Scan it, but count compatibility symlinks only
-            # once so root projections do not inflate architecture metrics.
-            resolved = path.resolve(strict=False)
-            if resolved in seen_files:
-                continue
-            seen_files.add(resolved)
-            metrics["scanned_files"] += 1
-            if path.suffix.lower() == ".py":
-                python_files += 1
-            else:
-                js_files += 1
-            try:
-                text = path.read_text(encoding="utf-8", errors="replace")
-            except OSError:
-                continue
-            rel = str(path.relative_to(root))
-            lines = len(text.splitlines())
-            if path.suffix.lower() == ".py":
-                functions, imports, names = analyze_python(text)
-            else:
-                functions, imports, names = analyze_js(text)
-            update_max(metrics, "max_file_lines", "max_file_lines_path", lines, rel)
-            update_max(
-                metrics,
-                "max_functions_per_file",
-                "max_functions_per_file_path",
-                functions,
-                rel,
-            )
-            update_max(
-                metrics,
-                "max_imports_per_file",
-                "max_imports_per_file_path",
-                imports,
-                rel,
-            )
-            metrics["duplicate_function_name_count"] += len(names) - len(set(names))
+            rows = metrics["top_files"][key]
+            rows.append({"path": rel, "value": value, "_names": names, "_text": text})
+            rows.sort(key=lambda row: (-row["value"], row["path"]))
+            del rows[5:]
+
+    for key, rows in metrics["top_files"].items():
+        for row in rows:
+            row["hint"] = file_hint(key, row.pop("_names"), row.pop("_text"))
 
     if python_files > js_files:
         domain = "backend"
@@ -201,9 +243,21 @@ def evaluate(
         stage = "needs_structured"
     else:
         stage = "needs_growth"
-    recommendations = [
-        RECOMMENDATIONS[item["metric"]][item["severity"]] for item in triggered
-    ]
+    recommendations = []
+    for key, rows in metrics.get("top_files", {}).items():
+        for row in rows:
+            # Duplicate count is aggregated across the project; show its contributors.
+            flagged = row["value"] > thresholds[key]["growth"] or (
+                key == "duplicate_function_name_count" and row["value"] > 0
+                and metrics[key] > thresholds[key]["growth"]
+            )
+            row["flagged"] = flagged
+            if flagged:
+                recommendations.append(
+                    f"source says: {row['path']} ({key}={row['value']}); we infer: {row['hint']}"
+                )
+            else:
+                row.pop("hint", None)
     return triggered, recommendations, stage
 
 
@@ -237,6 +291,12 @@ def render_text(result: Dict[str, Any]) -> str:
             )
     else:
         lines.append("  (none)")
+    lines.append("top_files (source says; hints are we infer):")
+    for key, rows in result["top_files"].items():
+        lines.append(f"  {key}:")
+        for row in rows:
+            lines.append(f"    {row['path']}: {row['value']}" +
+                         (f"; {row['hint']}" if row.get("hint") else ""))
     lines.append("recommendations:")
     if result["recommendations"]:
         for recommendation in result["recommendations"]:
@@ -269,7 +329,11 @@ def main(argv=None) -> int:
         print("error: refusing to scan ~/.claude", file=sys.stderr)
         return 2
 
-    metrics, auto_domain = scan_project(root)
+    try:
+        metrics, auto_domain = scan_project(root)
+    except (OSError, RuntimeError) as exc:
+        print(f"error: cannot scan project: {exc}", file=sys.stderr)
+        return 2
     domain = args.domain or auto_domain
     triggered, recommendations, stage = evaluate(metrics, domain)
     result = {
@@ -277,6 +341,7 @@ def main(argv=None) -> int:
         "project_path": str(root),
         "domain": domain,
         "metrics": metrics,
+        "top_files": metrics.pop("top_files"),
         "thresholds": THRESHOLDS,
         "triggered_upgrades": triggered,
         "recommendations": recommendations,

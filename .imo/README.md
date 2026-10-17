@@ -34,8 +34,7 @@ CI runs the strict tracked-reference checker, `verify`, and
 runtime; all smoke fixture state uses a temporary runtime and never touches
 source `.imo/.runtime`.
 
-Full verification requires the pinned migrated-runtime dependencies. Follow
-the virtual-environment setup in `UPDATE.md` on a new machine.
+Verification uses the Python standard library; no virtual environment is required.
 
 ## Layout
 
@@ -47,7 +46,7 @@ the virtual-environment setup in `UPDATE.md` on a new machine.
 - `product/`: canonical scripts, rules, and skills.
 - `learning/`: learning policy and schemas.
 - `providers/`: optional external capability metadata.
-- `runtime/`: stable contracts and shared runtime helpers.
+- `runtime/`: stable runtime contracts.
 
 Detailed knowledge is intentionally not injected on every prompt. The bounded
 `imo codex context` block routes an agent to these files only when relevant.

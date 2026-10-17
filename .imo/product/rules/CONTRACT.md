@@ -33,11 +33,10 @@ and skills without taking over repository or platform task workflows.
 - `focused-context-reading`: search and filter large files, logs, generated
   artifacts, and repository results before loading bounded, traceable slices
   into context.
-- `delegated-coding-relay-safety`: proactively use Herdr for eligible bounded
-  execution, including small fixes, with `orchestrate` for coordination.
-  Native subagents are not the default or fallback; explicit user/host
-  overrides take precedence. Verify the actual backend and outcome. Relay
-  remains personal-coding only.
+- `delegated-coding`: choose direct work or bounded delegation; delegated work
+  runs through Herdr with `delegate` and the model the user chose. Native
+  subagents are not the default or fallback; explicit user/host overrides take
+  precedence. Review the real diff and check before calling it done.
 - `evidence-first`: when something breaks, inspect the most complete available
   runtime evidence relevant to the failure and sufficient to verify a
   hypothesis (console error, logs, network trace) before forming one; when

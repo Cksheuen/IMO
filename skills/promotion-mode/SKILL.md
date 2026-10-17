@@ -1,1 +1,0 @@
-../../.imo/product/skills/promotion-mode/SKILL.md

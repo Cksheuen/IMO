@@ -1,1 +1,0 @@
-../../.imo/product/skills/codex-feedback-review/SKILL.md

@@ -1,1 +1,0 @@
-../../../.imo/product/skills/orchestrate/references/playbook.md

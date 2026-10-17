@@ -1,1 +1,0 @@
-../../../.imo/product/skills/evolve-notes/scripts/note_active_view.py

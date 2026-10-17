@@ -1,105 +1,46 @@
 ---
 name: eat
-description: 炼化新的外部资料或本地材料（论文、文章、代码库、技术文档、长文本、多媒体转写）：建立来源地图，经过多轮证据阅读持续修订认识，将来源事实、推断和假设分开，并把稳定结论直接映射为现有 rules、skills 或 profile。用户要求“炼化”“学习”“吸收”“消化”“深度阅读”或提供资料要求转化为可复用能力时触发；只有确实需要跨轮修订时才使用 evolve-notes 作为临时工作面。
+description: Reads outside material (articles, papers, repos, docs, messages, transcripts) and turns it into project decisions. Use when the user asks to learn from material, digest it, or find what is useful for this project.
 ---
 
-# Eat / 炼化
+# Eat
 
-把“读完并总结”升级为可追溯的多轮认知更新，再把稳定部分转化为本地能力。
+Outside material proposes; local code, tests and the user decide.
 
-## 边界
+1. Get the full source, its link, version and date. Say how old it is;
+   mark an unknown date as not checked.
+2. Map the problem, main claims, their locations and the kind of evidence
+   behind each claim (experiment, implementation, observation or opinion).
+3. Label each finding **source says (location)**, **we infer**, or
+   **not checked**. Look for limits and counter-evidence; a fluent summary
+   is not the stopping point.
+4. Search this project's rules, skills, docs and code for the same topic.
+   Mark each finding **new**, **already have**, or **conflicts with X**,
+   with a local path when available.
+5. Return a short **adopt / maybe / reject** table. Each row contains the
+   labelled finding, local comparison, one recommended verdict, why and
+   where it would go. If Icarus is available, present the rows as a decision
+   block with `multiple: true` so the user can tick rows.
+6. Apply only rows the user confirms. Re-read each edited target. Keep no
+   separate summary file; rejected and unconfirmed rows stay in the reply.
 
-- 处理新输入；已有 note 可由 `promote-notes` 评估，但用户要求直接炼化时应直接回填现有 owner。
-- 提取 pattern、mechanism、workflow 和 decision rule，不复制原文。
-- 来源事实、我们的推断、待验证假设和本地证据必须可区分。
-- 短小且一轮可理解的材料直接处理，不强制建立笔记。
-- 长文、多来源、跨主题或会反复修正认识时，可按需用 `evolve-notes` 建立临时工作面；目标 owner 已明确时直接回填，不为产生 note 而建 note。
-- 可以提出 declarative memory candidate，但不能直接写 canonical declarative memory。
-
-## 炼化流程
-
-### 1. 确认来源
-
-- 获取正文、版本、发布日期和稳定链接；URL 资料优先抓原文。
-- 论文优先记录标题、版本、章节结构、实验和附录位置。
-- 外部资料默认检查时效性；基础原理与当前实现细节分开判断。
-
-### 2. 查重与定位
-
-搜索当前项目的：
-
-- `notes/research/`、`notes/lessons/`、`notes/design/`；
-- `.imo/notes/`（IMO 真源）；
-- 相关 rules、skills、contracts、实现和测试。
-
-只读取能改变当前判断的命中，不全量加载历史知识。
-
-### 3. 选择承载方式
-
-| 输入形态 | 承载方式 |
+| Adopted finding | Target |
 | --- | --- |
-| 短小、稳定、单轮 | 当前回复或现有 rule/skill/profile |
-| 长文、多轮、认识会变化 | 临时使用 `evolve-notes`，稳定后回填 owner 并删除 note |
-| 多主题且超过目录化阈值 | 先拆到现有 owners；只有仍无 owner 且需要跨轮修订时才暂存目录 |
+| One-line rule used often | Project `AGENTS.md` or `CLAUDE.md` |
+| Procedure used sometimes | Existing or new skill |
+| Stable project or user fact | Memory |
+| One-off detail | Nothing |
 
-长资料不强制创建笔记容器。若确需临时工作面，首轮只写来源地图、问题和证据位置，
-完成回填、回读和引用清理后删除该工作面，不保留第二真源。
+Read [long-reads.md](references/long-reads.md) only when the material is too
+long for one session.
 
-### 4. 迭代炼化
+## Example
 
-每轮只围绕一个主题或问题：
+Input: "Learn from this blog post on prompt caching."
+Illustrative output; replace these locations and checks with actual evidence:
 
-1. 定位原文证据；
-2. 记录来源事实；
-3. 写出推断和置信度；
-4. 寻找反例、限制和替代解释；
-5. 更新当前认识；旧认识用划除线保留并说明修订原因；
-6. 用书签维持可按主题读取的上下文。
-
-不要因为摘要已经流畅就提前停止。遇到能推翻当前主张的证据时，先修订笔记再继续。
-
-### 5. 映射本地系统
-
-按同构度处理：
-
-- 高同构且证据充分：修复明确本地缺口，在目标 owner 或验证输出保留必要来源与证据；
-- 中同构：只保留为当前任务的可验证候选；若用了临时 note，结论收敛后删除；
-- 低同构：记录启发，不制造 rule 或 skill；
-- 已稳定且跨任务复用：交给 `promote-notes` 显式升格。
-
-外部资料只能提出方向；本地代码、运行时、测试和契约决定能否落地。
-
-### 6. 轻量演化闭环
-
-当炼化结果会修改本地 harness、rule、skill 或治理脚本时，使用薄协议控制回归，
-但不要创建 task/spec 状态机：
-
-1. 记录当前 baseline 与本轮单一、可证伪的机制假设；不要捆绑无关改动。
-2. 先运行能暴露结构性故障的便宜 preflight，再运行与假设直接相关的 focused check。
-3. 另选至少一个未直接用于调参的 transfer check，避免只对开发证据过拟合。
-4. 比较 baseline、candidate 与 best-so-far；candidate 回归时恢复最佳版本，不用“可能是噪声”代替复测或回滚。
-5. 连续局部修改没有收益时，停止 prompt/gate 微调，触发一次架构层重审或结束本轮。
-
-这些状态留在当前工作面、平台 plan 或验证输出中；临时 note 在目标 owner 回读后删除，默认不生成仓库任务目录、
-实验状态机或长期 ledger 服务。
-
-### 7. 停止条件
-
-满足以下条件后才结束本轮炼化：
-
-- 核心论点、关键证据、限制和反例已定位；
-- 当前认识可从目标 owner、来源证据和验证输出读取；若使用临时 note，已完成回填并删除；
-- 未验证假设和本地映射候选已显式列出；
-- 已说明采用、暂缓或拒绝每个主要优化方向的原因；
-- 若本次暴露了 `eat` 或 `evolve-notes` 的真实缺口，已在授权范围内补强；不为了记录缺口新建历史 note。
-- 若修改了本地 harness，已记录 baseline/best、focused/transfer checks 与回滚判断。
-
-## 渐进式自我补强
-
-用真实炼化任务 dogfood 本技能。只有来源或运行证据证明流程缺失时，才修改 `eat`、`evolve-notes` 或相关 contract；不要把单篇资料的术语硬编码进通用技能。
-
-## 参考
-
-- `references/playbook.md`：多轮炼化、claim ledger 和输出检查表。
-- `evolve-notes`：划除修订、当前视图、书签和目录化。
-- `promote-notes`：稳定 notes 的显式升格。
+| Finding and comparison | Verdict | Why | Target |
+| --- | --- | --- | --- |
+| Source says (section 2): put stable text first; new | Adopt | Local cache test confirms a benefit | Project `AGENTS.md` |
+| We infer: batch similar requests; new | Maybe | Latency impact not checked | Existing API skill, after a test |
+| Source says (section 4): use its provider's cache flag; conflicts with our client | Reject | Our client has no such option | Nothing |

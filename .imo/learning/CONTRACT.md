@@ -149,9 +149,6 @@ Public agents include:
 - Claude Code main agents
 - Codex main/review agents
 - IMO native skills
-- dual-review-loop
-- orchestrate
-- multi-model-agent
 
 ## Promotion Policy
 

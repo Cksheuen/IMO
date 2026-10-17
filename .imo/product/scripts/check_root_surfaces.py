@@ -144,9 +144,7 @@ def _check_skill_surfaces(contract: dict[str, Any]) -> list[str]:
 
     product_root = _repo_path(skill_surfaces.get("product_projection_root"))
     product_source = _repo_path(skill_surfaces.get("product_source_root"))
-    runtime_root = _repo_path(skill_surfaces.get("runtime_projection_root"))
-    runtime_source = _repo_path(skill_surfaces.get("runtime_source_root"))
-    if product_root is None or product_source is None or runtime_root is None or runtime_source is None:
+    if product_root is None or product_source is None:
         return ["skill_surfaces roots must be non-empty strings"]
 
     for root_path, label in ((product_root, "product projection root"), (product_source, "product source root")):
@@ -188,31 +186,12 @@ def _check_skill_surfaces(contract: dict[str, Any]) -> list[str]:
                     f"{projected_file.relative_to(ROOT)}: points to {link_target}, expected {canonical_file.resolve(strict=False)}"
                 )
 
-    if runtime_root.exists() or runtime_root.is_symlink():
-        expected_runtime_links = {
-            runtime_root / "requirements.txt": runtime_source / "requirements.txt",
-            runtime_root / "shared_runtime" / "__init__.py": runtime_source / "shared" / "__init__.py",
-            runtime_root / "shared_runtime" / "agent_protocols.py": runtime_source / "shared" / "agent_protocols.py",
-            runtime_root / "shared_runtime" / "graph_helpers.py": runtime_source / "shared" / "graph_helpers.py",
-            runtime_root / "shared_runtime" / "types.py": runtime_source / "shared" / "types.py",
-        }
-        for projected, canonical in expected_runtime_links.items():
-            if not projected.exists() and not projected.is_symlink():
-                errors.append(f"{projected.relative_to(ROOT)}: missing runtime projection")
-                continue
-            link_target = _link_target(projected)
-            if link_target != canonical.resolve(strict=False):
-                errors.append(
-                    f"{projected.relative_to(ROOT)}: points to {link_target}, expected {canonical.resolve(strict=False)}"
-                )
-
     root_entries = {
         str(path.relative_to(ROOT)).rstrip("/")
         for path in product_root.iterdir()
         if path.name != ".DS_Store"
     }
     allowed_entries = {f"skills/{module}" for module in product_modules}
-    allowed_entries.add("skills/migrated")
     allowed_entries.update(external_paths)
     unexpected = sorted(root_entries - allowed_entries)
     if unexpected:

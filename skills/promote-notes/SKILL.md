@@ -1,1 +1,0 @@
-../../.imo/product/skills/promote-notes/SKILL.md

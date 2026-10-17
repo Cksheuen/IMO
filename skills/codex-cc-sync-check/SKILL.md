@@ -1,1 +1,0 @@
-../../.imo/product/skills/codex-cc-sync-check/SKILL.md

@@ -1,0 +1,1 @@
+../../.imo/product/skills/learn-from-history/SKILL.md

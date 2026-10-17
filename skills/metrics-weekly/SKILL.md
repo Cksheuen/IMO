@@ -1,1 +1,0 @@
-../../.imo/product/skills/metrics-weekly/SKILL.md

@@ -1,1 +1,0 @@
-../../.imo/product/skills/multi-model-agent/SKILL.md

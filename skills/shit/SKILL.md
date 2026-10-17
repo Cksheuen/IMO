@@ -1,1 +1,0 @@
-../../.imo/product/skills/shit/SKILL.md

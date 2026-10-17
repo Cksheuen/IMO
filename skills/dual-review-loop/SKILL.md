@@ -1,1 +1,0 @@
-../../.imo/product/skills/dual-review-loop/SKILL.md

@@ -1,11 +1,11 @@
-# 项目白名单
-# 只同步当前保留的共享源码面
+# Project allowlist
+# Sync only retained shared source surfaces
 
 *
 
-# 保留的共享源码
-# scripts/ 和 skills/ 仅作为已审计兼容面 / 外部 provider 占位保留；
-# 真正产品源在 .imo/，声明见 .imo/providers/root_surfaces.json。
+# Retained shared source
+# scripts/ and skills/ are audited compatibility surfaces or external providers.
+# Product source lives in .imo/; see .imo/providers/root_surfaces.json.
 !.gitignore
 !.npmignore
 !package.json
@@ -22,13 +22,12 @@
 !scripts/
 !scripts/**
 
-# skills 本地/工作区产物不入库
+# Exclude local skill and workspace artifacts
 skills/**/workspace/
 skills/**/*-workspace/
 skills/local/
-skills/pkg-dive-workspace/
 
-# 临时文件
+# Temporary files
 __pycache__/
 *.pyc
 *.pyo
@@ -42,5 +41,5 @@ node_modules/
 test-results/
 *.tsbuildinfo
 
-# 冷存储
+# Cold storage
 .cold-storage/

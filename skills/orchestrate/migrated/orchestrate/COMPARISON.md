@@ -1,1 +1,0 @@
-../../../../.imo/product/skills/orchestrate/migrated/orchestrate/COMPARISON.md

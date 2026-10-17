@@ -1,1 +1,0 @@
-../../.imo/product/skills/lesson-review/SKILL.md

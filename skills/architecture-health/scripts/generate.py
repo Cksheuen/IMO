@@ -1,1 +1,0 @@
-../../../.imo/product/skills/architecture-health/scripts/generate.py

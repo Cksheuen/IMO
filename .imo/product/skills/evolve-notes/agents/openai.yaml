@@ -1,4 +1,0 @@
-interface:
-  display_name: "Evolve Notes"
-  short_description: "Use a temporary note only when multi-pass revision is needed"
-  default_prompt: "Use $evolve-notes only when multi-pass revision is necessary; promote stable conclusions into an existing owner, then delete the temporary note."

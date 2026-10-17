@@ -1,1 +1,0 @@
-../../../.imo/product/skills/evolve-notes/assets/note-template.md

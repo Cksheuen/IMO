@@ -6,7 +6,6 @@ import sys
 from observability_events import new_span_id, new_trace_id, now_ms, write_event
 
 from .architecture_health_smoke import _run_architecture_health_smoke
-from .evolve_notes_smoke import _run_evolve_notes_smoke
 from .global_config_smoke import _run_global_config_smoke
 from .global_project_smokes import _run_global_project_scope_smoke
 from .install_smokes import _run_install_smoke, _run_root_resolver_smoke
@@ -20,7 +19,6 @@ from .learning_smokes import (
     _run_learning_user_profile_smoke,
 )
 from .observability_smokes import _run_observability_smoke
-from .orchestrate_smoke import run_orchestrate_runtime_smoke
 from .identity_veil_smoke import run_identity_veil_smoke
 from .other_smokes import (
     _run_budget_audit_smoke,
@@ -109,11 +107,9 @@ def _execute_suite(trace_id: str, parent_span_id: str) -> int:
 
     smoke_checks = [
         _run_architecture_health_smoke,
-        _run_evolve_notes_smoke,
         _run_global_config_smoke,
         _run_skill_semantics_smoke,
         _run_tracked_references_smoke,
-        run_orchestrate_runtime_smoke,
         _run_learning_signal_smoke,
         _run_budget_audit_smoke,
         _run_defensive_audit_smoke,

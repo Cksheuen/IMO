@@ -88,21 +88,8 @@ reset or overwrite.
 
 ### Runtime Prerequisites
 
-Native IMO CLI commands use the Python standard library. The complete
-verification suite also exercises the adopted LangGraph runtime and requires
-the pinned dependencies in `.imo/runtime/requirements.txt`. A source checkout
-alone does not install them.
-
-Keep workstation dependencies in an IMO-owned virtual environment:
-
-```bash
-python3 -m venv "$HOME/.imo/venv"
-"$HOME/.imo/venv/bin/python" -m pip install -r .imo/runtime/requirements.txt
-```
-
-Run verification and migrated runtime examples with that environment on PATH.
-Refresh its requirements after updating the checkout. CI installs the same
-requirements before verification; missing dependencies are failures, not skips.
+Native IMO CLI commands and verification use the Python standard library.
+No virtual environment or third-party Python dependencies are required.
 
 ### 2. Clean Update
 
@@ -112,8 +99,7 @@ For a clean checkout:
 git fetch origin --prune
 git switch main
 git reset --hard origin/main
-"$HOME/.imo/venv/bin/python" -m pip install -r .imo/runtime/requirements.txt
-PATH="$HOME/.imo/venv/bin:$PATH" ./imo verify
+./imo verify
 ```
 
 `git reset --hard origin/main` is acceptable only after the preflight confirms a
@@ -229,9 +215,7 @@ placeholders with that device's real mapping, then verify with
 ```bash
 git clone git@github.com:Cksheuen/IMO.git
 cd IMO
-python3 -m venv "$HOME/.imo/venv"
-"$HOME/.imo/venv/bin/python" -m pip install -r .imo/runtime/requirements.txt
-PATH="$HOME/.imo/venv/bin:$PATH" ./imo verify
+./imo verify
 ./imo global install --apply
 imo global status
 ```
@@ -253,7 +237,7 @@ imo global status
 
 ```bash
 python3 .imo/product/scripts/check_tracked_references.py --require-tracked --json
-PATH="$HOME/.imo/venv/bin:$PATH" ./imo verify
+./imo verify
 npm pack --dry-run
 ```
 

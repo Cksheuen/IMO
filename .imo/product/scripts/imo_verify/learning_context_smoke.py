@@ -86,7 +86,7 @@ def _run_learning_context_smoke() -> bool:
                 break
             rule_names.append(line[2:].split(":", 1)[0])
         expected_rule_names = [
-            "Delegated Coding And Relay Safety",
+            "Delegated Coding",
             "Chameleon",
             "Structured Development",
             "Focused Context Reading",
@@ -163,9 +163,9 @@ def _run_learning_context_smoke() -> bool:
                 codex_context._build_sections({}, mode), mode
             )
             for marker in (
-                "work in main unless delegation is mandated",
-                "Selected delegation uses Herdr",
-                "exact model and inherited budget",
+                "work in main unless delegation is asked for",
+                "Delegation uses Herdr",
+                "exact chosen model",
             ):
                 if marker not in mode_context:
                     print(f"[imo verify] failed: {mode} delegation missing {marker}", file=sys.stderr)

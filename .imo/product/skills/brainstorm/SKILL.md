@@ -1,95 +1,29 @@
 ---
 name: brainstorm
-description: 实现前的调研与需求发现技能。通过本地证据、必要的外部研究和发散收敛，澄清目标、现状、约束与 MVP。用户要求 brainstorm、调研、需求澄清、技术选型或架构方案时触发。
-description_en: "Research-first discovery that turns an ambiguous request into an evidence-backed, bounded implementation direction."
+description: Turns unclear building requests into an evidence-backed first step. Use for a vague goal, work across several modules, or choosing a technology or architecture; skip clear, small changes.
 ---
 
 # Brainstorm
 
-先取得足够证据，再收敛需求；调研强度与不确定性和风险成比例。
+Describe one real scenario: input -> what changes -> what the user sees.
+Add a counter-example that only looks like success. Choose the smallest slice
+through the real entry point and actual dependencies to a real user before
+widening across modules.
 
-## 使用边界
+Read dependency source in `node_modules/` or the package repository rather
+than guessing its behavior. Answer what you can investigate yourself; ask
+only questions that change the result. If the user asked to discuss first,
+do not build until they say so. Changes to rules, skills, memory or config
+require user confirmation.
 
-使用于目标模糊、跨模块、技术选型、架构决策或外部参考可能影响方案的任务。
-单行修复、明确的 1-2 文件改动和纯机械操作直接执行，不引入调研仪式。
+Output: goal as understood; evidence (paths and sources); options with a
+recommendation; first slice; what is left out; risks. Mark findings **source
+says** (location), **we infer**, or **not checked**.
 
-本技能只产出发现与建议，除非用户同时要求实现，否则不修改业务代码。
-
-当前任务或此前同一任务链已经授权实现时，沿用该授权；讨论中的补充要求不是
-自动撤销实现授权。用户明确要求先讨论时先完成讨论，不自行扩大实现范围。
-
-## 工作流
-
-### 1. 检索已有知识
-
-- 查当前仓库的架构入口、规则、相关实现、测试和历史决策；
-- 命中旧结论时检查它是否仍与当前代码和日期一致；
-- 只读取与本次问题相关的文档，不全量加载知识库。
-
-### 2. 收集证据
-
-Repo 证据优先回答：
-
-- 现有入口和 owner 在哪里；
-- 当前行为、接口和测试是什么；
-- 哪些约束是硬契约，哪些只是历史说明；
-- 是否已有可复用实现。
-
-当技术选型、当前最佳实践或持续演进的外部项目会影响结论时，查官方当前文档、
-release/migration notes，并区分稳定核心、当前主路径和兼容旧路径。
-
-先用一个可观察场景说明用户想得到的能力：输入/触发 → 实际状态改变 →
-用户能看到的结果，再写一个最容易“看起来成功”的反例。例如有很多对话不代表
-形成合作，有很多任务完成不代表目标真的达成。测试数量、页面精美与方案篇数
-不能替代这条行为证据。
-
-### 3. 发散
-
-只扩展会改变决策的维度：
-
-- 邻近场景和未来一阶段演化；
-- 失败、冲突、幂等、回滚与验证；
-- 上游演进和迁移成本；
-- 最小方案与更完整方案的差异。
-
-先确定领域含义，再选数学、框架与架构工具。抽象模型的复杂度服务于用户要的
-体验和约束；不要把一个玩法问题自行升级成对现实世界的完整复刻。
-
-### 4. 收敛
-
-- 先自行回答可从证据推导的问题；
-- 只询问真正阻塞或会显著改变结果的偏好；
-- 给出推荐方向、排除范围、风险和可验证的 MVP；
-- 若用户已授权实现，把结论转成小而明确的执行计划。
-
-收敛到最小的真实纵向切片：沿既有入口穿过实际依赖，改变同一份状态并被真实
-消费者读到。先证明这条链，再扩展横向模块；不要先让每个模块各自“完成”。
-
-离线参考模型只验证指定假设，必须标明与正式实现的差距、接入位置与退出条件。
-用户转入实现后，合并已确认设计并接入一个切片，不用不断增加报告目录或第二套
-引擎替代交付。用户纠正取代的假设就近标注失效，避免下游继续读取旧结论。
-
-### 5. 沉淀判断
-
-仅当结论跨任务可复用且已稳定时，建议更新现有 lesson/rule/skill；一次性配置或
-未经验证的发现留在当前任务记录。先查重，再决定更新、合并或暂不沉淀。
-
-## 输出
-
-保持紧凑并包含：
-
-1. 目标与当前理解；
-2. 关键证据（路径、接口、测试或官方来源）；
-3. 发现与选项差异；
-4. 推荐 MVP 和明确排除项；
-5. 风险、阻塞和验证方式；
-6. 是否需要知识沉淀。
-
-## 反模式
-
-- 用提问代替可执行的本地调查；
-- 对简单任务强制 Web 搜索或多轮确认；
-- 只引用旧示例，不核对当前主路径；
-- 罗列大量可能性却不给推荐；
-- 未经用户要求创建 PRD、任务树或实现；
-- 把调研过程全文写进长期上下文。
+Example input: "Add offline notes."
+Output: "Type a note offline -> store it -> reload and see the same note.
+Many passing unit tests alone do not prove this. Source says: src/save.ts
+calls the network. We infer: local persistence is the first slice; choose
+between the existing store and a new database after checking their source.
+Start with one note through the real editor and reload; leave sync conflicts
+out. Not checked: storage eviction behavior."

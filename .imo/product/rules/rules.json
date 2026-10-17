@@ -2,12 +2,12 @@
   "schema_version": 1,
   "rules": [
     {
-      "id": "delegated-coding-relay-safety",
-      "name": "Delegated Coding And Relay Safety",
+      "id": "delegated-coding",
+      "name": "Delegated Coding",
       "status": "active",
-      "owner_surface": ".imo/product/rules/delegated-coding-relay-safety.md",
-      "trigger": "Choose direct execution or bounded delegation from current authorization, coupling and coordination cost. For selected workers use Herdr with explicit ownership, model route, budget and lifecycle return.",
-      "context_summary": "Keep short or tightly coupled work in main unless delegation is mandated. Selected delegation uses Herdr, exact model and inherited budget; distinguish usage from reservations. Reclaim ownership for authorized takeover; verify real integrated behavior.",
+      "owner_surface": ".imo/product/rules/delegated-coding.md",
+      "trigger": "Choose direct work or bounded delegation from the user's instruction, task coupling and whether the result can be checked alone. Selected workers run through Herdr with explicit file ownership, the chosen model and a short report.",
+      "context_summary": "Keep short or tightly coupled work in main unless delegation is asked for. Delegation uses Herdr and the exact chosen model via `delegate`; review the full diff and run the check before calling it done.",
       "priority_order": [
         "explicit_user_instruction",
         "repository_hard_rules_or_specs",
@@ -25,7 +25,6 @@
         "native subagents as the default or fallback for Herdr execution",
         "forcing delegation without independent value or bypassing an explicit route mandate",
         "large raw tool output inline",
-        "relay use for evaluation or live traffic",
         "treating worker startup or idle status as completion",
         "treating done, blocked, unknown, or process exit as a final project state",
         "waiting for an artifact before waking the parent or handling a failure",

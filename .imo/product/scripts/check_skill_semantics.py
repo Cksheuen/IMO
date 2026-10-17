@@ -5,12 +5,14 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 SCHEMA_VERSION = 1
 MODULES_REL = Path(".imo/product/skills/modules.json")
+PROVIDERS_REL = Path(".imo/providers/registry.json")
 
 EXTERNAL_RE = re.compile(
     r"~/.claude(?:/[A-Za-z0-9._/-]*)?"
@@ -86,7 +88,9 @@ def normalize_dependencies(value: Any) -> List[Any]:
     return deps
 
 
-def check_module(module: Dict[str, Any], root: Path, home: Path) -> Dict[str, Any]:
+def check_module(
+    module: Dict[str, Any], root: Path, home: Path, cli_dependencies: set[str]
+) -> Dict[str, Any]:
     module_id = str(module.get("id", "") or "<unknown>")
     classification = str(module.get("classification", "") or "")
     deps = normalize_dependencies(module.get("external_dependencies"))
@@ -185,10 +189,17 @@ def check_module(module: Dict[str, Any], root: Path, home: Path) -> Dict[str, An
                 )
             )
 
-    if classification == "provider-backed" and required_external:
+    required_commands = [dep for dep in deps if isinstance(dep, str) and dep in cli_dependencies]
+    missing_commands = [command for command in required_commands if shutil.which(command) is None]
+    if classification == "provider-backed":
+        for command in missing_commands:
+            issues.append(issue("warning", "provider_command_missing",
+                                f"provider command not found on PATH: {command}"))
+
+    if classification == "provider-backed" and (required_external or required_commands):
         provider_status = (
             "available"
-            if all(path.exists() for path in required_external.values())
+            if all(path.exists() for path in required_external.values()) and not missing_commands
             else "unavailable"
         )
     else:
@@ -223,6 +234,17 @@ def build_report(root: Path, home: Path) -> Dict[str, Any]:
     else:
         entries = []
 
+    providers_path = root / PROVIDERS_REL
+    try:
+        registry = json.loads(providers_path.read_text(encoding="utf-8"))
+        cli_dependencies = {
+            provider["id"] for provider in registry["providers"]
+            if "PATH" in provider.get("discovery", {}).get("inputs", [])
+        }
+    except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
+        print(f"error: cannot load providers from {providers_path}: {exc}", file=sys.stderr)
+        sys.exit(1)
+
     enabled = [
         entry
         for entry in entries
@@ -230,7 +252,7 @@ def build_report(root: Path, home: Path) -> Dict[str, Any]:
     ]
     enabled.sort(key=lambda entry: str(entry.get("id", "") or ""))
 
-    modules = [check_module(entry, root, home) for entry in enabled]
+    modules = [check_module(entry, root, home, cli_dependencies) for entry in enabled]
     errors = sum(
         1
         for module in modules

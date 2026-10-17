@@ -11,8 +11,6 @@ Observability covers compact operational facts for:
 - verification checks
 - learning metrics bridge
 - profile status visibility
-- orchestrate worker lifecycle events (Herdr instrumentation design; live wiring
-  must be verified separately)
 
 It does not own repository task state, host-output projection, remote telemetry,
 or user consent decisions.
@@ -25,7 +23,6 @@ Stable contracts live in tracked source:
 .imo/runtime/observability/
   CONTRACT.md
   event.schema.json
-  herdr-telemetry.md
 ```
 
 Generated local state lives only under global project runtime:
@@ -58,12 +55,6 @@ Allowed optional fields are compact ids, counts, and categories such as
 `parent_span_id`, `duration_ms`, `exit_code`, `error_kind`, `command`,
 `check_label`, `status`, `reason`, `count`, `item_count`, `pending_count`,
 `source`, and `source_event_type`.
-
-The [Herdr telemetry design](herdr-telemetry.md) profiles this existing envelope
-for route decisions, lifecycle delivery, actual parent receipts, intervention,
-and successor dispatch. It defines correlation, missing-event audits, latency
-budgets, and live-effectiveness checks. A recorded send or successful metrics
-command is not proof that the parent received or acted on an event.
 
 ## Privacy Boundary
 
